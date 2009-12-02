@@ -353,8 +353,10 @@ public class TCPTransfer implements ITransfer
     		out = it.next();
     		outCallID = out.getHeader(SIPHeader.FIELD_CALLID).getValue();
     		outSequence = out.getHeader(SIPHeader.FIELD_SEQUENCE).getValue();
-    		if(inCallID.equals(outCallID) && inSequence.equals(outSequence) )
-    			return out;
+    		if(inCallID.equals(outCallID) && inSequence.equals(outSequence) ){
+    			it.remove();
+				return out;
+			}
     	}
     	return null;
     }
