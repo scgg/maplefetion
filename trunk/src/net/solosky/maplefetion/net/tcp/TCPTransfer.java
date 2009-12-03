@@ -130,7 +130,10 @@ public class TCPTransfer implements ITransfer
     {
     	writer.write(outMessage.toSendString().getBytes());
     	writer.flush();
-    	sendQueue.add(outMessage);
+    	//如果需要回复才放入发送队列
+    	if(outMessage.isNeedAck()) {
+    		sendQueue.add(outMessage);
+    	}
     	messageLogger.logSIPMessage(outMessage);
     }
 

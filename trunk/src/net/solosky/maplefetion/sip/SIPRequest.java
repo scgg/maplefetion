@@ -68,6 +68,7 @@ public class SIPRequest extends SIPOutMessage
 	{
 		this.method = method;
 		this.domain = domain;
+		this.setNeedAck(true);
 	}
 	
 

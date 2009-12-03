@@ -75,11 +75,21 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 	 * 好友序号到好友飞信地址的映射
 	 */
 	private Hashtable<String, String> map;
+
+	/**
+	 * 主线程
+	 */
+	 private Thread mainThread;
+	 
+	 /**
+	  * 是否有错误
+	  */
+	 private boolean errorFlag;
 	
 	/**
 	 * 构造函数
 	 */
-	public MapleFetion(String mobileNo, String pass)
+	public MapleFetion(long mobileNo, String pass)
 	{
 		this.client = new MapleFetionClient(mobileNo,
 											pass,
@@ -90,6 +100,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		this.map = new Hashtable<String, String>();
+		this.mainThread = Thread.currentThread();
+		this.errorFlag = false;
 	}
 
 	/**
@@ -142,6 +154,21 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     	
     	prompt();
     }
+
+	/**
+	 * 欢迎信息
+	 * @throws Exception 
+	 */
+	 public void welcome() throws Exception
+	{
+		println("================================================");
+		println("|              MapleFetion 1.0 beta             |");
+		println("================================================");
+		println("你好，"+client.getFetionUser().getDisplayName()+"! - ["+client.getFetionUser().getImpresa()+"]");
+		println("[注意:这个命令行下的飞信发送中文会出现乱码，主要是命令行编码不一致。在Eclipse下有时也会出现乱码，可能是Ecplise的BUG。]");
+		println("如果需要帮助，请输入help。");
+	
+	}
     
     
     /**
@@ -151,6 +178,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     public boolean login() throws Exception
     {
     	if(client.login()) {
+    		this.welcome();
     		this.list();
     		return true;
     	}else {
@@ -181,21 +209,24 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     	println("=========================================");
     	println("帮助：");
     	println("=========================================");
-    	println("ls                 显示所有好友列表");
+    	println("welcome                    显示欢迎信息");
+		println("ls                         显示所有好友列表");
     	println("detail 好友编号            显示好友详细信息");
-    	println("add 手机号码                   添加好友（必须是手机号码）");
-    	println("del 好友编号                   删除好友");
-    	println("agree 好友编号              同意陌生人添加好友请求");
-    	println("decline 好友编号          拒绝陌生人添加好友请求");
-    	println("to 好友编号 消息内容    给好友发送消息");
-    	println("sms 好友编号 消息内容  给好友发送短信");
-    	println("enter 好友编号              和好友对话");
-    	println("leave              离开当前对话");
-    	println("dialog             显示当前所有会话");
-    	println("nickname 新昵称           修改自己昵称");
-    	println("impresa 个性签名          修改个性签名");
-    	println("exit               退出登录");
-    	println("help               帮助信息");
+    	println("add 手机号码               添加好友（必须是手机号码）");
+    	println("del 好友编号               删除好友");
+    	println("agree 好友编号             同意陌生人添加好友请求");
+    	println("decline 好友编号           拒绝陌生人添加好友请求");
+    	println("to 好友编号 消息内容       给好友发送消息");
+    	println("sms 好友编号 消息内容      给好友发送短信");
+    	println("enter 好友编号             和好友对话");
+    	println("leave                      离开当前对话");
+    	println("dialog                     显示当前所有会话");
+    	println("nickname 新昵称            修改自己昵称");
+    	println("impresa 个性签名           修改个性签名");
+		println("localname 好友编号 新名字  修改好友的显示名字");
+		println("self 消息内容              给自己发送短信");
+    	println("exit                       退出登录");
+    	println("help                       帮助信息");
     	println("=========================================");
     }
     
@@ -206,7 +237,9 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     public void mainloop() throws Exception
     {
     	String line = null;
-    	while((line = reader.readLine())!=null) {
+    	this.prompt();
+    	while(!this.errorFlag) {
+    		line = reader.readLine();
     		if(!this.dispatch(line)) {
     			break;
     		}
@@ -221,7 +254,9 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     public boolean dispatch(String line) throws Exception
     {
     	String[] cmd = line.split(" ");
-		if(cmd[0].equals("ls")) {
+    	if(cmd[0].equals("welcome")) {
+			this.welcome();
+		}else if(cmd[0].equals("ls")) {
 			this.list();
 		}else if(cmd[0].equals("exit")) {
 			this.exit();
@@ -260,6 +295,12 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		}else if(cmd[0].equals("decline")) {
 			if(cmd.length>=2)
 				this.decline(this.map.get(cmd[1]));
+		}else if(cmd[0].equals("self")) {
+			if(cmd.length>=2)
+				this.sms(client.getFetionUser().getMobileNo(), cmd[1]);
+		}else if(cmd[0].equals("localname")) {
+			if(cmd.length>=3)
+				this.localname(this.map.get(cmd[1]), cmd[2]);
 		}else if(cmd[0].equals("help")) {
 			this.help();
 		}
@@ -297,6 +338,21 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     	}
     }
     
+    
+    /**
+     * 改变好友的显示姓名
+     * @param uri
+     * @param localName
+     * @throws Exception 
+     */
+    public void localname(String uri, String localName) throws Exception
+    {
+    	if(this.client.setBuddyLocalName(uri, localName)) {
+    		println("更改好友显示姓名成功！");
+    	}else {
+    		println("更改好友显示姓名失败！");
+    	}
+    }
     /**
      * 显示所有用户列表
      */
@@ -304,7 +360,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     {
     	println("\n=================================");
     	println("所有好友列表");
-    	println("---------------------------------");
+    	println("-----------------------------------");
     	println("#ID\t好友昵称\t在线状态\t个性签名");;
     	IFetionStore store = this.client.getFetionStore();
     	Iterator<FetionCord> it = store.getCordList().iterator();
@@ -339,7 +395,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 			this.map.put(Integer.toString(startId), buddy.getUri());
 			println(Integer.toString(startId)+"\t"+fomartString(buddy.getDisplayName(),10)+"\t"
 					+fomartPresence(buddy.getPresence())
-					+"\t"+fomartString(buddy.getImpresa(), 50));
+					+"\t"+fomartString(buddy.getImpresa(), 25));
 			startId++;
 		}
 		return startId;
@@ -421,6 +477,19 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     public void sms(String uri, String message) throws Exception
     {
     	if(this.client.sendSMSMessage(uri, message)) {
+    		println("发送手机短信成功！");
+    	}else {
+    		println("发送手机短信失败！");
+    	}
+    }
+    
+    /**
+     * 发送手机短信
+     * @throws Exception 
+     */
+    public void sms(long mobileNo, String message) throws Exception
+    {
+    	if(this.client.sendSMSMessage(mobileNo, message)) {
     		println("发送手机短信成功！");
     	}else {
     		println("发送手机短信失败！");
@@ -575,7 +644,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     public void exceptionCaught(Throwable exception)
     {
 	   println("客户端错误，程序将退出。"+exception.toString());
-	   Thread.currentThread().interrupt();
+	   this.errorFlag = true;
+	   this.mainThread.interrupt();
     }
 
     /**
@@ -648,16 +718,15 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 	public static void main(String[] args)
 	{
 		if(args.length<2) {
-			System.out.println("参数不正确，用法：java -d MapleFetion.jar net.solosky.maplefetion.MapleFetion 手机号码 飞信密码");
+			System.out.println("参数不正确，用法：java -d MapleFetion.jar net.solosky.maplefetion.MapleFetion 手机号码 飞信密码 encoding");
 		}else {
-			MapleFetion  fetion = new MapleFetion(args[0], args[1]);
 			try {
+				MapleFetion  fetion = new MapleFetion(Long.parseLong(args[0]), args[1]);
 	            if(fetion.login()) {
 	            	fetion.mainloop();
 	            }
             } catch (Exception e) {
-            	e.printStackTrace();
-	            System.out.println("系统错误。");
+	            System.out.println("系统错误。"+e);
             }
 		}
 	}

@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion;
 
+import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -114,7 +115,7 @@ public class MapleFetionClient implements IFetionClient
 	 * @param notifyListener	通知监听器
 	 * @param loginListener		登录监听器
 	 */
-	public MapleFetionClient(String mobileNo,
+	public MapleFetionClient(long mobileNo,
 							String pass, 
 							ITransferFactory transferFactory,
 							IFetionStore fetionStore,
@@ -269,7 +270,7 @@ public class MapleFetionClient implements IFetionClient
 	
 	/**
 	 * 发送手机短信
-	 * @param uri		发送的uri:注意这里应该是tel:159xxxxxx的形式
+	 * @param uri		发送的uri:注意这里应该是159xxxxxx的形式
 	 * @param content	发送的内容
 	 * @return
 	 * @throws Exception
@@ -277,6 +278,18 @@ public class MapleFetionClient implements IFetionClient
 	public boolean sendSMSMessage(String uri, String content) throws Exception
 	{
 		return this.serverDialog.sendSMSMessage(uri, content);
+	}
+	
+	/**
+	 * 发送手机短信
+	 * @param mobileNo		发送的手机号码
+	 * @param content		发送的内容
+	 * @return
+	 * @throws IOException 
+	 */
+	public boolean sendSMSMessage(long mobileNo, String content) throws IOException
+	{
+		return this.serverDialog.sendSMSMessage("tel:"+Long.toString(mobileNo), content);
 	}
 	
 	

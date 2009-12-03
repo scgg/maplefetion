@@ -53,7 +53,7 @@ public class FetionUser extends FetionBuddy
 	/**
 	 * 默认构造函数
 	 */
-	public FetionUser(String mobileNo, String password,String domain)
+	public FetionUser(long mobileNo, String password,String domain)
 	{
 		this.setMobileNo(mobileNo);
 		this.setPassword(password);

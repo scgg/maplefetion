@@ -1,0 +1,39 @@
+<!-- MapleFetion Build File -->
+<project name="MapleFetion" default="compile" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
+
+    <property name="src"   value="src"   />
+    <property name="build" value="build" />
+    <property name="dist"  value="dist"  />
+    <property name="lib"   value="lib"   />
+    <property name="log"   value="log"   />
+
+    <path id="compile.classpath">
+        <pathelement location="${lib}/jdom.jar" />
+        <pathelement location="${lib}/log4j-1.2.15.jar"/>
+    </path>
+
+    <!-- 初始化构建目录 -->
+    <target name="init">
+        <tstamp />
+        <mkdir dir="${build}"/>
+    </target>
+
+   <!--  编译文件 -->
+    <target name="compile" depends="init">
+        <javac srcdir="${src}" destdir="${build}"  classpathref="compile.classpath" encoding="UTF-8"/>
+        <copy file="${src}/log4j.xml" tofile="${build}/log4j.xml" />
+    </target>
+
+    <!-- 构建JAR -->
+    <target name="dist" depends="compile">
+        <mkdir dir="${dist}"/>
+        <jar jarfile="${dist}/MapleFetion-${DSTAMP}.jar" basedir="${build}"/>
+    </target>
+    
+    <!-- 清除目录 -->
+    <target name="clean">
+        <delete dir="${build}"/>
+        <delete file="${log}/*.*" />
+    </target>
+    
+</project>

@@ -56,6 +56,7 @@ public class SIPReceipt extends SIPOutMessage
 	{
 		this.statusCode = statusCode;
 		this.statusMessage = statusMessage;
+		this.setNeedAck(false);
 	}
 	
 	/* (non-Javadoc)

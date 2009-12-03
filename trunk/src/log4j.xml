@@ -11,7 +11,7 @@
     <layout class="org.apache.log4j.SimpleLayout" />
 </appender>
 <root>
- <priority value="debug" />
+ <priority value="off" />
  <appender-ref ref="console" />
  <appender-ref ref="file" />
 </root>

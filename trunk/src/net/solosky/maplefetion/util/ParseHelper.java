@@ -49,13 +49,17 @@ public class ParseHelper
 	public static void parseBuddyPersonalBasic(FetionBuddy buddy, Element personal)
 	{
 		//这下面就是读取好友信息的详细字段，这里只实现了一部分，其余的下个版本添加。。
-		if(personal.getAttributeValue("user-id")!=null)
+		String userId = personal.getAttributeValue("user-id");
+		if(userId!=null && userId.length()>0)
 			buddy.setUid(Integer.parseInt(personal.getAttributeValue("user-id")));		//用户编号，这个不是飞信号
-		buddy.setGender(personal.getAttributeValue("gender"));						//好友性别
-		buddy.setImpresa(personal.getAttributeValue("impresa"));					//好友签名
-		buddy.setNickName(personal.getAttributeValue("nickname"));					//好友昵称
-		buddy.setMobileNo(personal.getAttributeValue("mobile-no"));					//手机号码
-		buddy.setPortrait(personal.getAttributeValue("portrait-crc"));				//头像
+		buddy.setGender(personal.getAttributeValue("gender"));							//好友性别
+		buddy.setImpresa(personal.getAttributeValue("impresa"));						//好友签名
+		buddy.setNickName(personal.getAttributeValue("nickname"));						//好友昵称
+		buddy.setPortrait(personal.getAttributeValue("portrait-crc"));					//头像
+		String mobileNo = personal.getAttributeValue("mobile-no");
+		if(mobileNo!=null && mobileNo.length()>0)
+			buddy.setMobileNo(Long.parseLong(personal.getAttributeValue("mobile-no")));	//手机号码
+		
 		//TODO ..下个版本添加好友的其他属性
 	}
 	

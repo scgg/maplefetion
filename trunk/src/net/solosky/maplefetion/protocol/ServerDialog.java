@@ -33,6 +33,7 @@ import java.util.TimerTask;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.ILoginListener;
 import net.solosky.maplefetion.IMessageCallback;
+import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionCord;
 import net.solosky.maplefetion.bean.FetionUser;
@@ -354,7 +355,7 @@ public class ServerDialog extends AbstractDialog
 		{
 			public void handle(SIPResponse response) throws Exception
 			{
-				callback.messageSended(uri, content, response.getStatusCode()==200);
+				callback.messageSended(uri, content, response.getStatusCode()==200||response.getStatusCode()==280);
 			}
 		};
 		request.setResponseHandler(handler);
@@ -559,7 +560,13 @@ public class ServerDialog extends AbstractDialog
 		SIPRequest request = this.messageFactory.createSetBuddyLocalName(uri, localName);
 		this.transfer.sendSIPMessage(request);
 		SIPResponse response = request.waitRepsonse();
-		return response.getStatusCode()==200;
+		if(response.getStatusCode()==200) {
+			FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
+			buddy.setLocalName(localName);
+			return true;
+		}else {
+			return false;
+		}
 	}
 	
 	/**

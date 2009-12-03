@@ -88,7 +88,7 @@ public class FetionBuddy
 	/**
 	 * 用户手机号
 	 */
-	private String mobileNo;
+	private long mobileNo;
 	
 	/**
 	 * 好友昵称
@@ -149,7 +149,7 @@ public class FetionBuddy
     	if(uri.startsWith("sip")) {
     		this.setSid(Integer.parseInt(uri.substring(4, uri.indexOf('@'))));
     	}else {
-    		this.setMobileNo(uri.substring(4));
+    		this.setMobileNo(Long.parseLong(uri.substring(4)));
     	}
     }
 
@@ -172,15 +172,15 @@ public class FetionBuddy
 	/**
      * @return the mobileNo
      */
-    public String getMobileNo()
+    public long getMobileNo()
     {
-    	return mobileNo;
+    	return this.mobileNo;
     }
 
 	/**
      * @param mobileNo the mobileNo to set
      */
-    public void setMobileNo(String mobileNo)
+    public void setMobileNo(long mobileNo)
     {
     	this.mobileNo = mobileNo;
     }
@@ -407,8 +407,8 @@ public class FetionBuddy
     		return trueName;
     	if(sid>0)
     		return Integer.toString(sid);
-    	if(mobileNo!=null && mobileNo.length()>0)
-    		return mobileNo;
+    	if(mobileNo!=0)
+    		return Long.toString(mobileNo);
     	return null;
     }
     
