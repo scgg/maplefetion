@@ -33,6 +33,11 @@ import net.solosky.maplefetion.bean.FetionBuddy;
  *
  *	收到服务器发回的相关通知便会调用
  *
+ *  警告：
+ *  这里的所有函数如果要进行有关客户端同步的操作，（如接受到好友请求马上回复同意）必须在另外一个线程调用
+ *  如果在收到通知后马上调用有关客户端的同步方法就会会造成死锁，因为回调函数还在读数据线程的调用栈上，等待回复永远不可能成功
+ *  可以调用异步的方法，如异步发送消息等。。
+ *
  * @author solosky <solosky772@qq.com> 
  */
 public interface INotifyListener

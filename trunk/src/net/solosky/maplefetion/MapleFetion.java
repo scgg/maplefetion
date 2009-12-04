@@ -225,6 +225,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     	println("impresa 个性签名           修改个性签名");
 		println("localname 好友编号 新名字  修改好友的显示名字");
 		println("self 消息内容              给自己发送短信");
+		println("presence away/online/busy/hiden   改变自己在线状态");
     	println("exit                       退出登录");
     	println("help                       帮助信息");
     	println("=========================================");
@@ -301,6 +302,9 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		}else if(cmd[0].equals("localname")) {
 			if(cmd.length>=3)
 				this.localname(this.map.get(cmd[1]), cmd[2]);
+		}else if(cmd[0].equals("presence")) {
+			if(cmd.length>=2)
+				this.presence(cmd[1]);
 		}else if(cmd[0].equals("help")) {
 			this.help();
 		}
@@ -338,6 +342,34 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     	}
     }
     
+    
+    /**
+     * 设置登录用户的状态
+     * @param presence
+     * @throws Exception 
+     */
+    public void presence(String presence) throws Exception
+    {
+    	int to = -1; 
+    	if(presence.equals("away")) {
+    		to = FetionBuddy.PRESENCE_PC_AWAY;
+    	}else if(presence.endsWith("online")) {
+    		to = FetionBuddy.PRESENCE_PC_ONLINE;
+    	}else if(presence.equals("busy")) {
+    		to = FetionBuddy.PRESENCE_PC_BUSY;
+    	}else if(presence.equals("hiden")) {
+    		to = FetionBuddy.PRESENCE_PC_HIDEN;
+    	}else {
+    		println("未知状态:"+presence);
+    	}
+    	if(to!=-1) {
+    		if(this.client.setPresence(to)) {
+    			println("改变状态成功！");
+    		}else {
+    			println("改变状态失败！");
+    		}
+    	}
+    }
     
     /**
      * 改变好友的显示姓名

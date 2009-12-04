@@ -270,7 +270,7 @@ public class MapleFetionClient implements IFetionClient
 	
 	/**
 	 * 发送手机短信
-	 * @param uri		发送的uri:注意这里应该是159xxxxxx的形式
+	 * @param uri		发送的uri,注意这里的应该是好友飞信的URI
 	 * @param content	发送的内容
 	 * @return
 	 * @throws Exception
@@ -478,6 +478,18 @@ public class MapleFetionClient implements IFetionClient
     }
 
     
+	/**
+	 * 设置当前用户的状态
+     * @param presence		用户状态，定义在FetionBuddy里面
+     * @return				设置是否成功
+     * @throws Exception
+     * @see net.solosky.maplefetion.protocol.ServerDialog#setPresence(int)
+     */
+    public boolean setPresence(int presence) throws Exception
+    {
+	    return serverDialog.setPresence(presence);
+    }
+
 	/**
 	 * 退出登录
 	 * @throws Exception

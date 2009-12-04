@@ -61,6 +61,8 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     		this.serviceResult(event);
     	}else if(eventType.equals("UpdateBuddy")) {
     		this.updateBuddy(event);
+    	}else if(eventType.equals("UpdateMobileBuddy")) {
+    		this.updateMobileBuddy(event);
     	}else if(eventType.equals("AddBuddyApplication")){
     		this.buddyApplication(event);
     	}else{
@@ -75,8 +77,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
      */
     private void serviceResult(Element event)
     {
-    	Element results =event.getChild("results");
-    	List list = results.getChild("contacts").getChildren();
+    	List list = XMLHelper.findAll(event, "/event/results/contacts/*contact");
     	Iterator it = list.iterator();
     	while(it.hasNext()) {
     		Element e =  (Element) it.next();
@@ -132,14 +133,50 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
 		logger.debug("Recived a buddy application:"+desc);
     }
     
+    
+    /**
+     * 手机好友同意或者拒绝添加手机好友
+     * @param event
+     */
+    private void updateMobileBuddy(Element event)
+    {
+    	List list = XMLHelper.findAll(event, "/event/contacts/mobile-buddies/*mobile-buddy");
+    	Iterator it = list.iterator();
+    	while(it.hasNext()) {
+    		Element e = (Element) it.next();
+    		String uri = e.getAttributeValue("uri");
+    		FetionBuddy buddy = client.getFetionStore().getBuddy(uri);
+    		if(buddy!=null) {
+    			//检查用户关系的变化
+    			int relationStatus = Integer.parseInt(e.getAttributeValue("relation-status"));
+    			//如果当前好友关系是没有确认，而返回的好友是确认了，表明好友同意了你添加好友的请求
+    			if(relationStatus==FetionBuddy.RELATION_STATUS_AGREED 
+    					&& buddy.getRelationStatus()!=FetionBuddy.RELATION_STATUS_AGREED) {
+    				
+    				//因为这里是手机好友，没有详细信息，故不再获取详细信息
+    				logger.debug("Mobile buddy agreed your buddy request:"+buddy.getDisplayName());
+    				client.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
+    				
+    			}else if(relationStatus==FetionBuddy.RELATION_STATUS_DECLINED) {	//对方拒绝了请求
+    				
+    				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
+    				client.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
+    				
+    			}else {}
+
+        		buddy.setUid(Integer.parseInt(e.getAttributeValue("user-id")));
+    			buddy.setRelationStatus(relationStatus);
+			}
+    	}
+    }
+    
     /**
      * 好友同意或者拒绝加入好友
      * @throws IOException 
      */
     private void updateBuddy(Element event) throws IOException
     {
-    	Element buddies = event.getChild("contacts").getChild("buddies");
-    	List list = buddies.getChildren();
+    	List list = XMLHelper.findAll(event, "/event/contacts/buddies/*buddy");
     	Iterator it = list.iterator();
     	while(it.hasNext()) {
     		Element e =  (Element) it.next();
@@ -169,7 +206,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     		        			    }
     		    				}
     		    				
-    		    				logger.debug("buddy agreed your buddy request:"+buddy.getNickName());
+    		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
     		    				client.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
     						}
     					};
@@ -178,7 +215,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     					//发出这个消息
     					dialog.getTransfer().sendSIPMessage(request);
     			}else if(relationStatus==FetionBuddy.RELATION_STATUS_DECLINED) {	//对方拒绝了请求
-    				logger.debug("buddy declined your buddy request:"+buddy.getNickName());
+    				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
     				client.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
     			}else {}
 

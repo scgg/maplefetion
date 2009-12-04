@@ -345,7 +345,7 @@ public class SIPMessageFactory
     }
     
     /**
-     * 添加好友请求
+     * 添加飞信好友请求
      * @param uri
      * @param promptId
      * @param cordId
@@ -369,6 +369,28 @@ public class SIPMessageFactory
     }
     
     /**
+     * 添加手机好友请求
+     * @param uri		好友的URI，这里应该是tel:159xxxxx
+     * @param cordId	添加的组编号
+     * @param desc		对好友的自我描述
+     * @return
+     */
+    public SIPRequest createAddMobileBuddyRequest(String uri, int cordId, String desc)
+    {
+    	SIPRequest req = this.createDefaultSIPRequest(SIPMethod.METHOD_SERVICE);
+    	String body = SIPRequestTemplate.TMPL_ADD_MOBILE_BUDDY;
+    	body = body.replace("{uri}", uri);
+    	body = body.replace("{cordId}", "");
+    	//body = body.replace("{cordId}", Integer.toString(cordId));
+    	body = body.replace("{desc}", desc);
+    	
+    	req.addHeader(SIPHeader.FIELD_EVENT,"AddMobileBuddy");
+    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
+    	req.setBody(new SIPBody(body));
+    	return req;
+    }
+    
+    /**
      * 删除好友
      * @param uri
      * @return
@@ -380,6 +402,24 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"DeleteBuddy");
+    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
+    	
+    	req.setBody(new SIPBody(body));
+    	return req;
+    }
+    
+    /**
+     * 删除手机好友
+     * @param uri  好友手机uri(类似tel:159xxxxxxxx)
+     * @return
+     */
+    public SIPRequest createDeleteMobileBuddyRequest(String uri)
+    {
+    	SIPRequest req = this.createDefaultSIPRequest(SIPMethod.METHOD_SERVICE);
+    	String body = SIPRequestTemplate.TMPL_DELETE_MOBILE_BUDDY;
+    	body = body.replace("{uri}", uri);
+    	
+    	req.addHeader(SIPHeader.FIELD_EVENT,"DeleteMobileBuddy");
     	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
@@ -470,6 +510,23 @@ public class SIPMessageFactory
     	req.setBody(new SIPBody(body));
     	return req;
     	
+    }
+    
+    /**
+     * 设置在线状态
+     */
+    public SIPRequest createSetPresenceRequest(int presence)
+    {
+    	SIPRequest req = this.createDefaultSIPRequest(SIPMethod.METHOD_SERVICE);
+    	
+    	String body = SIPRequestTemplate.TMPL_SET_PRESENCE;
+    	body = body.replace("{presence}", Integer.toString(presence));
+    	
+    	req.addHeader(SIPHeader.FIELD_EVENT,"SetPresence");
+    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
+    	
+    	req.setBody(new SIPBody(body));
+    	return req;
     }
     /**
      * 退出客户端

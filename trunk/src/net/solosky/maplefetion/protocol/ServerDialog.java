@@ -401,6 +401,7 @@ public class ServerDialog extends AbstractDialog
 	
 	/**
 	 * 添加好友
+	 * 注意：无论是添加飞信好友还是手机好友，都可以使用这个方法，这个方法会自动判断
 	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
 	 * @param cordId	添加好友的组编号
 	 * @param promptId	提示信息编号
@@ -413,20 +414,57 @@ public class ServerDialog extends AbstractDialog
 		SIPRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cordId, desc);
 		this.transfer.sendSIPMessage(request);
 		SIPResponse response = request.waitRepsonse();
+		if(response.getStatusCode()==522) {	//如果返回的是522，表明用户没开通飞信，那就添加手机好友
+			return this.addMobileBuddy(uri, cordId, desc);
+		}else {		
+    		//用户已经开通飞信,返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
+    		FetionBuddy buddy = new FetionBuddy();
+    		Element root = XMLHelper.build(response.getBody().toSendString());
+    		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
+    		if(element==null)	return false;
+    		buddy.setUri(element.getAttributeValue("uri"));
+    		buddy.setLocalName(element.getAttributeValue("local-name"));
+    		buddy.setCordId(element.getAttributeValue("buddy-lists"));
+    		buddy.setRelationStatus(Integer.parseInt(element.getAttributeValue("relation-status")));
+    		
+    		buddy.setRegistered(true);	//已开通飞信
+    		this.client.getFetionStore().addBuddy(buddy);
+    			
+    	    return true;
+		}
+	}
+	
+	
+	/**
+	 * 添加手机好友
+	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
+	 * @param cordId	添加好友的组编号
+	 * @param desc		“我是xx” xx：名字
+	 * @return
+	 * @throws IOException
+	 */
+	private boolean addMobileBuddy(String uri, int cordId, String desc) throws IOException
+	{
+		SIPRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cordId, desc);
+		this.transfer.sendSIPMessage(request);
+		SIPResponse response = request.waitRepsonse();
 		if(response.getStatusCode()!=200) return false;
 		
-		//返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
 		FetionBuddy buddy = new FetionBuddy();
 		Element root = XMLHelper.build(response.getBody().toSendString());
-		Element element = root.getChild("contacts").getChild("buddies").getChild("buddy");
+		Element element = XMLHelper.find(root, "/results/contacts/mobile-buddies/mobile-buddy");
+		if(element==null)	return false;
+		
 		buddy.setUri(element.getAttributeValue("uri"));
-		buddy.setLocalName(element.getAttributeValue("local-name"));
 		buddy.setCordId(element.getAttributeValue("buddy-lists"));
 		buddy.setRelationStatus(Integer.parseInt(element.getAttributeValue("relation-status")));
+		
+		buddy.setRegistered(false);		//未开通飞信
 		this.client.getFetionStore().addBuddy(buddy);
-			
-	    return true;
+		
+		return true;
 	}
+	
 	
 	/**
 	 * 同意对方添加好友
@@ -438,8 +476,6 @@ public class ServerDialog extends AbstractDialog
 	 */
 	public boolean agreedApplication(String uri) throws IOException
 	{
-		//警告： 这个函数必须在另外一个线程调用
-		// 如果在收到请求后马上调用这个函数会造成死锁，因为回调函数还在读数据线程的调用栈上，等待回复永远不可能成功
 		SIPRequest request = this.messageFactory.createAgreeApplicationRequest(uri);
 		this.transfer.sendSIPMessage(request);
 		SIPResponse response = request.waitRepsonse();
@@ -475,7 +511,6 @@ public class ServerDialog extends AbstractDialog
 	 */
 	public boolean declinedAppliction(String uri) throws IOException
 	{
-		//警告： 这个函数必须在另外一个线程调用
 		SIPRequest request = this.messageFactory.createDeclineApplicationRequest(uri);
 		this.transfer.sendSIPMessage(request);
 		SIPResponse response = request.waitRepsonse();
@@ -484,13 +519,41 @@ public class ServerDialog extends AbstractDialog
 	
 	/**
 	 * 删除好友
-	 * @param uri
+	 * @param uri  
 	 * @return
 	 * @throws IOException
 	 */
 	public boolean deleteBuddy(String uri) throws IOException
 	{
-		SIPRequest request = this.messageFactory.createDeleteBuddyRequest(uri);
+		FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
+		if(buddy == null) return false;
+		
+		//如果好友是飞信好友，就直接发起删除好友请求
+		if(buddy.isRegistered()) {
+    		SIPRequest request = this.messageFactory.createDeleteBuddyRequest(uri);
+    		this.transfer.sendSIPMessage(request);
+    		SIPResponse response = request.waitRepsonse();
+    		if(response.getStatusCode()==200) {
+    			this.client.getFetionStore().deleteBuddy(uri);
+    			return true;
+    		}else {
+    			return false;
+    		}
+		}else {
+			//如果是手机好友，删除手机好友
+			return this.deleteMoblieBuddy(uri);
+		}
+	}
+	
+	/**
+	 * 删除手机好友
+	 * @param uri  好友手机uri(类似tel:159xxxxxxxx)
+	 * @return
+	 * @throws IOException 
+	 */
+	private boolean deleteMoblieBuddy(String uri) throws IOException
+	{
+		SIPRequest request = this.messageFactory.createDeleteMobileBuddyRequest(uri);
 		this.transfer.sendSIPMessage(request);
 		SIPResponse response = request.waitRepsonse();
 		if(response.getStatusCode()==200) {
@@ -563,6 +626,26 @@ public class ServerDialog extends AbstractDialog
 		if(response.getStatusCode()==200) {
 			FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
 			buddy.setLocalName(localName);
+			return true;
+		}else {
+			return false;
+		}
+	}
+	
+	
+	/**
+	 * 设置当前用户的在线状态
+	 * @param presence		在线状态，定义在FetionBuddy里面
+	 * @return				成功返回true失败返回false
+	 * @throws Exception
+	 */
+	public boolean setPresence(int presence) throws Exception
+	{
+		SIPRequest request = this.messageFactory.createSetPresenceRequest(presence);
+		this.transfer.sendSIPMessage(request);
+		SIPResponse response = request.waitRepsonse();
+		if(response.getStatusCode()==200) {
+			this.client.getFetionUser().setPresence(presence);
 			return true;
 		}else {
 			return false;

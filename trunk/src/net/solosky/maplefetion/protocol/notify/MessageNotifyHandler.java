@@ -78,7 +78,7 @@ public class MessageNotifyHandler extends AbstractSIPNotifyHandler
     	//查找消息是哪个好友发送的
         IFetionStore store = this.client.getFetionStore();
 	    FetionBuddy from  = store.getBuddy(notify.getFrom());
-	    String      body  = notify.getBody().toSendString();
+	    String      body  = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
 	    
 	    //如果好友没有找到，可能是陌生人发送的信息，
 	    if(from==null) {

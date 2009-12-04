@@ -56,7 +56,7 @@ public class PresenceSIPNotifyHandler extends AbstractSIPNotifyHandler
 	    FetionBuddy buddy = client.getFetionStore().getBuddy(uri);
 	    
 	    //状态改变
-	    if(basic!=null) {
+	    if(basic!=null&&buddy!=null) {
     	    int oldpresense = buddy.getPresence(); 
     	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
     	    if(oldpresense!=curpresense) {
