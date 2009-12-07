@@ -51,10 +51,11 @@ public class ConversationNotifyHandler extends AbstractSIPNotifyHandler
     	String type = event.getAttributeValue("type");
     	if(type.equals("UserEntered")) {    	//这里只是处理了好友进入会话请求
     		this.userEntered(event);
+    	}else if(type.equals("UserLeft")){
+    		this.userLeft(event);
     	}else {
     		logger.warn("Unknown converstion event type:"+type);
-    	}
-    	
+    	}    	
     }
     
     
@@ -68,9 +69,28 @@ public class ConversationNotifyHandler extends AbstractSIPNotifyHandler
     		Element member = event.getChild("member");
     		String uri = member.getAttributeValue("uri");
     		cd.buddyEntered(uri);
+    		
+    		logger.debug("Buddy entered this dialog:"+uri);
     	}
     }
     
+    
+    /**
+     * 用户离开了回话
+     * @throws Exception 
+     */
+    private void userLeft(Element event) throws Exception
+    {
+    	if(this.dialog instanceof ChatDialog) {
+    		ChatDialog cd = (ChatDialog) this.dialog;
+    		Element member = event.getChild("member");
+    		String uri = member.getAttributeValue("uri");
+    		cd.buddyLeft(uri);
+    		
+    		logger.debug("Buddy left this dialog:"+uri);
+    	}
+    	
+    }
     
     
 }

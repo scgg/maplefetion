@@ -53,6 +53,18 @@ public interface ITransfer
 	public void setSIPMessageListener(ISIPMessageListener listener);
 	
 	/**
+	 * 返回SIP信令监听器
+	 * @return						SIP信令监听器
+	 */
+	public ISIPMessageListener getSIPMessageListener();
+	
+	/**
+	 * 返回已发送队列管理器
+	 * @return						已发送队列管理器
+	 */
+	public QueueManager getQueueManager();
+	
+	/**
 	 * 启动传输
 	 */
 	public void startTransfer();

@@ -51,9 +51,7 @@ public class RegistrationNotifyHandler extends AbstractSIPNotifyHandler
     	
     	//用户在其他地方登陆
     	if(eventType!=null && eventType.equals("deregistered")) {
-    		this.client.getChatDialogFactory().closeAllChatDialog();
-    		this.client.getServerDialog().closeDialog();
-    		this.client.getNotifyListener().exceptionCaught(new IllegalStateException("you have logined by other application."));
+    		this.client.exceptionCaught(new IllegalStateException("you have logined by other application."));
     	}else {
     		logger.warn("Unkown registration event type:"+eventType);
     	}

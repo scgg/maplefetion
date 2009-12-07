@@ -29,15 +29,12 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
-import java.util.Iterator;
-import java.util.LinkedList;
-import java.util.Queue;
 
 import net.solosky.maplefetion.net.ISIPMessageListener;
 import net.solosky.maplefetion.net.ITransfer;
+import net.solosky.maplefetion.net.QueueManager;
 import net.solosky.maplefetion.sip.SIPBody;
 import net.solosky.maplefetion.sip.SIPHeader;
-import net.solosky.maplefetion.sip.SIPInMessage;
 import net.solosky.maplefetion.sip.SIPMessage;
 import net.solosky.maplefetion.sip.SIPNotify;
 import net.solosky.maplefetion.sip.SIPOutMessage;
@@ -63,9 +60,9 @@ public class TCPTransfer implements ITransfer
 	private Thread readThread;
 	
 	/**
-	 * 已发送队列
+	 * 队列管理器
 	 */
-	private Queue<SIPOutMessage> sendQueue;
+	private QueueManager queueManager;
 	
 	/**
 	 * 监听器
@@ -117,8 +114,8 @@ public class TCPTransfer implements ITransfer
 		socket = new Socket(host, port);
 	    reader = socket.getInputStream();
 	    writer = socket.getOutputStream();
-	    sendQueue = new LinkedList<SIPOutMessage>();
 	    buffer = new ByteArrayBuffer(20480);
+	    queueManager = new QueueManager(this); 
 	    closeFlag = false;
 		messageLogger = new SIPMessageLogger(host+".log");
 	}
@@ -132,7 +129,7 @@ public class TCPTransfer implements ITransfer
     	writer.flush();
     	//如果需要回复才放入发送队列
     	if(outMessage.isNeedAck()) {
-    		sendQueue.add(outMessage);
+    		queueManager.sendedSIPMessage(outMessage);
     	}
     	messageLogger.logSIPMessage(outMessage);
     }
@@ -189,6 +186,9 @@ public class TCPTransfer implements ITransfer
 	        writer.close();
 	        messageLogger.close();
 	        
+	        //停止已发送队列超时检查任务
+	        queueManager.getTimeOutCheckTask().cancel();
+	        
 	        //中断线程
 	        readThread.interrupt();
         } catch (IOException e) {
@@ -237,7 +237,7 @@ public class TCPTransfer implements ITransfer
     		if(head.startsWith(SIPMessage.SIP_VERSION)) {
         		//如果是SIP-C/2.0 xxx msg...，表明是一个回复
     			SIPResponse response = this.readResponse(head);
-    			SIPRequest  request = (SIPRequest) this.findOutMessage(response);
+    			SIPRequest  request = (SIPRequest) this.queueManager.findSIPMessage(response);
     			this.messageLogger.logSIPMessage(response);
     			this.listener.SIPResponseRecived(response, request);
     		}else {	//表明是服务器发回的通知
@@ -336,32 +336,21 @@ public class TCPTransfer implements ITransfer
     	return body;
     }
     
-    
-    
-    
-    /**
-     * 查找接受信令对应的发出包
-     * @param inMessage
-     * @return
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransfer#getSIPMessageListener()
      */
-    public SIPOutMessage findOutMessage(SIPInMessage inMessage)
+    @Override
+    public ISIPMessageListener getSIPMessageListener()
     {
-    	Iterator<SIPOutMessage> it = this.sendQueue.iterator();
-    	SIPOutMessage out = null;
-    	String inCallID = inMessage.getHeader(SIPHeader.FIELD_CALLID).getValue();
-    	String inSequence = inMessage.getHeader(SIPHeader.FIELD_SEQUENCE).getValue();
-    	String outCallID = null;
-    	String outSequence = null;
-    	while(it.hasNext()) {
-    		out = it.next();
-    		outCallID = out.getHeader(SIPHeader.FIELD_CALLID).getValue();
-    		outSequence = out.getHeader(SIPHeader.FIELD_SEQUENCE).getValue();
-    		if(inCallID.equals(outCallID) && inSequence.equals(outSequence) ){
-    			it.remove();
-				return out;
-			}
-    	}
-    	return null;
+    	return this.listener;
+    }
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransfer#getQueueManager()
+     */
+    @Override
+    public QueueManager getQueueManager()
+    {
+	   return this.queueManager;
     }
 
 }

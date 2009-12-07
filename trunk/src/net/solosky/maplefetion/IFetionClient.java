@@ -95,5 +95,11 @@ public interface IFetionClient
 	 */
 	public ServerDialog getServerDialog();
 	
+	/**
+	 * 发生了致命的异常
+	 * @param e		异常
+	 */
+	public void exceptionCaught(Throwable exception);
+	
 	
 }

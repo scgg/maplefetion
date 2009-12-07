@@ -33,7 +33,6 @@ import java.util.TimerTask;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.ILoginListener;
 import net.solosky.maplefetion.IMessageCallback;
-import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionCord;
 import net.solosky.maplefetion.bean.FetionUser;
@@ -69,6 +68,7 @@ public class ServerDialog extends AbstractDialog
 	    super(client);
 	    this.transfer = client.getTransferFactory().createTransfer(host, port);
 	    this.transfer.setSIPMessageListener(this.messageListener);
+	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 15*1000);
 	    this.keepAliveTask =  new KeepAliveTimerTask();
     }
    
@@ -101,8 +101,7 @@ public class ServerDialog extends AbstractDialog
     	//当主服务器线程发生读写异常时，只能结束这个线程，并结束整个客户端
     	try {
     		logger.warn("ServerDialog exception caught, cannot fix it, the client will exit...");
-	        this.closeDialog();										//关闭服务器对话框
-	        this.client.getNotifyListener().exceptionCaught(e);		//通知调用者客户端出错
+	        this.client.exceptionCaught(e);		//客户端处理异常
         } catch (Exception e1) {
 	       logger.warn("handle ServerDailog exception:"+e);
         }

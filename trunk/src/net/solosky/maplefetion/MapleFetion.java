@@ -135,10 +135,11 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     {
     	if(b.getPresence()==FetionBuddy.PRESENCE_PC_ONLINE) {
     		println("[系统通知]:"+b.getDisplayName()+" 上线了。");
+        	prompt();
     	}else if(b.getPresence()==FetionBuddy.PRESENCE_PC_OFFLINE){
     		println("[系统通知]:"+b.getDisplayName()+" 下线了。");
+        	prompt();
     	}
-    	prompt();
     }
 
 	/**
@@ -169,7 +170,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		println("如果需要帮助，请输入help。");
 	
 	}
-    
+	 
     
     /**
      * 开始登录
@@ -177,8 +178,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
      */
     public boolean login() throws Exception
     {
+    	this.welcome();
     	if(client.login()) {
-    		this.welcome();
     		this.list();
     		return true;
     	}else {
@@ -311,6 +312,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		else {
 			if(activeBuddy!=null) {
 				this.to(activeBuddy.getUri(), cmd[0]);
+			}else {
+				println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
 			}
 		}
 		return true;

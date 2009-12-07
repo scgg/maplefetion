@@ -77,6 +77,7 @@ public class ChatDialog extends AbstractDialog
 	    super(client);
 	    this.transfer = client.getTransferFactory().createTransfer(host, port);
 	    this.transfer.setSIPMessageListener(this.messageListener);
+	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 15*1000);
 	    this.dialogSession.setAttribute("TICKET", ticket);
 	    this.buddyEnterWaiter = new ObjectWaiter<String>();
 	    this.lastActiveTime = System.currentTimeMillis();
@@ -204,6 +205,18 @@ public class ChatDialog extends AbstractDialog
     {
     	this.buddy = this.client.getFetionStore().getBuddy(uri);
     	this.buddyEnterWaiter.objectArrive(uri);
+    }
+    
+    /**
+     * 用户离开了回话
+     * @param uri 		用户uri
+     * @throws Exception 
+     */
+    public void buddyLeft(String uri) throws Exception
+    {
+    	//本来一个会话可能会有多人参与，但由于这里只实现了两个人参与，如果对方离开，这个对话就应该关闭了
+    	this.client.getChatDialogFactory().closeChatDialog(this);
+    	
     }
     
     

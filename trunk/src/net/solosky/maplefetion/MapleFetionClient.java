@@ -585,4 +585,20 @@ public class MapleFetionClient implements IFetionClient
     	return this.serverDialog;
     }
 
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.IFetionClient#exceptionCaught(java.lang.Throwable)
+     */
+    @Override
+    public void exceptionCaught(Throwable exception)
+    {
+    	try {
+        	this.serverDialog.closeDialog();
+        	this.chatDialogFactory.closeAllChatDialog();
+        	this.globalTimer.cancel();
+        	this.notifyListener.exceptionCaught(exception);
+    	}catch (Exception e) {
+			// TODO: handle exception
+		}
+    }
+
 }

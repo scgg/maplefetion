@@ -46,6 +46,22 @@ public abstract class SIPOutMessage extends SIPMessage
 	 */
 	protected int  aliveTime;
 	
+	/**
+	 * 重发次数
+	 */
+	protected int retryTimes;
+	
+	
+	/**
+	 * 默认的构造函数
+	 */
+	public SIPOutMessage()
+	{
+		this.needAck = true;		//默认需要回复
+		this.aliveTime = ((int) System.currentTimeMillis()/1000)+30;	//存活时间为发出去后的30秒
+		this.retryTimes = 0;		//重发次数重置为0,最多只能重发3次。。。
+	}
+	
 	
 	/**
 	 * 设置请求者
@@ -89,23 +105,58 @@ public abstract class SIPOutMessage extends SIPMessage
 	 */
 	public abstract String toSendString();
 
+	
+	/**
+	 * 当前信令是否需要回复
+	 * @return
+	 */
 	public boolean isNeedAck()
     {
     	return needAck;
     }
 
+	/**
+	 * 设置是否需要回复
+	 * @param needAck
+	 */
 	public void setNeedAck(boolean needAck)
     {
     	this.needAck = needAck;
     }
-
+	
+	/**
+	 * 设置存活时间
+	 * @param aliveTime
+	 */
+	public void setAliveTime(int aliveTime)
+	{
+		this.aliveTime = aliveTime;
+	}
+	
+	/**
+	 * 返回存活时间
+	 * @return
+	 */
 	public int getAliveTime()
     {
     	return aliveTime;
     }
 
-	public void setAliveTime(int aliveTime)
+	/**
+     *返回重发次数
+     */
+    public int getRetryTimes()
     {
-    	this.aliveTime = aliveTime;
+    	return retryTimes;
+    }
+
+	/**
+     * 递增重发次数
+     */
+    public void incRetryTimes()
+    {
+    	this.retryTimes++;
     }	
+	
+	
 }

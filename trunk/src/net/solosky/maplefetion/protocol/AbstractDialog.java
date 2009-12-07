@@ -26,7 +26,6 @@
 package net.solosky.maplefetion.protocol;
 
 import java.net.InetSocketAddress;
-import java.util.TimerTask;
 
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.net.ISIPMessageListener;
