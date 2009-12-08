@@ -394,13 +394,13 @@ public class MapleFetionClient implements IFetionClient
 	
 	/**
 	 * 添加好友
-	 * @param mobleNo	按手机号码添加
+	 * @param long		按手机号码添加
 	 * @return			发出好友请求是否成功
 	 * @throws Exception 
 	 */
-	public boolean addBuddy(String mobileNo) throws Exception
+	public boolean addBuddy(long mobileNo) throws Exception
 	{
-		return this.serverDialog.addBuddy("tel:"+mobileNo, 0, 1, this.fetionUser.getNickName());
+		return this.serverDialog.addBuddy("tel:"+Long.toString(mobileNo), 0, 1, this.fetionUser.getNickName());
 	}
 	
 	/**

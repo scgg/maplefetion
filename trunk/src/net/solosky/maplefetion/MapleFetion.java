@@ -536,7 +536,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
      */
     public void add(String uri) throws Exception
     {
-    	if(client.addBuddy(uri)) {
+    	if(client.addBuddy(Long.parseLong(uri))) {
     		println("发出添加好友请求成功！请耐性地等待用户回复。");
     	}else {
     		println("发出添加好友请求失败！");
