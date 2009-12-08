@@ -415,7 +415,7 @@ public class ServerDialog extends AbstractDialog
 		SIPResponse response = request.waitRepsonse();
 		if(response.getStatusCode()==522) {	//如果返回的是522，表明用户没开通飞信，那就添加手机好友
 			return this.addMobileBuddy(uri, cordId, desc);
-		}else {		
+		}else if(response.getStatusCode()==200){		
     		//用户已经开通飞信,返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
     		FetionBuddy buddy = new FetionBuddy();
     		Element root = XMLHelper.build(response.getBody().toSendString());
@@ -430,6 +430,9 @@ public class ServerDialog extends AbstractDialog
     		this.client.getFetionStore().addBuddy(buddy);
     			
     	    return true;
+		}else{
+			logger.warn("Error ocurred when adding Buddy:[uri:"+uri+", response:"+response);
+			return false;
 		}
 	}
 	
