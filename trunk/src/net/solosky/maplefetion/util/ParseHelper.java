@@ -48,10 +48,12 @@ public class ParseHelper
 	 */
 	public static void parseBuddyPersonalBasic(FetionBuddy buddy, Element personal)
 	{
+		if(buddy==null || personal==null)	return;
+
 		//这下面就是读取好友信息的详细字段，这里只实现了一部分，其余的下个版本添加。。
 		String userId = personal.getAttributeValue("user-id");
 		if(userId!=null && userId.length()>0)
-			buddy.setUid(Integer.parseInt(personal.getAttributeValue("user-id")));		//用户编号，这个不是飞信号
+			buddy.setUid(Integer.parseInt(userId));										//用户编号，这个不是飞信号
 		buddy.setGender(personal.getAttributeValue("gender"));							//好友性别
 		buddy.setImpresa(personal.getAttributeValue("impresa"));						//好友签名
 		buddy.setNickName(personal.getAttributeValue("nickname"));						//好友昵称
@@ -71,6 +73,8 @@ public class ParseHelper
 	 */
 	public static void parseBuddyPersonalExtend(FetionBuddy buddy, Element personal)
 	{
+		if(buddy==null || personal==null)	return;
+
 		//检查好友详细信息是否有效
 		BuddyExtend extend = buddy.getExtend();
 		if(extend==null) {
