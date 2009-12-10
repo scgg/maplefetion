@@ -582,6 +582,7 @@ public class ServerDialog extends AbstractDialog
 			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
 			FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
 			if(personal!=null && buddy!=null ) {
+				ParseHelper.parseBuddyPersonalBasic(buddy, personal);
 				ParseHelper.parseBuddyPersonalExtend(buddy, personal);
 				return true;
 			}else {

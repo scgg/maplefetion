@@ -85,7 +85,7 @@ public class ParseHelper
 		//逐个解析详细信息
 		try {
 	        extend.setBirth(DateFormat.getInstance().parse(personal.getAttributeValue("birth-date")));
-        } catch (ParseException e) {
+        } catch (Exception e) {
         	extend.setBirth(null);
         }
 		extend.setBlood( personal.getAttributeValue("blood-type"));

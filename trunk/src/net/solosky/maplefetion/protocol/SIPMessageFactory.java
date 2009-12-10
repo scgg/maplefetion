@@ -106,7 +106,6 @@ public class SIPMessageFactory
     public SIPRequest createServerRegisterRequest()
     {
     	 SIPRequest req =this.createDefaultSIPRequest(SIPMethod.METHOD_REGISTER);
-    	 req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(SIPRequestTemplate.TMPL_USER_AUTH.getBytes().length) );
          req.setBody(new SIPBody(SIPRequestTemplate.TMPL_USER_AUTH));
          
          return req;
@@ -128,7 +127,6 @@ public class SIPMessageFactory
     					+auth.getResponse()+"\",cnonce=\""+auth.getCnonce()
     					+"\",salt=\""+auth.getSalt()+"\",ssic=\""+user.getSsic()+"\"";
     	req.addHeader(SIPHeader.FIELD_AUTHORIZATION, authString);
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(SIPRequestTemplate.TMPL_USER_AUTH.getBytes().length) );
     	
     	req.setBody(new SIPBody(SIPRequestTemplate.TMPL_USER_AUTH));
     	
@@ -143,7 +141,6 @@ public class SIPMessageFactory
     {
     	SIPRequest req = this.createDefaultSIPRequest(SIPMethod.METHOD_SERVICE);
 	    req.addHeader(SIPHeader.FIELD_EVENT, "GetPersonalInfo");
-	    req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(SIPRequestTemplate.TMPL_GET_PERSONAL_INFO.getBytes().length) );
     	req.setBody(new SIPBody(SIPRequestTemplate.TMPL_GET_PERSONAL_INFO));
     	
     	return req;
@@ -159,7 +156,6 @@ public class SIPMessageFactory
     	req.addHeader(SIPHeader.FIELD_TO, toUri);
     	req.addHeader(SIPHeader.FIELD_CONTENT_TYPE, "text/plain");
     	req.addHeader(SIPHeader.FIELD_EVENT, "CatMsg");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(m.getBytes().length) );
     	
     	req.setBody(new SIPBody(m));
     	
@@ -178,7 +174,6 @@ public class SIPMessageFactory
     	
     	req.addHeader(SIPHeader.FIELD_TO, uri);
     	req.addHeader(SIPHeader.FIELD_EVENT, "SendCatSMS");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(m.getBytes().length) );
     	
     	req.setBody(new SIPBody(m));
     	
@@ -219,7 +214,6 @@ public class SIPMessageFactory
     	req.setBody(new SIPBody(body));
     	
     	req.addHeader(SIPHeader.FIELD_EVENT, "GetContactsInfo");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length) );
     	
     	
     	return req;
@@ -239,7 +233,6 @@ public class SIPMessageFactory
     	req.setBody(new SIPBody(body));
     	
     	req.addHeader(SIPHeader.FIELD_EVENT, "GetContactsInfo");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length) );
     	
     	return req;
     }
@@ -252,7 +245,6 @@ public class SIPMessageFactory
     	SIPRequest req = this.createDefaultSIPRequest(SIPMethod.METHOD_SERVICE);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT, "GetContactList");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(SIPRequestTemplate.TMPL_GET_CONTACT_LIST.getBytes().length));
     	
     	req.setBody(new SIPBody(SIPRequestTemplate.TMPL_GET_CONTACT_LIST));
     	return req;
@@ -278,7 +270,6 @@ public class SIPMessageFactory
     	req.setBody(new SIPBody(body));
     	
     	req.addHeader(SIPHeader.FIELD_EVENT, "compactlist");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	return req;
     }
@@ -320,7 +311,6 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"InviteBuddy");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	req.setBody(new SIPBody(body));
     	return req;
     }
@@ -339,7 +329,6 @@ public class SIPMessageFactory
     	buffer.append(SIPRequestTemplate.TMPL_FETION_SHOW_2.getBytes(), 0,SIPRequestTemplate.TMPL_FETION_SHOW_2.getBytes().length);
     	
     	byte[] bodyArr = buffer.toByteArray();
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(bodyArr.length));
     	req.setBody(new SIPBody(new String(bodyArr)));
     	return req;
     }
@@ -363,7 +352,6 @@ public class SIPMessageFactory
     	body = body.replace("{desc}", desc);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"AddBuddy");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	req.setBody(new SIPBody(body));
     	return req;
     }
@@ -385,7 +373,6 @@ public class SIPMessageFactory
     	body = body.replace("{desc}", desc);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"AddMobileBuddy");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	req.setBody(new SIPBody(body));
     	return req;
     }
@@ -402,7 +389,6 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"DeleteBuddy");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -420,7 +406,6 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"DeleteMobileBuddy");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -440,7 +425,6 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"HandleContactRequest");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -458,7 +442,6 @@ public class SIPMessageFactory
     	body = body.replace("{uri}", uri);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"HandleContactRequest");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -484,7 +467,6 @@ public class SIPMessageFactory
     	body = body.replace("{attrs}", attrs);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"SetPersonalInfo");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -505,7 +487,6 @@ public class SIPMessageFactory
     	body = body.replace("{localName}", localName);
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"SetBuddyInfo");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;
@@ -523,7 +504,6 @@ public class SIPMessageFactory
     	body = body.replace("{presence}", Integer.toString(presence));
     	
     	req.addHeader(SIPHeader.FIELD_EVENT,"SetPresence");
-    	req.addHeader(SIPHeader.FIELD_LENGTH, Integer.toString(body.getBytes().length));
     	
     	req.setBody(new SIPBody(body));
     	return req;

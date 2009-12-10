@@ -28,6 +28,7 @@ package net.solosky.maplefetion.sip;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.protocol.ISIPResponseHandler;
+import net.solosky.maplefetion.util.ConvertHelper;
 
 import org.apache.log4j.Logger;
 
@@ -85,7 +86,7 @@ public class SIPRequest extends SIPOutMessage
 			buffer.append(it.next().toSendString());
 		}
 		if(this.body!=null) {
-			int len = this.body.toSendString().getBytes().length;
+			int len =ConvertHelper.string2Byte(body.toSendString()).length;
 			if(len>0)
 				buffer.append("L: "+len+"\r\n");
 		}

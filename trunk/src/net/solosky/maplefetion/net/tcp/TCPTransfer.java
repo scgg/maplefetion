@@ -41,6 +41,7 @@ import net.solosky.maplefetion.sip.SIPOutMessage;
 import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
 import net.solosky.maplefetion.util.ByteArrayBuffer;
+import net.solosky.maplefetion.util.ConvertHelper;
 import net.solosky.maplefetion.util.SIPMessageLogger;
 
 import org.apache.log4j.Logger;
@@ -125,7 +126,7 @@ public class TCPTransfer implements ITransfer
     @Override
     public void sendSIPMessage(SIPOutMessage outMessage) throws IOException
     {
-    	writer.write(outMessage.toSendString().getBytes());
+    	writer.write(ConvertHelper.string2Byte(outMessage.toSendString()));
     	writer.flush();
     	//如果需要回复才放入发送队列
     	if(outMessage.isNeedAck()) {

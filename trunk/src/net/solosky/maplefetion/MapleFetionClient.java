@@ -166,6 +166,7 @@ public class MapleFetionClient implements IFetionClient
 			return false;
 		
 		String h = conn.getHeaderField("Set-Cookie");
+		if(h==null)	return false;
 		int s = h.indexOf("ssic=");
 		int e = h.indexOf(';');
 		String ssic = h.substring(s+5,e);

@@ -28,6 +28,7 @@ package net.solosky.maplefetion.util;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.io.UnsupportedEncodingException;
 import java.util.StringTokenizer;
 
 /**
@@ -193,7 +194,22 @@ public class ConvertHelper
     	while((len=in.read(b))!=-1)
     		out.write(b, 0, len);
     	return new String(out.toByteArray());
-		
+    }
+    
+    /**
+     * 把字符串转换为utf8字节数据
+     * @param src		utf8编码原字符串
+     * @return			字节数组
+     */
+    public static byte[] string2Byte(String src)
+    {
+    	byte[] ret = null;
+    	try {
+	        ret = src.getBytes("UTF8");
+        } catch (UnsupportedEncodingException e) {
+        	//nerver happened..
+        }
+        return ret;
     }
 
 }

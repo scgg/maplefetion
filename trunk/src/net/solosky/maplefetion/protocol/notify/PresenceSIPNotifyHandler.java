@@ -54,23 +54,30 @@ public class PresenceSIPNotifyHandler extends AbstractSIPNotifyHandler
 	    
 	    String uri = presence.getAttributeValue("uri");
 	    FetionBuddy buddy = client.getFetionStore().getBuddy(uri);
+	    if(buddy==null && client.getFetionUser().getUri().equals(uri)) {
+	    	buddy = client.getFetionUser();			//这里可能是用户自己
+	    }
 	    
-	    //状态改变
-	    if(basic!=null&&buddy!=null) {
-    	    int oldpresense = buddy.getPresence(); 
-    	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
-    	    if(oldpresense!=curpresense) {
-    	    	buddy.setPresence(curpresense);
-    	    	client.getNotifyListener().presenceChanged(buddy);
+	    if(buddy!=null) {
+    	    //状态改变
+    	    if(basic!=null) {
+        	    int oldpresense = buddy.getPresence(); 
+        	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
+        	    if(oldpresense!=curpresense) {
+        	    	buddy.setPresence(curpresense);
+        	    	client.getNotifyListener().presenceChanged(buddy);
+        	    }
     	    }
+    	    //好友信息改变
+    	    if(personal!=null) {
+    	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
+    	    }
+    	    
+    	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence()+"]");
+    	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
+	    }else {
+	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+uri);
 	    }
-	    //好友信息改变
-	    if(personal!=null) {
-	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
-	    }
-	    
-	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence()+"]");
-	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
     }
 
 }
