@@ -331,11 +331,13 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 			this.help();
 		}
 		else {
-			if(activeBuddy!=null) {
-				if( line!=null && line.length()>0 )
+			if( line!=null && line.length()>0 ){
+				if(activeBuddy!=null) {
 					this.to(activeBuddy.getUri(), line);
-			}else {
-				println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
+				}else{
+					println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
+				}
+
 			}
 		}
 		return true;

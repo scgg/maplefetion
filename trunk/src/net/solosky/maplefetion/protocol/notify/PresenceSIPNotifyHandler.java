@@ -65,7 +65,13 @@ public class PresenceSIPNotifyHandler extends AbstractSIPNotifyHandler
     	    }
     	    
     	    if(buddy!=null) {
-        	    //状态改变
+        	    
+				//好友信息改变
+        	    if(personal!=null) {
+        	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
+        	    }
+
+				//状态改变
         	    if(basic!=null) {
             	    int oldpresense = buddy.getPresence(); 
             	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
@@ -73,10 +79,6 @@ public class PresenceSIPNotifyHandler extends AbstractSIPNotifyHandler
             	    	buddy.setPresence(curpresense);
             	    	client.getNotifyListener().presenceChanged(buddy);
             	    }
-        	    }
-        	    //好友信息改变
-        	    if(personal!=null) {
-        	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
         	    }
         	    
         	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence()+"]");
