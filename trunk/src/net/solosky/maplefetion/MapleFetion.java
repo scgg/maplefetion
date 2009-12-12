@@ -332,7 +332,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 		}
 		else {
 			if(activeBuddy!=null) {
-				this.to(activeBuddy.getUri(), line);
+				if( line!=null && line.length()>0 )
+					this.to(activeBuddy.getUri(), line);
 			}else {
 				println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
 			}
@@ -744,7 +745,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
     {
 	    this.errorFlag = true;
 	    this.mainThread.interrupt();
-		println("程序内部错误，将退出并关闭，对此感到很抱歉，请到项目首页反馈错误信息或者给作者发电子邮件寻求帮助。");
+		println("程序内部错误，将退出并关闭，对此感到很抱歉，请将以下信息发布到项目首页反馈错误信息或者给作者发电子邮件寻求帮助。");
+		exception.printStackTrace();
     }
 
     /**
@@ -825,7 +827,8 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 	            	fetion.mainloop();
 	            }
             } catch (Exception e) {
-	            System.out.println("程序内部错误，将退出并关闭，对此感到很抱歉，请到项目首页反馈错误信息或者给作者发电子邮件寻求帮助。");
+            	System.out.println("程序内部错误，将退出并关闭，对此感到很抱歉，请将以下信息发布到项目首页反馈错误信息或者给作者发电子邮件寻求帮助。");
+        		e.printStackTrace();
             }
 		}
 	}

@@ -119,7 +119,7 @@ public class ChatDialog extends AbstractDialog
     	SIPResponse response = request.waitRepsonse();
     	if(response.getStatusCode()==200) {
     		logger.debug("Register successfull, processed...");
-    		this.sendFetionShow();
+    		//this.sendFetionShow();
     		return true;
     	}else {
     		logger.debug("Register failed, quit...");

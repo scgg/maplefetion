@@ -33,7 +33,7 @@ package net.solosky.maplefetion.protocol;
  */
 public class SIPRequestTemplate
 {
-	public static final String TMPL_USER_AUTH = "<args><device type=\"PC\" version=\"0\" client-version=\"3.5.1170\" /><caps value=\"simple-im;im-session;temp-group;personal-group;im-relay\" /><events value=\"contact;permission;system-message;personal-group;compact\" /><user-info attributes=\"all\" /><presence><basic value=\"400\" desc=\"\" /></presence></args>";
+	public static final String TMPL_USER_AUTH = "<args><device type=\"PC\" version=\"2009113004\" client-version=\"3.5.2540\" /><caps value=\"simple-im;im-session;temp-group;personal-group;im-relay;xeno-im;direct-sms;sms2fetion\" /><events value=\"contact;permission;system-message;personal-group;compact\" /><user-info attributes=\"all\" /><presence><basic value=\"400\" desc=\"\" /></presence></args>";
 	public static final String TMPL_GET_PERSONAL_INFO = "<args><personal attributes=\"all\" /><services version=\"\" attributes=\"all\" /><quota attributes=\"all\" /></args>";
 	public static final String TMPL_GET_CONTACT_LIST = "<args><contacts><buddy-lists /><buddies attributes=\"all\" /><mobile-buddies attributes=\"all\" /><chat-friends /><blacklist /><allow-list /></contacts></args>";
 	public static final String TMPL_GET_CONTACTS_INFO = "<args><contacts attributes=\"provisioning;impresa;mobile-no;nickname;name;gender;portrait-crc;ivr-enabled\" extended-attributes=\"score-level\">{contactList}</contacts></args>";

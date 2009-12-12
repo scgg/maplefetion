@@ -259,11 +259,17 @@ public class SIPMessageFactory
     	
     	StringBuffer buffer = new StringBuffer();
     	Iterator<FetionBuddy> it = buddyList.iterator();
-    	String contactTemplate = "<contact uri=\"{uri}\" type=\"3\"/>";
+    	String contactTemplate = "<contact uri=\"{uri}\" type=\"{type}\" />";
     	while(it.hasNext()){
     		FetionBuddy b = it.next();
-    		if(b.isRegistered())
-    			buffer.append(contactTemplate.replace("{uri}", b.getUri()));
+    		String t = contactTemplate;
+    		if(b.isRegistered()) {
+    			t = contactTemplate.replace("{type}", "3");
+    		}else {
+    			t = contactTemplate.replace("{type}", "2");
+    		}
+    		t = t.replace("{uri}", b.getUri());
+    		buffer.append(t);
     	}
     	String body = SIPRequestTemplate.TMPL_SUBSCRIBE;
     	body = body.replace("{contactList}", buffer.toString());

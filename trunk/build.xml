@@ -6,6 +6,7 @@
     <property name="dist"  value="dist"  />
     <property name="lib"   value="lib"   />
     <property name="log"   value="log"   />
+    <property name="doc"   value="doc"   />
 
     <path id="compile.classpath">
         <pathelement location="${lib}/jdom.jar" />
@@ -35,5 +36,15 @@
         <delete dir="${build}"/>
         <delete file="${log}/*.*" />
     </target>
-    
+
+    <!-- 生成doc -->
+    <target name="doc">
+        <delete dir="${doc}" />
+        <mkdir dir="${doc}"/>
+         <javadoc destdir="${doc}" encoding="UTF-8" docencoding="UTF-8">
+            <packageset dir="${src}">
+                <include name="**"/>
+            </packageset>
+        </javadoc>
+     </target>
 </project>

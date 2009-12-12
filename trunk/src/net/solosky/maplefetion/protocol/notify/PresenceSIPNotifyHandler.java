@@ -25,6 +25,9 @@
  */
 package net.solosky.maplefetion.protocol.notify;
 
+import java.util.Iterator;
+import java.util.List;
+
 import org.jdom.Element;
 
 import net.solosky.maplefetion.bean.FetionBuddy;
@@ -48,35 +51,39 @@ public class PresenceSIPNotifyHandler extends AbstractSIPNotifyHandler
     public void handle(SIPNotify notify) throws Exception
     {
 	    Element root = XMLHelper.build(notify.getBody().toSendString());
-	    Element presence = XMLHelper.find(root, "/events/event/presence");
-	    Element basic = XMLHelper.find(root ,"/events/event/presence/basic");
-	    Element personal = XMLHelper.find(root, "/events/event/presence/personal");
-	    
-	    String uri = presence.getAttributeValue("uri");
-	    FetionBuddy buddy = client.getFetionStore().getBuddy(uri);
-	    if(buddy==null && client.getFetionUser().getUri().equals(uri)) {
-	    	buddy = client.getFetionUser();			//这里可能是用户自己
-	    }
-	    
-	    if(buddy!=null) {
-    	    //状态改变
-    	    if(basic!=null) {
-        	    int oldpresense = buddy.getPresence(); 
-        	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
-        	    if(oldpresense!=curpresense) {
-        	    	buddy.setPresence(curpresense);
-        	    	client.getNotifyListener().presenceChanged(buddy);
-        	    }
-    	    }
-    	    //好友信息改变
-    	    if(personal!=null) {
-    	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
+	    List list = XMLHelper.findAll(root, "/events/event/*presence");
+	    if(list==null)	return;
+	    Iterator it = list.iterator();
+	    while(it.hasNext()) {
+	    	Element presence = (Element) it.next();
+	    	Element basic = presence.getChild("basic");
+	 	    Element personal = presence.getChild("personal");
+    	    String uri = presence.getAttributeValue("uri");
+    	    FetionBuddy buddy = client.getFetionStore().getBuddy(uri);
+    	    if(buddy==null && client.getFetionUser().getUri().equals(uri)) {
+    	    	buddy = client.getFetionUser();			//这里可能是用户自己
     	    }
     	    
-    	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence()+"]");
-    	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
-	    }else {
-	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+uri);
+    	    if(buddy!=null) {
+        	    //状态改变
+        	    if(basic!=null) {
+            	    int oldpresense = buddy.getPresence(); 
+            	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
+            	    if(oldpresense!=curpresense) {
+            	    	buddy.setPresence(curpresense);
+            	    	client.getNotifyListener().presenceChanged(buddy);
+            	    }
+        	    }
+        	    //好友信息改变
+        	    if(personal!=null) {
+        	    	ParseHelper.parseBuddyPersonalBasic(buddy, personal);
+        	    }
+        	    
+        	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence()+"]");
+        	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
+    	    }else {
+    	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+uri);
+    	    }
 	    }
     }
 
