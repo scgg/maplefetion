@@ -33,5 +33,12 @@ package net.solosky.maplefetion.net;
  */
 public interface ITransferFactory
 {
+	/**
+	 * 建立传输对象
+	 * @param host		主机地址
+	 * @param port		主机端口
+	 * @return
+	 * @throws Exception
+	 */
 	public ITransfer createTransfer(String host, int port) throws Exception;
 }

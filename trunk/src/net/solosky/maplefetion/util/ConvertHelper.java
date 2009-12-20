@@ -211,5 +211,21 @@ public class ConvertHelper
         }
         return ret;
     }
+    
+    /**
+     * 把utf8字节数据转换为字符串
+     * @param src		utf8编码原字节数组
+     * @return			编码后的字符串
+     */
+    public static String byte2String(byte[] src)
+    {
+    	String ret = null;
+    	try {
+	        ret = new String(src, "UTF8");
+        } catch (UnsupportedEncodingException e) {
+        	//nerver happened..
+        }
+        return ret;
+    }
 
 }

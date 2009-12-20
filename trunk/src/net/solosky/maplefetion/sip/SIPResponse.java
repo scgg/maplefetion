@@ -63,7 +63,7 @@ public class SIPResponse extends SIPInMessage
 	public SIPResponse(String headline)
 	{
 		int start = SIPMessage.SIP_VERSION.length();
-		this.statusCode    = Integer.parseInt(headline.substring(start+1,start+3));		//响应状态代码
+		this.statusCode    = Integer.parseInt(headline.substring(start+1,start+4));		//响应状态代码
 		this.statusMessage = headline.substring(start+7);								//响应状态说明
 	}
 	/**
