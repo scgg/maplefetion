@@ -30,6 +30,8 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Iterator;
 
+import org.apache.log4j.Logger;
+
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPInMessage;
@@ -48,16 +50,22 @@ public class SIPMessageLogger
 {
 	private BufferedWriter writer;
 	private boolean enableLogging;
+	private static Logger logger = Logger.getLogger(SIPMessageLogger.class);
 	/**
 	 * 构造函数
 	 * @param fileName
 	 */
-	public SIPMessageLogger(String fileName) throws IOException
+	public SIPMessageLogger()
 	{
 		enableLogging = FetionConfig.SIP_MESSAGE_LOG_ENABLE;
 		if(!enableLogging)
 			return;
-		writer = new BufferedWriter(new FileWriter(FetionConfig.SIP_MESSAGE_LOG_DIR+fileName));
+		String fileName = FetionConfig.SIP_MESSAGE_LOG_DIR+Long.toString(System.currentTimeMillis())+".log";
+		try {
+			writer = new BufferedWriter(new FileWriter(fileName));
+		}catch (IOException e) {
+			logger.warn("Cannot create SIPMessage log file:"+fileName);
+		}
 	}
 	
 	/**

@@ -189,7 +189,7 @@ public abstract class AbstractDialog
 	     * @see net.solosky.maplefetion.net.ISIPMessageListener#SIPNotifyRecived(net.solosky.maplefetion.sip.SIPNotify)
 	     */
 	    @Override
-	    public void SIPNotifyRecived(SIPNotify notify)
+	    public void SIPNotifyReceived(SIPNotify notify)
 	    {
 	    	dispatcher.dispatchSIPNotify(notify);
 	    }
@@ -198,7 +198,7 @@ public abstract class AbstractDialog
 	     * @see net.solosky.maplefetion.net.ISIPMessageListener#SIPResponseRecived(net.solosky.maplefetion.sip.SIPResponse, net.solosky.maplefetion.sip.SIPRequest)
 	     */
 	    @Override
-	    public void SIPResponseRecived(SIPResponse response, SIPRequest request)
+	    public void SIPResponseReceived(SIPResponse response, SIPRequest request)
 	    {
 	    	dispatcher.dispatchSIPResponse(response, request);
 	    }

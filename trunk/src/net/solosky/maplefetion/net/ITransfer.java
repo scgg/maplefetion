@@ -67,10 +67,11 @@ public interface ITransfer
 	/**
 	 * 启动传输
 	 */
-	public void startTransfer();
+	public void startTransfer() throws Exception;
 	
 	/**
 	 * 停止传输
+	 * @throws Exception 
 	 */
-	public void stopTransfer();
+	public void stopTransfer() throws Exception;
 }

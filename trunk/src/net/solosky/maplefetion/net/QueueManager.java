@@ -214,7 +214,7 @@ public class QueueManager
         	try {
         		logger.debug("TimeOutCheckTask is checking sended queue..[QueueSize:"+sendQueue.size()+"]");
 	            checkTimeOutMessage();
-            } catch (IOException e) {
+            } catch (Exception e) {
             	logger.warn("Exception caught when run TimeOutCheckTask..");
             	transfer.getSIPMessageListener().ExceptionCaught(e);
             }

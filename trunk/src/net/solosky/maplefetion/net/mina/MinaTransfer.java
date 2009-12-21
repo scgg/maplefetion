@@ -27,13 +27,11 @@ package net.solosky.maplefetion.net.mina;
 
 import java.io.IOException;
 
+import net.solosky.maplefetion.net.AbstractTransfer;
+import net.solosky.maplefetion.sip.SIPOutMessage;
+
 import org.apache.log4j.Logger;
 import org.apache.mina.core.session.IoSession;
-
-import net.solosky.maplefetion.net.ISIPMessageListener;
-import net.solosky.maplefetion.net.ITransfer;
-import net.solosky.maplefetion.net.QueueManager;
-import net.solosky.maplefetion.sip.SIPOutMessage;
 
 /**
  *
@@ -41,23 +39,12 @@ import net.solosky.maplefetion.sip.SIPOutMessage;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class MinaTransfer implements ITransfer
-{
-
-	/**
-	 * 队列刮管理对象
-	 */
-	private QueueManager queueManager;
-	
+public class MinaTransfer extends AbstractTransfer
+{	
 	/**
 	 * 会话对象，一个对象代表了一个连接
 	 */
 	private IoSession session;
-	
-	/**
-	 * SIP信令监听器
-	 */
-	private ISIPMessageListener listener;
 	
 	/**
 	 * Logger
@@ -71,64 +58,35 @@ public class MinaTransfer implements ITransfer
 	 */
 	public MinaTransfer(IoSession session)
 	{
+		super();
 		this.session = session;
-		this.queueManager = new QueueManager(this);
 		this.session.setAttribute("TRANSFER", this);
 	}
 	
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getQueueManager()
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doSendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
      */
     @Override
-    public QueueManager getQueueManager()
+    protected void doSendSIPMessage(SIPOutMessage outMessage)
+            throws IOException
     {
-    	return queueManager;
+    	 this.session.write(outMessage);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getSIPMessageListener()
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doStartTransfer()
      */
     @Override
-    public ISIPMessageListener getSIPMessageListener()
-    {
-	    return this.listener;
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#sendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
-     */
-    @Override
-    public void sendSIPMessage(SIPOutMessage outMessage) throws IOException
-    {
-	   this.session.write(outMessage);
-	   if(outMessage.isNeedAck()) {
-		   this.queueManager.sendedSIPMessage(outMessage);
-	   }
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#setSIPMessageListener(net.solosky.maplefetion.net.ISIPMessageListener)
-     */
-    @Override
-    public void setSIPMessageListener(ISIPMessageListener listener)
-    {
-    	this.listener = listener;
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#startTransfer()
-     */
-    @Override
-    public void startTransfer()
+    protected void doStartTransfer() throws Exception
     {
     	logger.debug("MinaTransfer started:"+this.session);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#stopTransfer()
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doStopTransfer()
      */
     @Override
-    public void stopTransfer()
+    protected void doStopTransfer() throws Exception
     {
     	this.session.close(false);
     	logger.debug("MinaTransfer stoped:"+this.session);

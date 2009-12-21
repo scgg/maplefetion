@@ -44,13 +44,13 @@ public interface ISIPMessageListener
 	 * @param response	SIP回复
 	 * @param reqeust   对应的请求
 	 */
-	public void SIPResponseRecived(SIPResponse response, SIPRequest request);
+	public void SIPResponseReceived(SIPResponse response, SIPRequest request);
 	
 	/**
 	 * 接受到了SIP通知的回调函数
 	 * @param notify	SIP通知
 	 */
-	public void SIPNotifyRecived(SIPNotify notify);
+	public void SIPNotifyReceived(SIPNotify notify);
 	
 	/**
 	 * 发生了异常回调函数

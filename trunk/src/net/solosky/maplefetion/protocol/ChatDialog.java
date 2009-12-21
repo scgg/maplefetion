@@ -128,19 +128,19 @@ public class ChatDialog extends AbstractDialog
     }
     
 	/**
-	 * 发送聊天消息
-	 * @param uri
-	 * @param content
-	 * @throws IOException 
-	 */
-	public boolean sendChatMessage(String uri, String content) throws IOException
-	{
-		this.updateActiveTime();
-		SIPRequest request  = this.messageFactory.createChatMessageRequest(uri, content);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
-		return response.getStatusCode()==200 || response.getStatusCode()==280;
-	}
+     * 发送聊天消息
+     * @param uri
+     * @param content
+     * @throws IOException 
+     */
+    public boolean sendChatMessage(String uri, String content) throws Exception
+    {
+    	this.updateActiveTime();
+    	SIPRequest request  = this.messageFactory.createChatMessageRequest(uri, content);
+    	this.transfer.sendSIPMessage(request);
+    	SIPResponse response = request.waitRepsonse();
+    	return response.getStatusCode()==200 || response.getStatusCode()==280;
+    }
 	
 	/**
 	 * 异步发送聊天信息

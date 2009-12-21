@@ -37,6 +37,7 @@ import java.util.Iterator;
 import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionCord;
+import net.solosky.maplefetion.net.mina.MinaTransferFactory;
 import net.solosky.maplefetion.net.tcp.TCPTransferFactory;
 import net.solosky.maplefetion.protocol.ChatDialog;
 import net.solosky.maplefetion.store.IFetionStore;
@@ -93,7 +94,7 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
 	{
 		this.client = new MapleFetionClient(mobileNo,
 											pass,
-											new TCPTransferFactory(),
+											new MinaTransferFactory(),
 											new SimpleFetionStore(),
 											this,
 											this);

@@ -30,9 +30,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.Socket;
 
-import net.solosky.maplefetion.net.ISIPMessageListener;
-import net.solosky.maplefetion.net.ITransfer;
-import net.solosky.maplefetion.net.QueueManager;
+import net.solosky.maplefetion.net.AbstractTransfer;
 import net.solosky.maplefetion.sip.SIPBody;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPMessage;
@@ -42,7 +40,6 @@ import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
 import net.solosky.maplefetion.util.ByteArrayBuffer;
 import net.solosky.maplefetion.util.ConvertHelper;
-import net.solosky.maplefetion.util.SIPMessageLogger;
 
 import org.apache.log4j.Logger;
 
@@ -52,7 +49,7 @@ import org.apache.log4j.Logger;
  *
  * @author solosky <solosky772@qq.com> 
  */
-public class TCPTransfer implements ITransfer
+public class TCPTransfer extends AbstractTransfer
 {
 
 	/**
@@ -60,15 +57,6 @@ public class TCPTransfer implements ITransfer
 	 */
 	private Thread readThread;
 	
-	/**
-	 * 队列管理器
-	 */
-	private QueueManager queueManager;
-	
-	/**
-	 * 监听器
-	 */
-	private ISIPMessageListener listener;
 	
 	/**
 	 * SOCKET
@@ -95,11 +83,6 @@ public class TCPTransfer implements ITransfer
 	private static Logger logger = Logger.getLogger(TCPTransfer.class);
 	
 	/**
-	 * 信令记录器
-	 */
-	private SIPMessageLogger messageLogger;
-	
-	/**
 	 * 关闭标志
 	 */
 	private volatile boolean closeFlag;
@@ -112,92 +95,14 @@ public class TCPTransfer implements ITransfer
 	 */
 	public TCPTransfer(String host, int port) throws IOException
 	{
+		super();
 		socket = new Socket(host, port);
 	    reader = socket.getInputStream();
 	    writer = socket.getOutputStream();
 	    buffer = new ByteArrayBuffer(20480);
-	    queueManager = new QueueManager(this); 
 	    closeFlag = false;
-		messageLogger = new SIPMessageLogger(host+".log");
 	}
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.SIPMessageTransfer#sendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
-     */
-    @Override
-    public void sendSIPMessage(SIPOutMessage outMessage) throws IOException
-    {
-    	writer.write(ConvertHelper.string2Byte(outMessage.toSendString()));
-    	writer.flush();
-    	//如果需要回复才放入发送队列
-    	if(outMessage.isNeedAck()) {
-    		queueManager.sendedSIPMessage(outMessage);
-    	}
-    	messageLogger.logSIPMessage(outMessage);
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.SIPMessageTransfer#setSIPMessageListener(net.solosky.maplefetion.net.SIPMessageListener)
-     */
-    @Override
-    public void setSIPMessageListener(ISIPMessageListener listener)
-    {
-    	this.listener = listener;
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.SIPMessageTransfer#startTransfer()
-     */
-    @Override
-    public void startTransfer()
-    {
-    	Runnable readRunner = new Runnable()
-	    {
-            public void run()
-            {
-            	try {
-            		logger.debug("The read thread of transfer started:"+socket.getInetAddress());
-	                loopReadSIPMessage();
-                } catch (Throwable e) {
-                	if(!closeFlag) {
-                    	listener.ExceptionCaught(e);
-                	}else {
-                		logger.debug("connection closed by user:"+socket.getInetAddress());
-                	}
-                }
-            }
-	    };
-	    
-	    readThread = new Thread(readRunner);
-	    readThread.setName("Transfer:"+socket.getInetAddress());
-	    
-	    readThread.start();
-	    
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.SIPMessageTransfer#stopTransfer()
-     */
-    @Override
-    public void stopTransfer()
-    {
-    	try {
-    		//关闭流
-    		closeFlag = true;
-	        reader.close();
-	        writer.close();
-	        messageLogger.close();
-	        
-	        //停止已发送队列超时检查任务
-	        queueManager.getTimeOutCheckTask().cancel();
-	        
-	        //中断线程
-	        readThread.interrupt();
-        } catch (IOException e) {
-	       logger.warn("IOException occured when closing stream..");
-        }
-    	
-    }
-    
+	
     /**
      * 读取一行字符
      * @param buffer	缓存对象
@@ -238,13 +143,10 @@ public class TCPTransfer implements ITransfer
     		if(head.startsWith(SIPMessage.SIP_VERSION)) {
         		//如果是SIP-C/2.0 xxx msg...，表明是一个回复
     			SIPResponse response = this.readResponse(head);
-    			SIPRequest  request = (SIPRequest) this.queueManager.findSIPMessage(response);
-    			this.messageLogger.logSIPMessage(response);
-    			this.listener.SIPResponseRecived(response, request);
+    			this.responseReceived(response);
     		}else {	//表明是服务器发回的通知
     			SIPNotify notify = this.readNotify(head);
-    			this.messageLogger.logSIPMessage(notify);
-    			this.listener.SIPNotifyRecived(notify);
+    			this.notifyReceived(notify);
     		}
     	}
     }
@@ -337,21 +239,59 @@ public class TCPTransfer implements ITransfer
     	return body;
     }
     
+
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getSIPMessageListener()
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doSendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
      */
     @Override
-    public ISIPMessageListener getSIPMessageListener()
+    protected void doSendSIPMessage(SIPOutMessage outMessage)
+            throws IOException
     {
-    	return this.listener;
+    	writer.write(ConvertHelper.string2Byte(outMessage.toSendString()));
+    	writer.flush();
+	    
     }
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getQueueManager()
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doStartTransfer()
      */
     @Override
-    public QueueManager getQueueManager()
+    protected void doStartTransfer() throws Exception
     {
-	   return this.queueManager;
+    	Runnable readRunner = new Runnable()
+	    {
+            public void run()
+            {
+            	try {
+            		logger.debug("The read thread of transfer started:"+socket.getInetAddress());
+	                loopReadSIPMessage();
+                } catch (Throwable e) {
+                	if(!closeFlag) {
+                    	exceptionCaught(e);
+                	}else {
+                		logger.debug("connection closed by user:"+socket.getInetAddress());
+                	}
+                }
+            }
+	    };
+	    
+	    readThread = new Thread(readRunner);
+	    readThread.setName("Transfer:"+socket.getInetAddress());
+	    
+	    readThread.start();
+	    
+    }
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.AbstractTransfer#doStopTransfer()
+     */
+    @Override
+    protected void doStopTransfer() throws Exception
+    {
+    		//关闭流
+    		closeFlag = true;
+	        reader.close();
+	        writer.close();
+	        //中断线程
+	        readThread.interrupt();
     }
 
 }
