@@ -270,6 +270,19 @@ public class MapleFetionClient implements IFetionClient
 	}
 	
 	/**
+	 * 释放资源
+	 * 在客户端出错或者关闭的时候释放资源
+	 * @throws Exception 
+	 */
+	private void dispose() throws Exception
+	{
+    	this.serverDialog.closeDialog();
+    	this.chatDialogFactory.closeAllChatDialog();
+    	this.globalTimer.cancel();
+    	this.transferFactory.closeFactory();
+	}
+	
+	/**
 	 * 发送手机短信
 	 * @param uri		发送的uri,注意这里的应该是好友飞信的URI
 	 * @param content	发送的内容
@@ -490,15 +503,14 @@ public class MapleFetionClient implements IFetionClient
     {
 	    return serverDialog.setPresence(presence);
     }
-
+    
 	/**
 	 * 退出登录
 	 * @throws Exception
 	 */
 	public void logout() throws Exception
 	{
-		this.chatDialogFactory.closeAllChatDialog();
-		this.serverDialog.closeDialog();
+		this.dispose();
 	}
 	
 	/* (non-Javadoc)
@@ -593,9 +605,7 @@ public class MapleFetionClient implements IFetionClient
     public void exceptionCaught(Throwable exception)
     {
     	try {
-        	this.serverDialog.closeDialog();
-        	this.chatDialogFactory.closeAllChatDialog();
-        	this.globalTimer.cancel();
+    		this.dispose();
         	this.notifyListener.exceptionCaught(exception);
     	}catch (Exception e) {
 			// TODO: handle exception

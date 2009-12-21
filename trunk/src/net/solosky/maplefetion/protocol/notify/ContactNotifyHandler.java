@@ -97,7 +97,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     				while(it.hasNext()) {
     					Element m = (Element) it.next();
     					//这里可能的值有 score sms feike show rtm, 这里只处理score TODO ..处理其他的。。
-    					if(m.getAttributeValue("type").equals("score")) {
+    					if(m.getAttribute("type")!=null&&m.getAttributeValue("type").equals("score")) {
     						Element s = m.getChild("score");
     						buddy.setLevel(Integer.parseInt(s.getAttributeValue("value")));
     					}

@@ -41,4 +41,9 @@ public interface ITransferFactory
 	 * @throws Exception
 	 */
 	public ITransfer createTransfer(String host, int port) throws Exception;
+	
+	/**
+	 * 关闭这个连接工厂
+	 */
+	public void closeFactory();
 }

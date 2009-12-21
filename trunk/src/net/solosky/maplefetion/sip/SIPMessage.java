@@ -74,7 +74,7 @@ public abstract class SIPMessage
 		Iterator<SIPHeader> it = headers.iterator();
 		while(it.hasNext()) {
 			SIPHeader header = it.next();
-			if(header.getName().equals(name))
+			if(header.getName()!=null&&header.getName().equals(name))
 				return header;
 		}
 		return null;

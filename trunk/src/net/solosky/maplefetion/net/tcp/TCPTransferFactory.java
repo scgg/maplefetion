@@ -46,4 +46,13 @@ public class TCPTransferFactory implements ITransferFactory
 	    return new TCPTransfer(host, port);
     }
 
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransferFactory#closeFactory()
+     */
+    @Override
+    public void closeFactory()
+    {
+	    //Do nothing...
+    }
+
 }

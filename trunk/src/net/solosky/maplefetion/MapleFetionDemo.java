@@ -48,7 +48,7 @@ import net.solosky.maplefetion.store.SimpleFetionStore;
  *	
  * @author solosky <solosky772@qq.com> 
  */
-public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallback
+public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageCallback
 {
 	
 	/**
@@ -89,7 +89,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 	/**
 	 * 构造函数
 	 */
-	public MapleFetion(long mobileNo, String pass)
+	public MapleFetionDemo(long mobileNo, String pass)
 	{
 		this.client = new MapleFetionClient(mobileNo,
 											pass,
@@ -824,7 +824,7 @@ public class MapleFetion implements INotifyListener,ILoginListener,IMessageCallb
 			System.out.println("参数不正确，用法：java -d MapleFetion.jar net.solosky.maplefetion.MapleFetion 手机号码 飞信密码");
 		}else {
 			try {
-				MapleFetion  fetion = new MapleFetion(Long.parseLong(args[0]), args[1]);
+				MapleFetionDemo  fetion = new MapleFetionDemo(Long.parseLong(args[0]), args[1]);
 	            if(fetion.login()) {
 	            	fetion.mainloop();
 	            }

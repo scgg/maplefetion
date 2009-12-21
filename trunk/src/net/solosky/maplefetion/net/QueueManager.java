@@ -64,6 +64,7 @@ public class QueueManager
 	 */
 	private TimerTask timeOutCheckTask;
 	
+	
 	/**
 	 * 日志记录
 	 */
@@ -132,7 +133,7 @@ public class QueueManager
 	 * @throws IOException 
 	 */
 	private synchronized void checkTimeOutMessage() throws IOException
-	{
+	{	
 		SIPOutMessage out = null;
 		int curtime = (int) System.currentTimeMillis()/1000;
 		//如果队列为空就不需要查找了

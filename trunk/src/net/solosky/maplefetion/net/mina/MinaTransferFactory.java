@@ -110,4 +110,13 @@ public class MinaTransferFactory implements ITransferFactory
     	return this.ioHandler;
     }
 
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransferFactory#closeFactory()
+     */
+    @Override
+    public void closeFactory()
+    {
+	    this.connector.dispose();
+    }
+
 }
