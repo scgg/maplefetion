@@ -25,8 +25,6 @@
  */
 package net.solosky.maplefetion.net.mina;
 
-import java.io.IOException;
-
 import net.solosky.maplefetion.sip.SIPBody;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPInMessage;
@@ -54,9 +52,40 @@ public class SIPProtocolDecoder implements ProtocolDecoder
 	 */
 	private ByteArrayBuffer headBuffer;
 	
-	private SIPInMessage tmpMessage;
+	/**
+	 * 当前解码的消息
+	 */
+	private SIPInMessage curMessage;
 		
-	private int contentBytesLeft;
+	/**
+	 * 消息体还需要读取的长度
+	 */
+	private int contentLeft;
+	
+	/**
+	 * 读取一行时上一个字符
+	 */
+	private int lineLast;
+	
+	/**
+	 * 上一次操作
+	 */
+	private int lastAction;
+	
+	/**
+	 * 有效字符掩码
+	 */
+	private static final int BYTE_MASK = 0x7FFFFFFF;
+	
+	/**
+	 * 操作常量
+	 */
+	private static final int ACTION_NONE = 0x00;
+	private static final int ACTION_READ_RETURN = 0x01;
+	private static final int ACTION_READ_HEADER = 0x02;
+	private static final int ACTION_READ_CONTENT = 0x03;
+	
+	
 	
 	/**
 	 * 默认构造函数
@@ -64,7 +93,9 @@ public class SIPProtocolDecoder implements ProtocolDecoder
 	public SIPProtocolDecoder()
 	{
 		this.headBuffer = new ByteArrayBuffer(20480);
-		this.contentBytesLeft = 0;
+		this.contentLeft = 0;
+		this.lastAction = ACTION_NONE;
+		this.lineLast = BYTE_MASK;
 	}
 	
 	/**
@@ -75,50 +106,85 @@ public class SIPProtocolDecoder implements ProtocolDecoder
             throws Exception
     {
     	while(buffer.hasRemaining()) {
-    		if(contentBytesLeft>0) {
-    			this.readSIPBody(buffer);
-    			if(contentBytesLeft>0) {	//如果仍还有部分正文字节没有读完，等待下一个缓冲对象继续读取
-    				return;		
-    			}else {						//如果已经读完，返回这个信令对象
-    				this.tmpMessage.setBody(new SIPBody( ConvertHelper.byte2String(headBuffer.toByteArray())));
-    				output.write(tmpMessage);
-    	    	 	tmpMessage = null;
-    	    	 	continue;				//继续下一次读取
+    		switch(lastAction)
+    		{
+    		case ACTION_READ_RETURN:
+    		case ACTION_NONE:
+    			String headline = this.readLine(buffer);
+        	 	if(headline==null) {
+        	 		lastAction = ACTION_READ_RETURN;
+        	 		break;
+        	 	}
+        	 	if(this.readSIPMessage(buffer, headline)) {
+        	 		this.flushSIPMessage(output);
+        	 	}
+        	 	break;
+        	 	
+    		case ACTION_READ_HEADER:
+    			if(this.readSIPBody(buffer)&&this.readSIPBody(buffer)) {
+    				this.flushSIPMessage(output);
     			}
-    		}else {
-        	 	String headline = this.readLine(buffer);
-        	 	if(headline.startsWith(SIPMessage.SIP_VERSION)) {
-        	 		this.readResponse(buffer, headline);	//SIP-C/2.0 200 OK
-        	 	}else {
-        	 		
-        	 		this.readNotify(buffer, headline);		//BN 685592830 SIP-C/2.0
-        	 	}
-        	 	if(contentBytesLeft==0) {
-            	 	output.write(tmpMessage);
-            	 	tmpMessage = null;
-        	 	}
+    			break;
+    		
+    		case ACTION_READ_CONTENT:
+    			if(this.readSIPBody(buffer)) {
+    				this.flushSIPMessage(output);
+    			}
+    			break;
+    		default:
+    			break;
     		}
     	}
     }
 
-	/* (non-Javadoc)
-     * @see org.apache.mina.filter.codec.ProtocolDecoder#dispose(org.apache.mina.core.session.IoSession)
-     */
+	/**
+	 * 这个函数是在每次解码结束后清理资源，这里不做任何处理
+	 */
     @Override
     public void dispose(IoSession session) throws Exception
     {
-    	//这个函数是在每次解码结束后清理资源，这里不做任何处理
+    	//Do nothing.... 
     }
 
-	/* (non-Javadoc)
-     * @see org.apache.mina.filter.codec.ProtocolDecoder#finishDecode(org.apache.mina.core.session.IoSession, org.apache.mina.filter.codec.ProtocolDecoderOutput)
-     */
+	/**
+	 * 当这个IoSession关闭时候调用
+	 */
     @Override
     public void finishDecode(IoSession arg0, ProtocolDecoderOutput arg1)
             throws Exception
     {
-	    // TODO 当这个IoSession关闭时候调用
-	    
+	    // Do nothing.... 
+    }
+    
+    /**
+     * 把当前对象刷新至下一个处理器
+     */
+    private void flushSIPMessage(ProtocolDecoderOutput output)
+    {
+    	output.write(this.curMessage);
+	 	this.curMessage = null;
+	 	this.lastAction = ACTION_NONE;
+	 	this.lineLast = BYTE_MASK;
+    }
+    
+    /**
+     * 读取SIP信令
+     * @param buffer 	缓存对象
+     * @param head		首行信息
+     */
+    private boolean readSIPMessage(IoBuffer buffer,String headline)
+    {
+    	if(headline.startsWith(SIPMessage.SIP_VERSION)) {
+    		this.curMessage = new SIPResponse(headline);	//SIP-C/2.0 200 OK
+	 	}else {
+	 		this.curMessage = new SIPNotify(headline);		//BN 685592830 SIP-C/2.0
+	 	}
+
+		if(this.readSIPHeaders(buffer)) {
+			return this.readSIPBody(buffer);
+		}else {
+			return false;
+		}
     }
     
     
@@ -129,101 +195,87 @@ public class SIPProtocolDecoder implements ProtocolDecoder
      */
     public String readLine(IoBuffer buffer)
     {
-    	headBuffer.clear();
-    	int cur  = 0x7FFFFFFF;
-    	int last = 0x7FFFFFFF;
+    	int cur  = BYTE_MASK;
+    	int last = BYTE_MASK;
+    	boolean end = false;
+    	if(lineLast==BYTE_MASK) {
+    		headBuffer.clear();
+        }else {
+        	last = lineLast;
+        }
+    	
     	while(buffer.hasRemaining()) {
     		cur = buffer.get();
     		//0x0D 0x0A为行结束符
     		if(last==0x0D && cur==0x0A) {
+    			end = true;
     			break;
-    		}else if(last==0x7FFFFFFF) {
+    		}else if(last==BYTE_MASK) {
     			last = cur;
     		}else {
     			headBuffer.append(last);
     			last = cur;
     		}
-    	}  	
-    	return new String(headBuffer.toByteArray());
+    	} 
+    	if(end) {
+    		lineLast = BYTE_MASK;
+    		return ConvertHelper.byte2String(headBuffer.toByteArray());
+    	}else {
+    		lineLast = last;
+    		return null;
+    	}
+    	
     }
-    
     
     /**
-     * 读取一行消息头
+     * 读取所有消息头
      * @param buffer		缓存对象
-     * @return				消息头
+     * @return				如果读取完毕返回true否则返回false
      */
-    private SIPHeader readSIPHeader(IoBuffer buffer)
+    private boolean readSIPHeaders(IoBuffer buffer)
     {
-    	SIPHeader header = null;
-    	String headline = this.readLine(buffer);
-    	if(headline.length()>0)
-    		header = new SIPHeader(headline);
-    	
-    	return header;
+    	while(true) {
+        	String headline = this.readLine(buffer);
+        	if(headline==null) {
+        		lastAction = ACTION_READ_HEADER;
+        		return false;
+        	}else if(headline.length()==0) {
+        		lastAction = ACTION_NONE;
+        		return true;
+        	}else {
+        		curMessage.addHeader(new SIPHeader(headline));
+        	}
+    	}
     }
+    
     
     /**
      * 读取消息体
      * @param buffer		缓存对象
-     * @param length		消息正文长度
-     * @return				消息正文对象
+     * @return		如果读取完毕返回true否则返回false
      */
-    private void readSIPBody(IoBuffer buffer)
+    private boolean readSIPBody(IoBuffer buffer)
     {
-    	for(; buffer.hasRemaining() && contentBytesLeft>0; contentBytesLeft--)
-    		this.headBuffer.append(buffer.get());
-    }
-    
-    
-    /**
-     * 读取一个服务器回复
-     * @param buffer 	缓存对象
-     * @param head		首行信息
-     */
-    private void readResponse(IoBuffer buffer,String headline)
-    {
-		this.tmpMessage = new SIPResponse(headline);
-
-		//读取消息头
-		SIPHeader header = null;
-		while((header=this.readSIPHeader(buffer))!=null)
-				this.tmpMessage.addHeader(header);
-		
-		//读取消息正文
-		if(this.tmpMessage.getLength()>0) {
-			this.contentBytesLeft = this.tmpMessage.getLength();
-			this.headBuffer.clear();
-			this.readSIPBody(buffer);
-			if(this.contentBytesLeft==0) {
-				this.tmpMessage.setBody(new SIPBody( ConvertHelper.byte2String(headBuffer.toByteArray())));
-			}
-		}
-    }
-    
-    /**
-     * 读取服务器发送的通知，如BN，M
-     * @param head		首行信息
-     */
-    private void readNotify(IoBuffer buffer, String headline) throws IOException
-    {
-    	//BN 685592830 SIP-C/2.0
-    	this.tmpMessage = new SIPNotify(headline);
+    	if(this.lastAction==ACTION_NONE) {
+    		if(this.curMessage.getLength()>0) {
+    			this.contentLeft = this.curMessage.getLength();
+    			this.headBuffer.clear();
+    		}else {
+    			lastAction = ACTION_NONE;
+    			return true;
+    		}
+    	}
     	
-    	//读取消息头
-		SIPHeader header = null;
-		while((header=this.readSIPHeader(buffer))!=null)
-			this.tmpMessage.addHeader(header);
-		
-		//读取消息正文
-		if(this.tmpMessage.getLength()>0) {
-			this.contentBytesLeft = this.tmpMessage.getLength();
-			this.headBuffer.clear();
-			this.readSIPBody(buffer);
-			if(this.contentBytesLeft==0) {
-				this.tmpMessage.setBody(new SIPBody( ConvertHelper.byte2String(headBuffer.toByteArray())));
-			}
-		}
+    	for(; buffer.hasRemaining() && this.contentLeft>0; this.contentLeft--)
+    		this.headBuffer.append(buffer.get());
+    	if(this.contentLeft==0) {
+    		this.curMessage.setBody(new SIPBody( ConvertHelper.byte2String(this.headBuffer.toByteArray())));
+    		this.lastAction = ACTION_NONE;
+    		return true;
+    	}else {
+    		this.lastAction = ACTION_READ_CONTENT;
+    		return false;
+    	}
     }
-
+    
 }

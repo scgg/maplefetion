@@ -28,7 +28,9 @@ package net.solosky.maplefetion.net.mina;
 import java.io.IOException;
 
 import net.solosky.maplefetion.net.AbstractTransfer;
+import net.solosky.maplefetion.sip.SIPNotify;
 import net.solosky.maplefetion.sip.SIPOutMessage;
+import net.solosky.maplefetion.sip.SIPResponse;
 
 import org.apache.log4j.Logger;
 import org.apache.mina.core.session.IoSession;
@@ -91,5 +93,28 @@ public class MinaTransfer extends AbstractTransfer
     	this.session.close(false);
     	logger.debug("MinaTransfer stoped:"+this.session);
     }
+
+    /**
+     * 因为MinaTransfer是由IoHandler调用的，但recieved的两个方法都是保护的，外部能访问，所以这里需要使用两个适配器转发
+     * @param notify
+     * @throws IOException
+     */
+    public void minaNotifyReceived(SIPNotify notify) throws IOException
+    {
+	    super.notifyReceived(notify);
+    }
+
+    /**
+     * 转发至父类的方法
+     * @param response
+     * @throws IOException
+     */
+    public void minaResponseReceived(SIPResponse response) throws IOException
+    {
+	    super.responseReceived(response);
+    }
+    
+    
+    
 
 }

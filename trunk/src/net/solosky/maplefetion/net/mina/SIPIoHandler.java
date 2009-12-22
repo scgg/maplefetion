@@ -72,13 +72,10 @@ public class SIPIoHandler extends IoHandlerAdapter
 	    	
 			if( transfer!=null) {
 	    		if(tmpMessage instanceof SIPNotify) {				//收到了异步通知
-	    			transfer.getSIPMessageListener().SIPNotifyReceived((SIPNotify) tmpMessage);
+	    			transfer.minaNotifyReceived((SIPNotify) tmpMessage);
 	    		}else if(tmpMessage instanceof SIPResponse) {		//收到了回复
-	    			//找到回复对应的请求
-	    			SIPResponse response = (SIPResponse) tmpMessage;
-	    			SIPRequest  request = (SIPRequest) transfer.getQueueManager().findSIPMessage(response);
 	    			//通知监听器，收到了消息
-	    			transfer.getSIPMessageListener().SIPResponseReceived(response, request);
+	    			transfer.minaResponseReceived((SIPResponse) tmpMessage);
 	    		}else {												//其他未知回复。。不会发生的情况
 	    			logger.warn("Unknown SIPMessage:"+message);
 	    		}

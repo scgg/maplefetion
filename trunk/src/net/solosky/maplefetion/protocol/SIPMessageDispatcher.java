@@ -92,7 +92,11 @@ public class SIPMessageDispatcher
 				logger.warn("SIPResponseHandlerException [" + request.getResponseHandler().getClass().getName()+ "]:" + e);
 			}
 		} else {
-			request.setResponse(response);
+			if(request!=null) {
+				request.setResponse(response);
+			}else {
+				logger.warn("Unknown Response:[ "+response+"]");
+			}
 		}
 
 	}
@@ -105,9 +109,18 @@ public class SIPMessageDispatcher
 	 */
 	public void dispatchSIPNotify(SIPNotify notify)
 	{
+			if(notify==null)	return;
     		String method = notify.getMethod();
+    		if(method==null) {
+    			logger.warn("Unknown Notify method:["+notify+"]");
+    		}
     		String clazz = "net.solosky.maplefetion.protocol.notify.";
     		if (method.equals(SIPMethod.METHOD_BENOTIFY)) {
+    			SIPHeader eventHeader = notify.getHeader(SIPHeader.FIELD_EVENT);
+    			if(eventHeader==null || eventHeader.getValue()==null) {
+    				logger.warn("Unknown Notify event:["+notify+"]");
+    				return;
+    			}
     			String event = notify.getHeader(SIPHeader.FIELD_EVENT).getValue();
     			if (event.equals("presence")) {
     				clazz += "PresenceSIPNotifyHandler";					//好友在线状态改变

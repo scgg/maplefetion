@@ -50,6 +50,7 @@ public class SIPMessageLogger
 {
 	private BufferedWriter writer;
 	private boolean enableLogging;
+	private boolean isClosed;
 	private static Logger logger = Logger.getLogger(SIPMessageLogger.class);
 	/**
 	 * 构造函数
@@ -66,6 +67,7 @@ public class SIPMessageLogger
 		}catch (IOException e) {
 			logger.warn("Cannot create SIPMessage log file:"+fileName);
 		}
+		isClosed = false;
 	}
 	
 	/**
@@ -109,8 +111,8 @@ public class SIPMessageLogger
 		
 		writer.append("发送信令:>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n");
 		writer.append(out.toSendString());
-		writer.flush();
 		writer.append("\r\n--------------------------------------------\r\n");
+		writer.flush();
 	}
 	
 	/**
@@ -119,9 +121,11 @@ public class SIPMessageLogger
 	 */
 	public void close() throws IOException
 	{
-		if(!enableLogging)
+		if(!enableLogging || !isClosed || writer==null)
 			return;
-		writer.close();
+		else {
+			writer.close();
+		}
 	}
 	
 }

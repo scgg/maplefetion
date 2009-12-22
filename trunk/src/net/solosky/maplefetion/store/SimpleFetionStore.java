@@ -76,6 +76,7 @@ public class SimpleFetionStore implements IFetionStore
      */
 	public boolean hasBuddy(String uri)
 	{
+		if(uri==null)	return false;
 		return this.buddyList.containsKey(uri);
 	}
 	
@@ -84,14 +85,16 @@ public class SimpleFetionStore implements IFetionStore
      */
 	public FetionBuddy getBuddy(String uri)
 	{
+		if(uri==null)	return null;
 		return this.buddyList.get(uri);
 	}
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.store.IFetionStore#removeBuddy(java.lang.String)
      */
-	public void removeBuddy(String uid)
+	public void removeBuddy(String uri)
 	{
-		this.buddyList.remove(uid);
+		if(uri==null)	return;
+		this.buddyList.remove(uri);
 	}
 	
 	/* (non-Javadoc)
@@ -151,6 +154,7 @@ public class SimpleFetionStore implements IFetionStore
     @Override
     public void deleteBuddy(String uri)
     {
+    	if(uri==null)	return;
 	    this.buddyList.remove(uri);  
     }
 

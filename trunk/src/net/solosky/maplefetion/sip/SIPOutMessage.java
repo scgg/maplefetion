@@ -58,7 +58,7 @@ public abstract class SIPOutMessage extends SIPMessage
 	public SIPOutMessage()
 	{
 		this.needAck = true;		//默认需要回复
-		this.aliveTime = ((int) System.currentTimeMillis()/1000)+30;	//存活时间为发出去后的30秒
+		this.aliveTime = ((int) System.currentTimeMillis()/1000)+60;	//存活时间为发出去后的60秒
 		this.retryTimes = 0;		//重发次数重置为0,最多只能重发3次。。。
 	}
 	

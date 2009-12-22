@@ -66,7 +66,7 @@ public class SIPNotify extends SIPInMessage
     	int fb = headline.indexOf(' ');
     	int nb = headline.indexOf(' ', fb+1);
     	this.method = headline.substring(0,fb);			//通知方法
-    	this.sid    = Integer.parseInt(headline.substring(fb+1,nb));		//SID
+    	//this.sid    = Integer.parseInt(headline.substring(fb+1,nb));		//SID
 	}
 	
 	

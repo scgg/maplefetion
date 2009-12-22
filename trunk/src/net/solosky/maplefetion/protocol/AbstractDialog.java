@@ -181,7 +181,8 @@ public abstract class AbstractDialog
 	    @Override
 	    public void ExceptionCaught(Throwable exception)
 	    {
-	    	logger.warn("TCPTransfer Exception:"+exception);
+	    	logger.warn("Transfer Exception:"+exception);
+	    	exception.printStackTrace();
 	    	excetionCaught(exception);
 	    }
 

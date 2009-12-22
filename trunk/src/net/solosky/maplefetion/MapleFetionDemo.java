@@ -38,7 +38,6 @@ import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionCord;
 import net.solosky.maplefetion.net.mina.MinaTransferFactory;
-import net.solosky.maplefetion.net.tcp.TCPTransferFactory;
 import net.solosky.maplefetion.protocol.ChatDialog;
 import net.solosky.maplefetion.store.IFetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
@@ -164,7 +163,7 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
 	 public void welcome() throws Exception
 	{
 		println("================================================");
-		println("|              MapleFetion 1.0 beta            |");
+		println("|              MapleFetion 1.0 beta2            |");
 		println("|----------------------------------------------|");
 		println("| Author:solosky <solosky772@qq.com>           |");
 		println("| Home:http://maplefetion.googlecode.com       |");

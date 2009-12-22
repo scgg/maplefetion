@@ -68,7 +68,7 @@ public class ServerDialog extends AbstractDialog
 	    super(client);
 	    this.transfer = client.getTransferFactory().createTransfer(host, port);
 	    this.transfer.setSIPMessageListener(this.messageListener);
-	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 15*1000);
+	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 30*1000);
 	    this.keepAliveTask =  new KeepAliveTimerTask();
     }
    

@@ -93,6 +93,8 @@ public class XMLHelper
 	 */
 	public static List findAll(Element tree, String path)
 	{
+		if(tree==null || path==null)	
+			return null;
 		if(path.charAt(0)=='/')
 			path = path.substring( path.indexOf('/', 1)+1);
 		String[] paths = path.split("/");
@@ -122,6 +124,8 @@ public class XMLHelper
 	 */
 	public static Element find(Element tree, String path)
 	{
+		if(tree==null || path==null)	
+			return null;
 		if(path.charAt(0)=='/')
 			path = path.substring( path.indexOf('/', 1)+1);
 		String[] paths = path.split("/");

@@ -51,7 +51,7 @@ public abstract class SIPInMessage extends SIPMessage
 	public int getCallID()
 	{
 		SIPHeader header = this.getHeader(SIPHeader.FIELD_CALLID);
-		return Integer.parseInt(header.getValue());
+		return header==null?-1:Integer.parseInt(header.getValue());
 	}
 	
 	/**
@@ -60,7 +60,8 @@ public abstract class SIPInMessage extends SIPMessage
 	 */
 	public String getSequence() 
 	{
-		return this.getHeader(SIPHeader.FIELD_SEQUENCE).getValue();
+		SIPHeader header = this.getHeader(SIPHeader.FIELD_SEQUENCE);
+		return header==null?null:header.getValue();
 	}
 	
 	/**
