@@ -80,9 +80,9 @@ public class SIPProtocolDecoder implements ProtocolDecoder
 	/**
 	 * 操作常量
 	 */
-	private static final int ACTION_NONE = 0x00;
-	private static final int ACTION_READ_RETURN = 0x01;
-	private static final int ACTION_READ_HEADER = 0x02;
+	private static final int ACTION_NONE 		= 0x00;
+	private static final int ACTION_READ_RETURN 	= 0x01;
+	private static final int ACTION_READ_HEADER 	= 0x02;
 	private static final int ACTION_READ_CONTENT = 0x03;
 	
 	
@@ -121,7 +121,7 @@ public class SIPProtocolDecoder implements ProtocolDecoder
         	 	break;
         	 	
     		case ACTION_READ_HEADER:
-    			if(this.readSIPBody(buffer)&&this.readSIPBody(buffer)) {
+    			if(this.readSIPHeaders(buffer)&&this.readSIPBody(buffer)) {
     				this.flushSIPMessage(output);
     			}
     			break;

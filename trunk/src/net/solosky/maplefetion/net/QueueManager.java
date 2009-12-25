@@ -33,6 +33,7 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPInMessage;
 import net.solosky.maplefetion.sip.SIPOutMessage;
@@ -136,6 +137,8 @@ public class QueueManager
 	{	
 		SIPOutMessage out = null;
 		int curtime = (int) System.currentTimeMillis()/1000;
+		int maxTryTimes = FetionConfig.getInteger("fetion.sip.default-retry-times");
+		int aliveTimes = FetionConfig.getInteger("fetion.sip.default-alive-time");
 		//如果队列为空就不需要查找了
 		if(this.sendQueue.size()==0)
 			return;
@@ -147,12 +150,12 @@ public class QueueManager
 				return;		//当前包还处于存活期内，退出查找
 			}else {
 				//当前这个包是超时的包
-				if(out.getRetryTimes()<3) {
+				if(out.getRetryTimes()<maxTryTimes) {
 					//如果小于重发次数，就重发这个包
 					logger.debug("A OutMessage:"+out+" timeout, now resend it...");
 					this.sendQueue.poll();
 					out.incRetryTimes();
-					out.setAliveTime(((int)System.currentTimeMillis()/1000)+30);
+					out.setAliveTime(((int)System.currentTimeMillis()/1000)+aliveTimes);
 					this.transfer.sendSIPMessage(out);
 				}else {		//这个包已经超过重发次数，通知对话对象，发生了超时异常
 					logger.warn("A OutMessage is resend three times, handle this timeout exception...");

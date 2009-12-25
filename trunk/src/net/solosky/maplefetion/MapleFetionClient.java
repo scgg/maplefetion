@@ -141,7 +141,7 @@ public class MapleFetionClient implements IFetionClient
 	{
     		this.querySystemConfig();
     		if(this.SSISignIn()) {
-    			String[] proxy = FetionConfig.SIPC_PROXY.split(":");
+    			String[] proxy = FetionConfig.getString("server.sipc-proxy").split(":");
     			serverDialog = new ServerDialog(this, proxy[0], Integer.parseInt(proxy[1]));
     			return serverDialog.openDialog();
     		}else {
@@ -157,7 +157,7 @@ public class MapleFetionClient implements IFetionClient
 	private boolean SSISignIn() throws Exception
 	{
 		this.loginListener.loginStatusChanged(ILoginListener.LOGIN_SSI_SIGN_IN);
-		URL url = new URL(FetionConfig.SSI_APP_SIGN_IN+"?mobileno="+
+		URL url = new URL(FetionConfig.getString("server.ssi-sign-in")+"?mobileno="+
 				this.fetionUser.getMobileNo()+"&pwd="+this.fetionUser.getPassword()
 				);
 		
@@ -197,7 +197,7 @@ public class MapleFetionClient implements IFetionClient
 	private void querySystemConfig() throws Exception
 	{
 		this.loginListener.loginStatusChanged(ILoginListener.LOGIN_QUERY_SYSTEM_CONFIG);
-        URL url = new URL(FetionConfig.NAV_SYSTEM_CONFIG);
+        URL url = new URL(FetionConfig.getString("server.nav-system-uri"));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
@@ -209,9 +209,9 @@ public class MapleFetionClient implements IFetionClient
         Element root = XMLHelper.build(conn.getInputStream());
         
         Element servers = root.getChild("servers");
-        FetionConfig.SSI_APP_SIGN_IN  = servers.getChildText("ssi-app-sign-in");
-        FetionConfig.SSI_APP_SIGN_OUT = servers.getChildText("ssi-app-sign-out");
-        FetionConfig.SIPC_PROXY       = servers.getChildText("sipc-proxy");
+        FetionConfig.setString("server.ssi-sign-in",  servers.getChildText("ssi-app-sign-in"));
+        FetionConfig.setString("server.sipc-proxy",   servers.getChildText("sipc-proxy"));
+        FetionConfig.setString("server.http-tunnel",  servers.getChildText("http-tunnel"));
 	}
 	
 	/**

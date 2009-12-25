@@ -36,7 +36,6 @@ import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPMessage;
 import net.solosky.maplefetion.sip.SIPNotify;
 import net.solosky.maplefetion.sip.SIPOutMessage;
-import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
 import net.solosky.maplefetion.util.ByteArrayBuffer;
 import net.solosky.maplefetion.util.ConvertHelper;
@@ -262,20 +261,20 @@ public class TCPTransfer extends AbstractTransfer
             public void run()
             {
             	try {
-            		logger.debug("The read thread of transfer started:"+socket.getInetAddress());
+            		logger.debug("The read thread of transfer started:"+getName());
 	                loopReadSIPMessage();
                 } catch (Throwable e) {
                 	if(!closeFlag) {
                     	exceptionCaught(e);
                 	}else {
-                		logger.debug("connection closed by user:"+socket.getInetAddress());
+                		logger.debug("connection closed by user:"+getName());
                 	}
                 }
             }
 	    };
 	    
 	    readThread = new Thread(readRunner);
-	    readThread.setName("Transfer:"+socket.getInetAddress());
+	    readThread.setName(getName());
 	    
 	    readThread.start();
 	    
@@ -292,6 +291,15 @@ public class TCPTransfer extends AbstractTransfer
 	        writer.close();
 	        //中断线程
 	        readThread.interrupt();
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransfer#getName()
+     */
+    @Override
+    public String getName()
+    {
+	    return "TCPTransfer-"+socket.getInetAddress().getHostAddress();
     }
 
 }

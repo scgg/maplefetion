@@ -62,7 +62,6 @@ public abstract class AbstractTransfer implements ITransfer
 	public AbstractTransfer()
 	{
 		queueManager = new QueueManager(this);
-		messageLogger = new SIPMessageLogger();
 	}
 	
 	/* (non-Javadoc)
@@ -115,6 +114,7 @@ public abstract class AbstractTransfer implements ITransfer
     @Override
     public void startTransfer() throws Exception
     {
+    	this.messageLogger = SIPMessageLogger.create(this.getName());
     	this.doStartTransfer();
     }
 

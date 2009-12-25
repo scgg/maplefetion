@@ -48,6 +48,7 @@ import net.solosky.maplefetion.sip.SIPResponse;
  */
 public class SIPMessageLogger
 {
+	private String name;
 	private BufferedWriter writer;
 	private boolean enableLogging;
 	private boolean isClosed;
@@ -56,12 +57,13 @@ public class SIPMessageLogger
 	 * 构造函数
 	 * @param fileName
 	 */
-	public SIPMessageLogger()
+	public SIPMessageLogger(String name)
 	{
-		enableLogging = FetionConfig.SIP_MESSAGE_LOG_ENABLE;
+		this.name = name;
+		enableLogging = FetionConfig.getBoolean("log.sip.enable");
 		if(!enableLogging)
 			return;
-		String fileName = FetionConfig.SIP_MESSAGE_LOG_DIR+Long.toString(System.currentTimeMillis())+".log";
+		String fileName = FetionConfig.getString("log.sip.dir")+name+".log";
 		try {
 			writer = new BufferedWriter(new FileWriter(fileName));
 		}catch (IOException e) {
@@ -77,7 +79,7 @@ public class SIPMessageLogger
 	 */
 	public void logSIPMessage(SIPInMessage in) throws IOException
 	{
-		if(!enableLogging)
+		if(!enableLogging || writer==null)
 			return;
 		
 		writer.append("接受信令:<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\r\n");
@@ -106,7 +108,7 @@ public class SIPMessageLogger
 	 */
 	public void logSIPMessage(SIPOutMessage out) throws IOException
 	{
-		if(!enableLogging)
+		if(!enableLogging || writer==null)
 			return;
 		
 		writer.append("发送信令:>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n");
@@ -126,6 +128,25 @@ public class SIPMessageLogger
 		else {
 			writer.close();
 		}
+	}
+	
+	/**
+	 * 返回记录器的明智
+	 * @return
+	 */
+	public String getName()
+	{
+		return this.name;
+	}
+	
+	/**
+	 * 工厂方法
+	 * @param name
+	 * @return
+	 */
+	public static SIPMessageLogger create(String name)
+	{
+		return new SIPMessageLogger(name);
 	}
 	
 }

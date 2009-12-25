@@ -28,6 +28,7 @@ package net.solosky.maplefetion.protocol;
 import java.util.Collection;
 import java.util.Iterator;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionUser;
@@ -95,6 +96,7 @@ public class SIPMessageFactory
 	    	req.addHeader(SIPHeader.FIELD_SEQUENCE, "1 "+m);
 	    	this.sequence = 1;
 	    }
+	    req.setAliveTime((int) (FetionConfig.getInteger("fetion.sip.default-alive-time")+System.currentTimeMillis()/1000));
 	    this.lastMethod = m;
 	    return req;
     }

@@ -113,6 +113,16 @@ public class MinaTransfer extends AbstractTransfer
     {
 	    super.responseReceived(response);
     }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.ITransfer#getName()
+     */
+    @Override
+    public String getName()
+    {
+    	String addr = this.session.getRemoteAddress().toString();
+	    return "MinaTransfer-"+addr.substring(1, addr.lastIndexOf(":"));
+    }
     
     
     

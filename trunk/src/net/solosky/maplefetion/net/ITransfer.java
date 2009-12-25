@@ -74,4 +74,10 @@ public interface ITransfer
 	 * @throws Exception 
 	 */
 	public void stopTransfer() throws Exception;
+	
+	/**
+	 * 返回这个传输对象的名字
+	 * @return
+	 */
+	public String getName();
 }

@@ -30,6 +30,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.ILoginListener;
 import net.solosky.maplefetion.IMessageCallback;
@@ -68,7 +69,7 @@ public class ServerDialog extends AbstractDialog
 	    super(client);
 	    this.transfer = client.getTransferFactory().createTransfer(host, port);
 	    this.transfer.setSIPMessageListener(this.messageListener);
-	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 30*1000);
+	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
 	    this.keepAliveTask =  new KeepAliveTimerTask();
     }
    
@@ -119,7 +120,7 @@ public class ServerDialog extends AbstractDialog
     		this.getContactList();
     		this.getContactsInfo();
     		this.subscribeNotify();
-    		client.getGlobalTimer().schedule(this.keepAliveTask, 5*60*1000, 5*60*1000);
+    		client.getGlobalTimer().schedule(this.keepAliveTask, 5*60*1000, FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000);
     		return true;
     	}else {
     		return false;

@@ -29,12 +29,19 @@ import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
+import java.io.OutputStreamWriter;
+import java.net.URL;
+import java.util.Iterator;
 import java.util.Properties;
 
 import org.apache.log4j.Appender;
-import org.apache.log4j.FileAppender;
+import org.apache.log4j.ConsoleAppender;
+import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
+import org.apache.log4j.Priority;
+import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.xml.DOMConfigurator;
 
 /**
  *
@@ -44,68 +51,210 @@ import org.apache.log4j.Logger;
  */
 public class FetionConfig
 {
-	public static String NAV_SYSTEM_CONFIG = "http://nav.fetion.com.cn/nav/getsystemconfig.aspx";
-	public static String SSI_APP_SIGN_IN = "https://uid.fetion.com.cn/ssiportal/SSIAppSignIn.aspx";
-	public static String SSI_APP_SIGN_OUT = "http://ssi.fetion.com.cn/ssiportal/SSIAppSignOut.aspx";
-	public static String SIPC_PROXY = "221.130.46.141:8080";
-	public static boolean DEBUG_MODE = false;		//是否开启调试模式
-	public static boolean LOG_ENABLE = false;		//是否开启日志记录
-	public static String  LOG_DIR = "./";			//日志记录目录
-	public static String  LOG_FILE = "maplefetion.log";			//日志记录文件名
-	public static boolean SIP_MESSAGE_LOG_ENABLE = false;		//是否开启记录SIP信令
-	public static String  SIP_MESSAGE_LOG_DIR = ".";			//记录SIP信令目录
+	private static Properties prop;
 	
-	//动态读取当前目录下的配置文件 maplefetion.properties
 	static {
+		loadDefaultConfig();
+		loadUserConfig();
+		configLog4j();
+	}
+	
+	/**
+	 * 返回指定名字的字符串配置
+	 * @param name
+	 * @return
+	 */
+	public static String getString(String name)
+	{
+		return prop.getProperty(name);
+	}
+	
+	/**
+	 * 设置指定名字的字符串配置
+	 * @param name
+	 * @param value
+	 */
+	public static void setString(String name, String value)
+	{
+		prop.setProperty(name, value);
+	}
+	
+	/**
+	 * 返回指定名字的整数配置
+	 * @param name
+	 * @return
+	 */
+	public static int getInteger(String name)
+	{
+		return Integer.parseInt (prop.getProperty(name));
+	}
+	
+	/**
+	 * 设置指定名字的整数配置
+	 * @param name
+	 * @param value
+	 */
+	public static void setInteger(String name, int value)
+	{
+		prop.setProperty(name, Integer.toString(value));
+	}
+	
+	/**
+	 * 返回指定名字的布尔配置
+	 * @param name
+	 * @return
+	 */
+	public static boolean getBoolean(String name)
+	{
+		return Boolean.parseBoolean(prop.getProperty(name));
+	}
+	
+	/**
+	 * 设置指定名字的布尔配置
+	 * @param name
+	 * @param value
+	 */
+	public static void setBoolean(String name, boolean value)
+	{
+		prop.setProperty(name, Boolean.toString(value));
+	}
+	
+	/**
+	 * 加载配置文件
+	 * 用户可以手动的加载配置文件，如果用户手动的加载了配置文件，系统将会合并默认配置和用户配置
+	 * @param file
+	 * @throws IOException 
+	 * @throws FileNotFoundException 
+	 */
+	public static void loadConfig(File file) throws FileNotFoundException, IOException
+	{
+		Properties userDefinedPerProperties = new Properties();
+		userDefinedPerProperties.load(new FileReader(file));
+		Iterator<Object> it = userDefinedPerProperties.keySet().iterator();
+		while(it.hasNext()) {
+			String key = (String) it.next();
+			prop.setProperty(key, userDefinedPerProperties.getProperty(key));
+			
+		}
+		
+	}
+	
+	
+	/**
+	 * 加载默认的配置文件
+	 */
+	private static void loadDefaultConfig()
+	{
+		//在类的根目录查找默认的系统配置文件，maplefetionDefault.properties
+		//这个文件定义的所有飞信的配置，如果配置都是基于这个配置文件，因为存在惯性配置，所以不会存在配置不存在的错误
+		URL configUrl = ClassLoader.getSystemResource("maplefetionDefault.properties");
+		if(configUrl!=null) {
+			prop = new Properties();
+			try {
+	            prop.load(configUrl.openStream());
+            } catch (IOException e) {
+            	throw new IllegalStateException("Error occured when reading maplefetionDefault.properties in classpath.");
+            }
+			
+		}else {
+			throw new IllegalStateException("Cannot find maplefetionDefault.properties in classpath.");
+		}
+	}
+
+	/**
+	 * 动态配置日志记录
+	 */
+	public static void configLog4j()
+	{
+		// 检查用户是否配置log4j.xml，如果配置了使用用户定义的log4j.xml加载日志配置，以下的配置均无效
+		String xml = getString("system.log4j.xml");
+		if(xml!=null && xml.length()>0) {
+			DOMConfigurator.configure(xml);
+			return;
+		}
+
+		// 动态的配置日志记录器
+		Logger root = Logger.getRootLogger();
+		// 是否开启调试模式
+		if (getBoolean("system.debug.enable")) {
+			root.addAppender(createConsoleAppender());
+			return;
+		}
+
+		// 是否开启日志记录
+		if (getBoolean("log.system.enable")) {
+			String appender = getString("log.system.appender");
+			if (appender.equals("console")) {
+				root.addAppender(createConsoleAppender());
+			} else if (appender.equals("file")) {
+				root.addAppender(createFileAppender());
+			}
+			
+			//日志级别
+    		String level = getString("log.system.level");
+    		if(level.equals("debug")) {
+    			root.setLevel(Level.DEBUG);
+    		}else if(level.equals("info")) {
+    			root.setLevel(Level.INFO);
+    		}else if(level.equals("warn")) {
+    			root.setLevel(Level.WARN);
+    		}else if(level.equals("off")) {
+    			root.setLevel(Level.OFF);
+    		}else if(level.equals("all")) {
+    			root.setLevel(Level.ALL);
+    		}else if(level.equals("fatal")) {
+    			root.setLevel(Level.FATAL);
+    		}else {
+    			
+    		}
+
+
+		}
+	}
+	
+	/**
+	 * 加载用户定义配置，默认存放在程序启动目录
+	 */
+	private static void loadUserConfig()
+	{
 		File file = new File("maplefetion.properties");
 		if(file.exists()&&file.canRead()) {
 			try {
-				Properties prop = new Properties();
-	            prop.load(new FileReader(file));
-	            
-	            
-	            String value = null; 
-	            value = prop.getProperty("DEBUG_MODE");
-	            if(value!=null) 	DEBUG_MODE = value.equals("true")?true:false;
-	            
-	            
-	            value = prop.getProperty("LOG_ENABLE");
-	            if(value!=null) 	LOG_ENABLE = value.equals("true")?true:false;
-	            
-	            value = prop.getProperty("LOG_SIP_MESSAGE_ENABLE");
-	            if(value!=null) 	SIP_MESSAGE_LOG_ENABLE = value.equals("true")?true:false;
-	            
-	            value = prop.getProperty("LOG_DIR");
-	            if(value!=null)		LOG_DIR = value;
-	            
-	            value = prop.getProperty("LOG_SIP_MESSAGE_DIR");
-	            if(value!=null)		SIP_MESSAGE_LOG_DIR = value;
-	            
-            } catch (FileNotFoundException e) {
-            	//do nothing
+				System.out.println("found user specified maplefetion.properties..");
+	            loadConfig(file);
             } catch (IOException e) {
-            	//do nothing
-            }
-            
-            //动态的配置日志记录器
-            Logger root = Logger.getRootLogger();
-            Appender consoleAppender = root.getAppender("console");
-            Appender fileAppender    = root.getAppender("file");
-            
-            //设置文件日志记录的路径
-            FileAppender fileAppender2 = (FileAppender) fileAppender;
-            fileAppender2.setFile(LOG_DIR+LOG_FILE);
-            //如果处在调试模式，日志级别为最低，写入控制台
-            if(DEBUG_MODE) {
-            	root.removeAppender("file");
-            	root.setLevel(Level.ALL);
-            }else if(!DEBUG_MODE && LOG_ENABLE){
-            	root.removeAppender("console");
-            	root.setLevel(Level.ALL);
-            }else {
-            	root.removeAppender("file");
-            	root.setLevel(Level.OFF);
+	            //忽略掉
             }
 		}
+	}
+	
+	/**
+	 * 创建命令行日志输出
+	 * @return
+	 */
+	private static Appender createConsoleAppender()
+	{
+		ConsoleAppender appender = new ConsoleAppender();
+		appender.setName("console");
+		appender.setLayout(new SimpleLayout());
+		appender.setWriter(new OutputStreamWriter(System.out));
+		appender.activateOptions();
+		return appender;
+	}
+	
+	/**
+	 * 创建文件日志输出
+	 * @return
+	 */
+	private static Appender createFileAppender()
+	{
+		DailyRollingFileAppender appender = new DailyRollingFileAppender();
+		appender.setDatePattern("'.'yyyy-MM-dd");
+		appender.setAppend(true);
+		appender.setLayout(new SimpleLayout());
+		appender.setFile(getString("log.system.dir")+getString("log.system.file"));
+		appender.setName("file");
+		appender.activateOptions();
+		return appender;
 	}
 }

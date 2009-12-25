@@ -27,6 +27,7 @@ package net.solosky.maplefetion.protocol;
 
 import java.io.IOException;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.IMessageCallback;
 import net.solosky.maplefetion.bean.FetionBuddy;
@@ -77,7 +78,7 @@ public class ChatDialog extends AbstractDialog
 	    super(client);
 	    this.transfer = client.getTransferFactory().createTransfer(host, port);
 	    this.transfer.setSIPMessageListener(this.messageListener);
-	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, 30*1000);
+	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
 	    this.dialogSession.setAttribute("TICKET", ticket);
 	    this.buddyEnterWaiter = new ObjectWaiter<String>();
 	    this.lastActiveTime = System.currentTimeMillis();

@@ -32,6 +32,7 @@ import java.util.TimerTask;
 
 import org.apache.log4j.Logger;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.IFetionClient;
 
 /**
@@ -64,7 +65,10 @@ public class ChatDialogFactory
 	{
 		this.client = client;
 		this.chatDialogList = new ArrayList<ChatDialog>();
-		this.client.getGlobalTimer().schedule(new ActiveTimeChecker(), 1*60*1000, 3*60*1000);	//5分钟后运行，每隔5分钟运行
+		this.client.getGlobalTimer().schedule(
+				new ActiveTimeChecker(),
+				3*60*1000, 
+				FetionConfig.getInteger("fetion.dialog.check-idle-interval")*1000);
 	}
 	
 	/**
@@ -143,9 +147,10 @@ public class ChatDialogFactory
         	logger.debug("ActiveTimeChecker is checking idle ChatDialog...");
         	Iterator<ChatDialog> it = chatDialogList.iterator();
         	long curtime = System.currentTimeMillis();
+        	long interval = FetionConfig.getInteger("fetion.dialog.max-idle-time");
         	while(it.hasNext()) {
         		ChatDialog cd = it.next();
-        		if((cd.getLastActiveTime()+5*60*1000)<curtime) {
+        		if((cd.getLastActiveTime()+interval)<curtime) {
         			//如果在5分钟内没有消息发送或者接受，关闭这个对话
         			try {
         				int min = (int) ((curtime-cd.getLastActiveTime())/(1000*60));
