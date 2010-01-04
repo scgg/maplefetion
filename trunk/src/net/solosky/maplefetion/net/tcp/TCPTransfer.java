@@ -238,23 +238,17 @@ public class TCPTransfer extends AbstractTransfer
     	return body;
     }
     
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doSendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
-     */
     @Override
-    protected void doSendSIPMessage(SIPOutMessage outMessage)
+    public void sendSIPMessage(SIPOutMessage outMessage)
             throws IOException
     {
     	writer.write(ConvertHelper.string2Byte(outMessage.toSendString()));
     	writer.flush();
 	    
     }
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doStartTransfer()
-     */
+    
     @Override
-    protected void doStartTransfer() throws Exception
+    public void startTransfer() throws Exception
     {
     	Runnable readRunner = new Runnable()
 	    {
@@ -279,11 +273,9 @@ public class TCPTransfer extends AbstractTransfer
 	    readThread.start();
 	    
     }
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doStopTransfer()
-     */
+    
     @Override
-    protected void doStopTransfer() throws Exception
+    public void stopTransfer() throws Exception
     {
     		//关闭流
     		closeFlag = true;
@@ -293,9 +285,6 @@ public class TCPTransfer extends AbstractTransfer
 	        readThread.interrupt();
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getName()
-     */
     @Override
     public String getName()
     {

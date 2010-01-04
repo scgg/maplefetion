@@ -65,30 +65,21 @@ public class MinaTransfer extends AbstractTransfer
 		this.session.setAttribute("TRANSFER", this);
 	}
 	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doSendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
-     */
     @Override
-    protected void doSendSIPMessage(SIPOutMessage outMessage)
+    public void sendSIPMessage(SIPOutMessage outMessage)
             throws IOException
     {
     	 this.session.write(outMessage);
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doStartTransfer()
-     */
     @Override
-    protected void doStartTransfer() throws Exception
+    public void startTransfer() throws Exception
     {
     	logger.debug("MinaTransfer started:"+this.session);
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#doStopTransfer()
-     */
     @Override
-    protected void doStopTransfer() throws Exception
+    public void stopTransfer() throws Exception
     {
     	this.session.close(false);
     	logger.debug("MinaTransfer stoped:"+this.session);
@@ -114,9 +105,6 @@ public class MinaTransfer extends AbstractTransfer
 	    super.responseReceived(response);
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getName()
-     */
     @Override
     public String getName()
     {

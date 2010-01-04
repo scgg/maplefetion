@@ -93,8 +93,9 @@ public class SIPMessageDispatcher
 			}
 		} else {
 			if(request!=null) {
-				request.setResponse(response);
+				request.getResponseWaiter().responseRecived(response);
 			}else {
+				//这里可能是收到了重复的回复了，忽略掉
 				logger.warn("Unknown Response:[ "+response+"]");
 			}
 		}

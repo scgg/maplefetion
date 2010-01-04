@@ -18,9 +18,9 @@
  /**
  * Project  : MapleFetion
  * Package  : net.solosky.maplefetion.net
- * File     : QueueManager.java
+ * File     : TransferSerivce.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-12-7
+ * Created  : 2010-1-4
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.net;
@@ -31,77 +31,87 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.TimerTask;
 
-import org.apache.log4j.Logger;
-
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPInMessage;
+import net.solosky.maplefetion.sip.SIPNotify;
 import net.solosky.maplefetion.sip.SIPOutMessage;
 import net.solosky.maplefetion.sip.SIPRequest;
+import net.solosky.maplefetion.sip.SIPResponse;
+import net.solosky.maplefetion.util.SIPMessageLogger;
+
+import org.apache.log4j.Logger;
 
 /**
  *
- * 发送队列管理
- * 处理查找对应的发出信令对象和定时检查超时信令并重发
- * 如果超时指定的次数，就向对话对象抛出超时异常，
- * 如果是普通的聊天对话，就简单的关闭这个聊天对话，如果是服务器对话就结束整个客户端
+ * 传输服务
+ * 提供发出包和接收包的管理，日志记录，并处理超时异常
  *
  * @author solosky <solosky772@qq.com>
  */
-public class QueueManager 
+public class TransferService implements ISIPMessageListener
 {
-	/**
-	 * 已发送队列
-	 */
-	private Queue<SIPOutMessage> sendQueue;
-	
 	/**
 	 * 传输对象
 	 */
 	private ITransfer transfer;
 	
 	/**
+	 * 监听器
+	 */
+	protected ISIPMessageListener listener;
+	
+	/**
+	 * 已发送队列
+	 */
+	private Queue<SIPOutMessage> sendQueue;
+	
+	/**
+	 * 信令记录器
+	 */
+	protected SIPMessageLogger messageLogger;
+	
+	/**
 	 * 定时检查超时任务，
 	 */
 	private TimerTask timeOutCheckTask;
 	
-	
 	/**
 	 * 日志记录
 	 */
-	private static Logger logger = Logger.getLogger(QueueManager.class);
+	private static Logger logger = Logger.getLogger(TransferService.class);
 	
 	
 	/**
-	 * 构造函数
-	 * @param sendQueue		发送队列
-	 * @param transfer		传输对象
+	 * 默认构造函数
 	 */
-	public QueueManager(Queue<SIPOutMessage> sendQueue, ITransfer transfer)
+	public TransferService(ITransfer transfer, ISIPMessageListener listener)
 	{
-		this.sendQueue = sendQueue;
-		this.transfer  = transfer;
+		this.transfer = transfer;
+		this.listener = listener;
+		this.sendQueue =  new LinkedList<SIPOutMessage>();
+		this.messageLogger = SIPMessageLogger.create(transfer.getName());
 		this.timeOutCheckTask = new TimeOutCheckTask();
+		
+		this.transfer.setSIPMessageListener(this);
+		
 	}
 	
 	/**
-	 * 构造函数
-	 * @param transfer		传输对象
+	 * 发送SIP信令
+	 * @param outMessage
+	 * @throws IOException
 	 */
-	public QueueManager(ITransfer transfer)
-	{
-		this( new LinkedList<SIPOutMessage>(), transfer);
-	}
-	
-	/**
-	 * 发送了一个SIP信令
-	 * @param out
-	 */
-	public synchronized void sendedSIPMessage(SIPOutMessage out)
-	{
-		this.sendQueue.add(out);
-	}
-	
+	public void sendSIPMessage(SIPOutMessage outMessage) throws IOException
+    {
+    	//交给传输对象发送这个消息
+    	this.transfer.sendSIPMessage(outMessage);
+    	//如果需要回复才放入发送队列
+    	if(outMessage.isNeedAck()) {
+    		this.sendQueue.add(outMessage);
+    	}
+    	messageLogger.logSIPMessage(outMessage);
+    }
 	
 	/**
 	 * 在已发送队列中查找对应发送信令
@@ -159,14 +169,29 @@ public class QueueManager
 					this.transfer.sendSIPMessage(out);
 				}else {		//这个包已经超过重发次数，通知对话对象，发生了超时异常
 					logger.warn("A OutMessage is resend three times, handle this timeout exception...");
-					this.handleTimeOutException();
+					this.handlePacketTimeout(out);
 				}
 			}
 		}
 	}
 	
+	
 	/**
 	 * 处理包超时异常
+	 * @param out
+	 */
+	private void handlePacketTimeout(SIPOutMessage out)
+	{
+		//如果发出包设置了超时处理器，就调用超时处理器，否则抛出超时异常，结束整个程序
+		if(out.getTimeoutHandler()!=null) {
+			out.getTimeoutHandler().handleTimeout(out);
+		}else {
+			this.handleTimeOutException();
+		}
+	}
+	
+	/**
+	 * 超时退出程序
 	 */
 	private synchronized void handleTimeOutException()
 	{
@@ -179,7 +204,7 @@ public class QueueManager
     			//判断是否是请求包，如果是强制转换，因为只有请求包才会需要等待回复
     			if(out instanceof SIPRequest) {
     				SIPRequest req = (SIPRequest) out;
-    				req.setResponse(null);		//设置一个空的回复，可能调用者会出现Null异常。。。
+    				req.getResponseWaiter().setResponseTimeout();		//设置该请求超时
     			}
     		}
     	}
@@ -197,6 +222,25 @@ public class QueueManager
 		return this.timeOutCheckTask;
 	}
 	
+	/**
+	 * 启动服务
+	 * @throws Exception
+	 */
+	public void startService() throws Exception
+	{
+		this.transfer.startTransfer();
+	}
+	
+	/**
+	 * 停止服务
+	 * @throws Exception
+	 */
+	public void stopService() throws Exception
+	{
+		this.transfer.stopTransfer();
+	}
+	
+	
 	
 	/**
 	 * 
@@ -207,10 +251,6 @@ public class QueueManager
 	 */
 	public class TimeOutCheckTask extends TimerTask
 	{
-
-		/* (non-Javadoc)
-         * @see java.util.TimerTask#run()
-         */
         @Override
         public void run()
         {
@@ -224,4 +264,31 @@ public class QueueManager
         }
 		
 	}
+
+    @Override
+    public void ExceptionCaught(Throwable e)
+    {
+    	listener.ExceptionCaught(e);
+    }
+    @Override
+    public void SIPNotifyReceived(SIPNotify notify)
+    {
+	    listener.SIPNotifyReceived(notify);
+	    try {
+	        this.messageLogger.logSIPMessage(notify);
+        } catch (IOException e) {
+	       logger.warn("Cannot log sip notify:"+e);
+        }
+    }
+    @Override
+    public void SIPResponseReceived(SIPResponse response, SIPRequest request)
+    {
+    	request = (SIPRequest) this.findSIPMessage(response);
+    	this.listener.SIPResponseReceived(response, request);
+    	try {
+	        this.messageLogger.logSIPMessage(response);
+        } catch (IOException e) {
+	       logger.warn("Cannot log sip response:"+e);
+        }
+    }
 }

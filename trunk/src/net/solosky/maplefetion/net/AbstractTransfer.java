@@ -28,10 +28,7 @@ package net.solosky.maplefetion.net;
 import java.io.IOException;
 
 import net.solosky.maplefetion.sip.SIPNotify;
-import net.solosky.maplefetion.sip.SIPOutMessage;
-import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
-import net.solosky.maplefetion.util.SIPMessageLogger;
 
 /**
  *
@@ -41,38 +38,17 @@ import net.solosky.maplefetion.util.SIPMessageLogger;
  * @author solosky <solosky772@qq.com>
  */
 public abstract class AbstractTransfer implements ITransfer
-{
-	
-	/**
-	 * 队列管理器
-	 */
-	protected QueueManager queueManager;
-	
+{	
 	/**
 	 * 监听器
 	 */
 	protected ISIPMessageListener listener;
 	
-	/**
-	 * 信令记录器
-	 */
-	protected SIPMessageLogger messageLogger;
-	
 	
 	public AbstractTransfer()
 	{
-		queueManager = new QueueManager(this);
 	}
 	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#getQueueManager()
-     */
-    @Override
-    public QueueManager getQueueManager()
-    {
-    	return this.queueManager;
-    }
-
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.net.ITransfer#getSIPMessageListener()
      */
@@ -92,43 +68,6 @@ public abstract class AbstractTransfer implements ITransfer
     }
     
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.ITransfer#sendSIPMessage(net.solosky.maplefetion.sip.SIPOutMessage)
-     */
-    @Override
-    public void sendSIPMessage(SIPOutMessage outMessage) throws IOException
-    {
-    	//交给子类发送这个消息
-    	this.doSendSIPMessage(outMessage);
-    	//如果需要回复才放入发送队列
-    	if(outMessage.isNeedAck()) {
-    		queueManager.sendedSIPMessage(outMessage);
-    	}
-    	messageLogger.logSIPMessage(outMessage);
-    }
-
-	/**
-	 * 启动传输，这里只是简单的调用子类的启动函数
-	 * @throws Exception 
-	 */
-    @Override
-    public void startTransfer() throws Exception
-    {
-    	this.messageLogger = SIPMessageLogger.create(this.getName());
-    	this.doStartTransfer();
-    }
-
-	/**
-	 * 停止传输，调用子类停止传输后，关闭日志记录
-	 * @throws IOException 
-	 */
-    @Override
-    public void stopTransfer() throws Exception
-    {
-    	this.doStopTransfer();
-    	this.messageLogger.close();
-        queueManager.getTimeOutCheckTask().cancel();	//停止已发送队列超时检查任务
-    }
     
     /**
      * 收到了回复
@@ -138,9 +77,7 @@ public abstract class AbstractTransfer implements ITransfer
      */
     protected void responseReceived(SIPResponse response) throws IOException
     {
-    	SIPRequest  request = (SIPRequest) this.queueManager.findSIPMessage(response);
-    	this.listener.SIPResponseReceived(response, request);
-    	this.messageLogger.logSIPMessage(response);
+    	this.listener.SIPResponseReceived(response, null);
     }
     
     /**
@@ -152,7 +89,6 @@ public abstract class AbstractTransfer implements ITransfer
     protected void notifyReceived(SIPNotify notify) throws IOException
     {
     	this.listener.SIPNotifyReceived(notify);
-    	this.messageLogger.logSIPMessage(notify);
     }
     
     /**
@@ -164,27 +100,6 @@ public abstract class AbstractTransfer implements ITransfer
     {
     	this.listener.ExceptionCaught(exception);
     }
-    
-    /**
-     * 发送消息
-     * 子类在这个函数里完成消息发送工作
-     * @param outMessage
-     * @throws IOException
-     */
-    protected abstract void doSendSIPMessage(SIPOutMessage outMessage) throws IOException;
-    
-    /**
-     * 启动传输
-     * 子类重载
-     * @throws Exception
-     */
-    protected abstract void doStartTransfer() throws Exception;
-    
-    /**
-     * 停止传输
-     * 子类重载
-     * @throws Exception
-     */
-    protected abstract void doStopTransfer() throws Exception;
+ 
 	
 }

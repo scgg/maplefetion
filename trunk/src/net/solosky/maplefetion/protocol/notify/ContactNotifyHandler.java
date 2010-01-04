@@ -126,7 +126,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     	//获取陌生人的信息
     	SIPRequest request = this.dialog.getMessageFactory().createGetContactDetailRequest(uri);
     	request.setResponseHandler(new GetContactInfoResponseHandler(buddy));
-    	this.dialog.getTransfer().sendSIPMessage(request);
+    	this.dialog.getTransferService().sendSIPMessage(request);
 
     	//通知监听器
 		client.getNotifyListener().buddyApplication(buddy, desc);
@@ -213,7 +213,7 @@ public class ContactNotifyHandler extends AbstractSIPNotifyHandler
     					//消息回复收到后就会自动调用这个处理器
     					request.setResponseHandler(handler);
     					//发出这个消息
-    					dialog.getTransfer().sendSIPMessage(request);
+    					dialog.getTransferService().sendSIPMessage(request);
     			}else if(relationStatus==FetionBuddy.RELATION_STATUS_DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
     				client.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器

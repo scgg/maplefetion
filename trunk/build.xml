@@ -25,7 +25,7 @@
    <!--  编译文件 -->
     <target name="compile" depends="init">
         <javac srcdir="${src.dir}" destdir="${build.dir}"  classpathref="compile.classpath" encoding="UTF-8"/>
-        <copy file="${src.dir}/log4j.xml" tofile="${build.dir}/log4j.xml" />
+        <copy file="${src.dir}/maplefetionDefault.properties" todir="${build.dir}" />
     </target>
 
     <!-- 构建JAR -->

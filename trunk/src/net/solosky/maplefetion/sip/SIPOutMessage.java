@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.sip;
 
+import net.solosky.maplefetion.protocol.ISIPTimeoutHandler;
+
 
 /**
  *
@@ -50,6 +52,11 @@ public abstract class SIPOutMessage extends SIPMessage
 	 * 重发次数
 	 */
 	protected int retryTimes;
+	
+	/**
+	 * 超时处理器
+	 */
+	protected ISIPTimeoutHandler timeoutHandler;
 	
 	
 	/**
@@ -156,6 +163,26 @@ public abstract class SIPOutMessage extends SIPMessage
     public void incRetryTimes()
     {
     	this.retryTimes++;
+    }
+
+
+	/**
+	 * 返回超时处理器
+     * @return the timeoutHandler
+     */
+    public ISIPTimeoutHandler getTimeoutHandler()
+    {
+    	return timeoutHandler;
+    }
+
+
+	/**
+	 * 设置超时处理器
+     * @param timeoutHandler the timeoutHandler to set
+     */
+    public void setTimeoutHandler(ISIPTimeoutHandler timeoutHandler)
+    {
+    	this.timeoutHandler = timeoutHandler;
     }	
 	
 	

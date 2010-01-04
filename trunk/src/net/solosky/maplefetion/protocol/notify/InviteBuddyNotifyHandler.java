@@ -59,7 +59,7 @@ public class InviteBuddyNotifyHandler extends AbstractSIPNotifyHandler
 
         		SIPReceipt receipt = this.dialog.getMessageFactory().createChatMessageReceipt(
         				notify.getFrom() ,Integer.toString(notify.getCallID()), notify.getSequence());
-        		this.dialog.getTransfer().sendSIPMessage(receipt);
+        		this.dialog.getTransferService().sendSIPMessage(receipt);
     		}else {
     			logger.warn("cannot parse auth string:"+auth);
     		}

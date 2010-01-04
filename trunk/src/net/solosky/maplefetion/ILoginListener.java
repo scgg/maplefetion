@@ -96,24 +96,35 @@ public interface ILoginListener
 	public final static int LOGIN_SUCCESS = 0x200;
 	
 	/**
-	 * 登陆验证失败
+	 * 用户已经停机
 	 */
-	public final static int LOGIN_FAIL_AUTH_FAILED = 0x401;
+	public final static int LOGIN_USER_OVER_DRAW = 0x401;
 	
 	/**
 	 * 连接SSI服务失败
 	 */
-	public final static int LOGIN_FAIL_SSI_CONNECT_FALIED = 0x402;
+	public final static int LOGIN_SSI_CONNECT_FALIED = 0x411;
+	
+	/**
+	 * SSI验证失败
+	 */
+	public final static int LOGIN_SSI_AUTH_FAILED = 0x412;
 	
 	/**
 	 * 连接主服务失败
 	 */
-	public final static int LOGIN_FAIL_SERVER_CONNECT_FAILED = 0x403;
+	public final static int LOGIN_SERVER_CONNECT_FAILED = 0x421;
+	
+	/**
+	 * 连接主服务验证失败
+	 */
+	public final static int LOGIN_SERVER_AUTH_FAILED = 0x422;
+	
 	
 	/**
 	 * 未知异常
 	 */
-	public final static int LOGIN_FAIL_UNKOWN_FAILED = 0x0404;
+	public final static int LOGIN_UNKOWN_FAILED = 0x440;
 	
 	/**
 	 * 登陆状态改变

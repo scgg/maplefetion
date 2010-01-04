@@ -68,7 +68,7 @@ public class MessageNotifyHandler extends AbstractSIPNotifyHandler
     	//发送信息收到回复
 	    SIPReceipt receipt = this.dialog.getMessageFactory()
 	    .createChatMessageReceipt(notify.getFrom(), Integer.toString(notify.getCallID()), notify.getSequence());
-	    this.dialog.getTransfer().sendSIPMessage(receipt);
+	    this.dialog.getTransferService().sendSIPMessage(receipt);
 	    //如果是聊天对话的话，更新活动时间
 	    if(dialog instanceof ChatDialog) {
 	    	ChatDialog cd = (ChatDialog) dialog;
@@ -92,7 +92,7 @@ public class MessageNotifyHandler extends AbstractSIPNotifyHandler
 	    		.getMessageFactory()
 	    		.createGetContactDetailRequest(notify.getFrom());
 	    	request.setResponseHandler(new GetContactInfoResponseHandler(from));
-	    	this.client.getServerDialog().getTransfer().sendSIPMessage(request);
+	    	this.client.getServerDialog().getTransferService().sendSIPMessage(request);
 	    }
 	   
 	    //通知消息监听器

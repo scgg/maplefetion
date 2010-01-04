@@ -17,35 +17,21 @@
 
  /**
  * Project  : MapleFetion
- * Package  : net.solosky.maplefetion.protocol.notify
- * File     : DefaultNotifyHandler.java
+ * Package  : net.solosky.maplefetion.net
+ * File     : MessageTimeoutException.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-26
+ * Created  : 2010-1-4
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.protocol.notify;
-
-import net.solosky.maplefetion.sip.SIPNotify;
-import net.solosky.maplefetion.sip.SIPReceipt;
+package net.solosky.maplefetion.net;
 
 /**
- *	飞信秀的通知处理
  *
- * @author solosky <solosky772@qq.com> 
+ * 发送SIP信令在指定的时间没有回复就触发超时异常
+ *
+ * @author solosky <solosky772@qq.com>
  */
-public class FetionShowNotifyHandler extends AbstractSIPNotifyHandler
+public class MessageTimeoutException extends Exception
 {
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.protocol.ISIPNotifyHandler#handle(net.solosky.maplefetion.sip.SIPNotify)
-     */
-    @Override
-    public void handle(SIPNotify notify) throws Exception
-    {
-    	SIPReceipt receipt = this.dialog.getMessageFactory()
-    		.createFetionShowReceipt(notify.getFrom(), 
-    				Integer.toString(notify.getCallID()), notify.getSequence());
-    	this.dialog.getTransferService().sendSIPMessage(receipt);
-    }
-
+    private static final long serialVersionUID = 4681144597971987214L;
 }

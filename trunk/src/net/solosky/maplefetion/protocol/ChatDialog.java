@@ -31,6 +31,7 @@ import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.IMessageCallback;
 import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.net.TransferService;
 import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
 import net.solosky.maplefetion.util.ObjectWaiter;
@@ -76,12 +77,16 @@ public class ChatDialog extends AbstractDialog
     public ChatDialog(IFetionClient client,String host, int port, String ticket) throws Exception
     {
 	    super(client);
-	    this.transfer = client.getTransferFactory().createTransfer(host, port);
-	    this.transfer.setSIPMessageListener(this.messageListener);
-	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
+	    this.transferService = new TransferService(
+	    		client.getTransferFactory().createTransfer(host, port),
+	    		this.messageListener);
 	    this.dialogSession.setAttribute("TICKET", ticket);
 	    this.buddyEnterWaiter = new ObjectWaiter<String>();
 	    this.lastActiveTime = System.currentTimeMillis();
+	    
+	    this.client.getGlobalTimer().schedule(
+	    		this.transferService.getTimeOutCheckTask(), 0, 
+	    		FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
     }
 
 	/**
@@ -92,9 +97,9 @@ public class ChatDialog extends AbstractDialog
     public void closeDialog() throws Exception
     {
     	SIPRequest req =this.messageFactory.createLogoutRequest(this.client.getFetionUser().getUri());
-		this.transfer.sendSIPMessage(req);
+		this.transferService.sendSIPMessage(req);
 		this.client.getGlobalTimer().purge();
-		this.transfer.stopTransfer();
+		this.transferService.stopService();
     }
 
 	/* (non-Javadoc)
@@ -113,11 +118,11 @@ public class ChatDialog extends AbstractDialog
     public boolean openDialog() throws Exception
     {
     	logger.debug("Register to chatServer..");
-    	this.transfer.startTransfer();
+    	this.transferService.startService();
     	SIPRequest request = this.messageFactory.createRegisterChatRequest(
     			(String)this.dialogSession.getAttribute("TICKET"));
-    	this.transfer.sendSIPMessage(request);
-    	SIPResponse response = request.waitRepsonse();
+    	this.transferService.sendSIPMessage(request);
+    	SIPResponse response = request.getResponseWaiter().waitResponse();
     	if(response.getStatusCode()==200) {
     		logger.debug("Register successfull, processed...");
     		//this.sendFetionShow();
@@ -138,8 +143,8 @@ public class ChatDialog extends AbstractDialog
     {
     	this.updateActiveTime();
     	SIPRequest request  = this.messageFactory.createChatMessageRequest(uri, content);
-    	this.transfer.sendSIPMessage(request);
-    	SIPResponse response = request.waitRepsonse();
+    	this.transferService.sendSIPMessage(request);
+    	SIPResponse response = request.getResponseWaiter().waitResponse();
     	return response.getStatusCode()==200 || response.getStatusCode()==280;
     }
 	
@@ -161,7 +166,7 @@ public class ChatDialog extends AbstractDialog
 			}
 		};
 		request.setResponseHandler(handler);
-		this.transfer.sendSIPMessage(request);
+		this.transferService.sendSIPMessage(request);
 	}
 
    /**
@@ -182,19 +187,19 @@ public class ChatDialog extends AbstractDialog
     public void sendFetionShow() throws IOException
     {
     	SIPRequest request = this.messageFactory.createFetionShowRequest();
-    	this.transfer.sendSIPMessage(request);
+    	this.transferService.sendSIPMessage(request);
     }
     
     /**
      * 邀请好友加入会话
      * @param uri
-     * @throws IOException 
+     * @throws Exception 
      */
-    public boolean invateBuddy(String uri) throws IOException
+    public boolean invateBuddy(String uri) throws Exception
     {
     	SIPRequest request = this.messageFactory.createInvateBuddyRequest(uri);
-    	this.transfer.sendSIPMessage(request);
-    	SIPResponse response = request.waitRepsonse();
+    	this.transferService.sendSIPMessage(request);
+    	SIPResponse response = request.getResponseWaiter().waitResponse();
     	return response.getStatusCode()==200;
     }
     

@@ -59,12 +59,6 @@ public interface ITransfer
 	public ISIPMessageListener getSIPMessageListener();
 	
 	/**
-	 * 返回已发送队列管理器
-	 * @return						已发送队列管理器
-	 */
-	public QueueManager getQueueManager();
-	
-	/**
 	 * 启动传输
 	 */
 	public void startTransfer() throws Exception;

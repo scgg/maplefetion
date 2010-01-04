@@ -29,6 +29,7 @@ import java.util.Iterator;
 
 import net.solosky.maplefetion.protocol.ISIPResponseHandler;
 import net.solosky.maplefetion.util.ConvertHelper;
+import net.solosky.maplefetion.util.ResponseWaiter;
 
 import org.apache.log4j.Logger;
 
@@ -53,14 +54,14 @@ public class SIPRequest extends SIPOutMessage
 	private String domain;
 	
 	/**
-	 * 相应的回复
-	 */
-	private SIPResponse response;
-	
-	/**
 	 * 回复的监听器
 	 */
 	private ISIPResponseHandler handler;
+	
+	/**
+	 * 回复等待对象
+	 */
+	private ResponseWaiter waiter;
 	
 	/**
 	 * 默认构造函数
@@ -69,6 +70,7 @@ public class SIPRequest extends SIPOutMessage
 	{
 		this.method = method;
 		this.domain = domain;
+		this.waiter = new ResponseWaiter();
 		this.setNeedAck(true);
 	}
 	
@@ -104,33 +106,11 @@ public class SIPRequest extends SIPOutMessage
 	}
 	
 	/**
-	 * 设置回复对象
-	 * @param response
+	 * 返回复等待对象
 	 */
-	public void setResponse(SIPResponse response)
+	public ResponseWaiter getResponseWaiter()
 	{
-		synchronized (this) {
-	        this.response = response;
-	        this.notifyAll();
-        }
-	}
-	
-	/**
-	 * 等待回复收到,如果没有收到回复就在此等待
-	 * @return  回复对象
-	 */
-	public SIPResponse waitRepsonse()
-	{
-		synchronized (this) {
-            try {
-            	 while(this.response==null)
-            		 this.wait();
-            	 return this.response;
-            } catch (InterruptedException e) {
-            	Logger.getLogger(SIPRequest.class).warn("Wait response failed:"+e);
-            }
-	       return null;
-        }
+		return this.waiter;
 	}
 	
 	/**

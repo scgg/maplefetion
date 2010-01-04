@@ -29,7 +29,7 @@ import java.net.InetSocketAddress;
 
 import net.solosky.maplefetion.IFetionClient;
 import net.solosky.maplefetion.net.ISIPMessageListener;
-import net.solosky.maplefetion.net.ITransfer;
+import net.solosky.maplefetion.net.TransferService;
 import net.solosky.maplefetion.sip.SIPNotify;
 import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
@@ -57,7 +57,7 @@ public abstract class AbstractDialog
 	/**
 	 * 传输服务
 	 */
-	protected ITransfer transfer;
+	protected TransferService transferService;
 	
 	/**
 	 * 信令分发器
@@ -119,12 +119,12 @@ public abstract class AbstractDialog
 	}
 	
 	/**
-	 * 返回传输对象
+	 * 返回传输服务
 	 * @return
 	 */
-	public ITransfer getTransfer()
+	public TransferService getTransferService()
 	{
-		return this.transfer;
+		return this.transferService;
 	}
 	
 	/**

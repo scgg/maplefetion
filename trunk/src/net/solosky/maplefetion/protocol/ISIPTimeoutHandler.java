@@ -17,35 +17,27 @@
 
  /**
  * Project  : MapleFetion
- * Package  : net.solosky.maplefetion.protocol.notify
- * File     : DefaultNotifyHandler.java
+ * Package  : net.solosky.maplefetion.protocol
+ * File     : ISIPTimeoutHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-26
+ * Created  : 2010-1-4
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.protocol.notify;
+package net.solosky.maplefetion.protocol;
 
-import net.solosky.maplefetion.sip.SIPNotify;
-import net.solosky.maplefetion.sip.SIPReceipt;
+import net.solosky.maplefetion.sip.SIPOutMessage;
 
 /**
- *	飞信秀的通知处理
  *
- * @author solosky <solosky772@qq.com> 
+ *	SIP信令发送超时的处理器
+ *
+ * @author solosky <solosky772@qq.com>
  */
-public class FetionShowNotifyHandler extends AbstractSIPNotifyHandler
+public interface ISIPTimeoutHandler
 {
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.protocol.ISIPNotifyHandler#handle(net.solosky.maplefetion.sip.SIPNotify)
-     */
-    @Override
-    public void handle(SIPNotify notify) throws Exception
-    {
-    	SIPReceipt receipt = this.dialog.getMessageFactory()
-    		.createFetionShowReceipt(notify.getFrom(), 
-    				Integer.toString(notify.getCallID()), notify.getSequence());
-    	this.dialog.getTransferService().sendSIPMessage(receipt);
-    }
-
+	/**
+	 * 信令发送超时的处理器
+	 * @param out
+	 */
+	public void handleTimeout(SIPOutMessage out);
 }

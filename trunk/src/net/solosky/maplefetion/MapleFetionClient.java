@@ -162,32 +162,43 @@ public class MapleFetionClient implements IFetionClient
 				);
 		
 		HttpsURLConnection conn = (HttpsURLConnection) url.openConnection();
-		if(conn.getResponseCode()==401)		//登录失败
+		int resCode = conn.getResponseCode();
+		logger.debug("SSIstatusCode:"+resCode);
+		
+		//登录成功
+		if(resCode==200) {
+			String h = conn.getHeaderField("Set-Cookie");
+			if(h==null) 	return false;
+			int s = h.indexOf("ssic=");
+			int e = h.indexOf(';');
+			String ssic = h.substring(s+5,e);
+			
+			
+			Element root = XMLHelper.build(conn.getInputStream());
+			String statusCode = root.getAttributeValue("status-code");
+			Element user = root.getChild("user");
+			String uri = user.getAttributeValue("uri");
+			String uid = user.getAttributeValue("user-id");
+			String sid = uri.substring(4, uri.indexOf('@'));
+			
+			FetionUser fetionUser = this.getFetionUser(); 
+			fetionUser.setSsic(ssic);
+			fetionUser.setUri(uri);
+			fetionUser.setUid(Integer.parseInt(uid));
+			fetionUser.setSid(Integer.parseInt(sid));
+			
+			logger.debug("SSISignIn success:SSIC="+ssic);
+			return true;
+		}else {
+			//登录失败
+			switch (resCode)
+			{
+				case 401:this.loginListener.loginStatusChanged(ILoginListener.LOGIN_SSI_AUTH_FAILED);break;
+				case 433:this.loginListener.loginStatusChanged(ILoginListener.LOGIN_USER_OVER_DRAW);break;
+				default:this.loginListener.loginStatusChanged(ILoginListener.LOGIN_UNKOWN_FAILED);
+			}
 			return false;
-		
-		String h = conn.getHeaderField("Set-Cookie");
-		if(h==null)	return false;
-		int s = h.indexOf("ssic=");
-		int e = h.indexOf(';');
-		String ssic = h.substring(s+5,e);
-		
-		
-		Element root = XMLHelper.build(conn.getInputStream());
-		String statusCode = root.getAttributeValue("status-code");
-		Element user = root.getChild("user");
-		String uri = user.getAttributeValue("uri");
-		String uid = user.getAttributeValue("user-id");
-		String sid = uri.substring(4, uri.indexOf('@'));
-		
-		FetionUser fetionUser = this.getFetionUser(); 
-		fetionUser.setSsic(ssic);
-		fetionUser.setUri(uri);
-		fetionUser.setUid(Integer.parseInt(uid));
-		fetionUser.setSid(Integer.parseInt(sid));
-		logger.debug("statusCode:"+statusCode);
-		logger.debug("SSISignIn success:SSIC="+ssic);
-		
-		return true;
+		}
 	}
 	
 	/**
@@ -299,9 +310,9 @@ public class MapleFetionClient implements IFetionClient
 	 * @param mobileNo		发送的手机号码
 	 * @param content		发送的内容
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean sendSMSMessage(long mobileNo, String content) throws IOException
+	public boolean sendSMSMessage(long mobileNo, String content) throws Exception
 	{
 		return this.serverDialog.sendSMSMessage("tel:"+Long.toString(mobileNo), content);
 	}

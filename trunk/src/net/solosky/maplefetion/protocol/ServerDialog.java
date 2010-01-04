@@ -37,6 +37,7 @@ import net.solosky.maplefetion.IMessageCallback;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.FetionCord;
 import net.solosky.maplefetion.bean.FetionUser;
+import net.solosky.maplefetion.net.TransferService;
 import net.solosky.maplefetion.sip.SIPHeader;
 import net.solosky.maplefetion.sip.SIPRequest;
 import net.solosky.maplefetion.sip.SIPResponse;
@@ -67,10 +68,14 @@ public class ServerDialog extends AbstractDialog
     public ServerDialog(IFetionClient client, String host, int port) throws Exception
     {
 	    super(client);
-	    this.transfer = client.getTransferFactory().createTransfer(host, port);
-	    this.transfer.setSIPMessageListener(this.messageListener);
-	    this.client.getGlobalTimer().schedule(this.transfer.getQueueManager().getTimeOutCheckTask(), 0, FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
+	    this.transferService = new TransferService(
+	    		client.getTransferFactory().createTransfer(host, port),
+	    		this.messageListener);
 	    this.keepAliveTask =  new KeepAliveTimerTask();
+	    
+	    this.client.getGlobalTimer().schedule(
+	    		this.transferService.getTimeOutCheckTask(), 0, 
+	    		FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000);
     }
    
 	/**
@@ -81,7 +86,7 @@ public class ServerDialog extends AbstractDialog
     	//好像服务对话直接关闭就行了。。没有发出任何包
 		this.keepAliveTask.cancel();
 		this.client.getGlobalTimer().purge();
-		this.transfer.stopTransfer();
+		this.transferService.stopService();
     }
 
 	/* (non-Javadoc)
@@ -114,7 +119,16 @@ public class ServerDialog extends AbstractDialog
 	 */
     public boolean openDialog() throws Exception
     {
-    	this.transfer.startTransfer();
+    	//连接服务器
+    	this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_CONNECT);
+    	try {
+    		this.transferService.startService();
+    	}catch (Exception e) {
+    		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_CONNECT_FAILED);
+    		throw new Exception(e);
+		}
+    	
+    	//一系列的登录过程
     	if(this.register()&&this.userAuth()) {
     		this.getPersonalInfo();
     		this.getContactList();
@@ -135,7 +149,7 @@ public class ServerDialog extends AbstractDialog
 	{
 		logger.debug("sending keep live request to server..");
 		SIPRequest request = this.messageFactory.createKeepAliveRequest();
-		this.transfer.sendSIPMessage(request);
+		this.transferService.sendSIPMessage(request);
 	}
 	
 	/**
@@ -164,8 +178,8 @@ public class ServerDialog extends AbstractDialog
 	{
 		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_REGISTER);
 		SIPRequest request = this.messageFactory.createServerRegisterRequest();
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		
 		//服务返回 401和随机加密字串
     	if(response.getStatusCode()==401) {
@@ -177,7 +191,7 @@ public class ServerDialog extends AbstractDialog
     		logger.debug("Nonce:"+nonce);
     		return true;
     	}else {
-    		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_FAIL_AUTH_FAILED);
+    		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_UNKOWN_FAILED);
     		logger.warn("Invalid response:"+response.getStatusCode()+" "+response.getStatusMessage());
     		return false;
     	}
@@ -191,14 +205,14 @@ public class ServerDialog extends AbstractDialog
 		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_AUTH);
 		String nonce = (String) this.dialogSession.getAttribute("NONCE");
 		SIPRequest request = this.messageFactory.createUserAuthRequest(nonce);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		
 		if(response.getStatusCode()==200) {
     		logger.debug("User auth success, processed...");
     		return true;
     	}else {
-    		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_FAIL_AUTH_FAILED);
+    		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_AUTH_FAILED);
     		logger.warn("User auth failed:username or password may wrong..");
     		return false;
     	}
@@ -212,8 +226,8 @@ public class ServerDialog extends AbstractDialog
 	{
 		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_GET_PERSONAL_INFO);
 		SIPRequest request = this.messageFactory.createGetPersonalInfoRequest();
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		
 		Element personal = XMLHelper.build(response.getBody().toSendString()).getChild("personal");
     	FetionUser user = this.client.getFetionUser();
@@ -233,8 +247,8 @@ public class ServerDialog extends AbstractDialog
 		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_GET_CONTECT_LIST);
     	
 		SIPRequest request = this.messageFactory.createGetContactListRequest();
-    	this.transfer.sendSIPMessage(request);
-    	SIPResponse response = request.waitRepsonse();
+    	this.transferService.sendSIPMessage(request);
+    	SIPResponse response = request.getResponseWaiter().waitResponse();
     	
     	IFetionStore store = this.client.getFetionStore();
     	Element result = XMLHelper.build(response.getBody().toSendString());
@@ -291,9 +305,9 @@ public class ServerDialog extends AbstractDialog
     	this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_GET_CONTACTS_INFO);
     	IFetionStore store  = this.client.getFetionStore();
     	SIPRequest request = this.messageFactory.createGetContactsInfoRequest(store.getBuddyList());
-    	this.transfer.sendSIPMessage(request);
+    	this.transferService.sendSIPMessage(request);
     	
-    	SIPResponse response = request.waitRepsonse();
+    	SIPResponse response = request.getResponseWaiter().waitResponse();
     	
     	Element root = XMLHelper.build(response.getBody().toSendString());
  	    List list = root.getChild("contacts").getChildren();
@@ -319,8 +333,8 @@ public class ServerDialog extends AbstractDialog
 		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_SUB_NOTIFY);
 		IFetionStore store = this.client.getFetionStore();
  	   	SIPRequest request = this.messageFactory.createSubscribeRequest(store.getBuddyList());
- 	   	this.transfer.sendSIPMessage(request);
- 	   	SIPResponse response = request.waitRepsonse();
+ 	   	this.transferService.sendSIPMessage(request);
+ 	   	SIPResponse response = request.getResponseWaiter().waitResponse();
  	   	//TODO ..处理订阅回复结果
  	   	
  	   	this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SUCCESS);
@@ -330,13 +344,13 @@ public class ServerDialog extends AbstractDialog
 	 * 发送聊天消息
 	 * @param uri
 	 * @param content
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean sendChatMessage(String uri, String content) throws IOException
+	public boolean sendChatMessage(String uri, String content) throws Exception
 	{
 		SIPRequest request  = this.messageFactory.createChatMessageRequest(uri, content);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		return response.getStatusCode()==200 || response.getStatusCode()==280;
 	}
 	
@@ -359,7 +373,7 @@ public class ServerDialog extends AbstractDialog
 			}
 		};
 		request.setResponseHandler(handler);
-		this.transfer.sendSIPMessage(request);
+		this.transferService.sendSIPMessage(request);
 	}
 	
 	/**
@@ -367,13 +381,13 @@ public class ServerDialog extends AbstractDialog
 	 * @param uri
 	 * @param content
 	 * @return
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	public boolean sendSMSMessage(String uri, String content) throws IOException
+	public boolean sendSMSMessage(String uri, String content) throws Exception
 	{
 		SIPRequest request  = this.messageFactory.createSendSMSRequest(uri, content);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		return response.getStatusCode()==280;
 	}
 	
@@ -396,7 +410,7 @@ public class ServerDialog extends AbstractDialog
 			}
 		};
 		request.setResponseHandler(handler);
-		this.transfer.sendSIPMessage(request);
+		this.transferService.sendSIPMessage(request);
 	}
 	
 	/**
@@ -407,13 +421,13 @@ public class ServerDialog extends AbstractDialog
 	 * @param promptId	提示信息编号
 	 * @param desc 		“我是xx” xx：名字
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean addBuddy(String uri, int cordId, int promptId, String desc) throws IOException
+	public boolean addBuddy(String uri, int cordId, int promptId, String desc) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cordId, desc);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==522) {	//如果返回的是522，表明用户没开通飞信，那就添加手机好友
 			return this.addMobileBuddy(uri, cordId, desc);
 		}else if(response.getStatusCode()==200){		
@@ -444,13 +458,13 @@ public class ServerDialog extends AbstractDialog
 	 * @param cordId	添加好友的组编号
 	 * @param desc		“我是xx” xx：名字
 	 * @return
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	private boolean addMobileBuddy(String uri, int cordId, String desc) throws IOException
+	private boolean addMobileBuddy(String uri, int cordId, String desc) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cordId, desc);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()!=200) return false;
 		
 		FetionBuddy buddy = new FetionBuddy();
@@ -475,21 +489,21 @@ public class ServerDialog extends AbstractDialog
 	 * @param localName		修改的姓名
 	 * @param cordId		分组编号
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean agreedApplication(String uri) throws IOException
+	public boolean agreedApplication(String uri) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createAgreeApplicationRequest(uri);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			//将原来是陌生人的状态设置为好友
 			FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
 			buddy.setRelationStatus(FetionBuddy.RELATION_STATUS_AGREED);
 			///获取好友详细信息
 			request = this.messageFactory.createGetContactDetailRequest(uri);
-			this.transfer.sendSIPMessage(request);
-			response = request.waitRepsonse();
+			this.transferService.sendSIPMessage(request);
+			response = request.getResponseWaiter().waitResponse();
 			
 			Element root = XMLHelper.build(response.getBody().toSendString());
 			Element contact = root.getChild("contacts").getChild("contact");
@@ -510,13 +524,13 @@ public class ServerDialog extends AbstractDialog
 	 * 拒绝对方添加请求
 	 * @param uri
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean declinedAppliction(String uri) throws IOException
+	public boolean declinedAppliction(String uri) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createDeclineApplicationRequest(uri);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		return response.getStatusCode()==200;
 	}
 	
@@ -524,9 +538,9 @@ public class ServerDialog extends AbstractDialog
 	 * 删除好友
 	 * @param uri  
 	 * @return
-	 * @throws IOException
+	 * @throws Exception
 	 */
-	public boolean deleteBuddy(String uri) throws IOException
+	public boolean deleteBuddy(String uri) throws Exception
 	{
 		FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
 		if(buddy == null) return false;
@@ -534,8 +548,8 @@ public class ServerDialog extends AbstractDialog
 		//如果好友是飞信好友，就直接发起删除好友请求
 		if(buddy.isRegistered()) {
     		SIPRequest request = this.messageFactory.createDeleteBuddyRequest(uri);
-    		this.transfer.sendSIPMessage(request);
-    		SIPResponse response = request.waitRepsonse();
+    		this.transferService.sendSIPMessage(request);
+    		SIPResponse response = request.getResponseWaiter().waitResponse();
     		if(response.getStatusCode()==200) {
     			this.client.getFetionStore().deleteBuddy(uri);
     			return true;
@@ -552,13 +566,13 @@ public class ServerDialog extends AbstractDialog
 	 * 删除手机好友
 	 * @param uri  好友手机uri(类似tel:159xxxxxxxx)
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	private boolean deleteMoblieBuddy(String uri) throws IOException
+	private boolean deleteMoblieBuddy(String uri) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createDeleteMobileBuddyRequest(uri);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			this.client.getFetionStore().deleteBuddy(uri);
 			return true;
@@ -571,13 +585,13 @@ public class ServerDialog extends AbstractDialog
 	 * 获取好好友详细信息
 	 * @param uri
 	 * @return
-	 * @throws IOException 
+	 * @throws Exception 
 	 */
-	public boolean readBuddyDetail(String uri) throws IOException
+	public boolean readBuddyDetail(String uri) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createGetContactDetailRequest(uri);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			Element root = XMLHelper.build(response.getBody().toSendString());
 			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
@@ -604,8 +618,8 @@ public class ServerDialog extends AbstractDialog
 	public boolean setPersonalInfo(String nickName, String impresa) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createSetPersonalInfoRequest(nickName, impresa);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			this.client.getFetionUser().setNickName(nickName);
 			this.client.getFetionUser().setImpresa(impresa);
@@ -625,8 +639,8 @@ public class ServerDialog extends AbstractDialog
 	public boolean setBuddyLocalName(String uri, String localName) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createSetBuddyLocalName(uri, localName);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			FetionBuddy buddy = this.client.getFetionStore().getBuddy(uri);
 			buddy.setLocalName(localName);
@@ -646,8 +660,8 @@ public class ServerDialog extends AbstractDialog
 	public boolean setPresence(int presence) throws Exception
 	{
 		SIPRequest request = this.messageFactory.createSetPresenceRequest(presence);
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			this.client.getFetionUser().setPresence(presence);
 			return true;
@@ -665,8 +679,8 @@ public class ServerDialog extends AbstractDialog
 	public String startChat() throws Exception
 	{
 		SIPRequest request = this.messageFactory.createStartChatRequest();
-		this.transfer.sendSIPMessage(request);
-		SIPResponse response = request.waitRepsonse();
+		this.transferService.sendSIPMessage(request);
+		SIPResponse response = request.getResponseWaiter().waitResponse();
 		if(response.getStatusCode()==200) {
 			return response.getHeader(SIPHeader.FIELD_AUTHORIZATION).getValue();
 		}else {

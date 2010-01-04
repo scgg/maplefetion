@@ -94,7 +94,7 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
 	{
 		this.client = new MapleFetionClient(mobileNo,
 											pass,
-											new MinaTransferFactory(),
+											new TCPTransferFactory(),
 											new SimpleFetionStore(),
 											this,
 											this);
@@ -164,7 +164,7 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
 	 public void welcome() throws Exception
 	{
 		println("================================================");
-		println("|              MapleFetion 1.0 beta2            |");
+		println("|              MapleFetion 1.0 beta2           |");
 		println("|----------------------------------------------|");
 		println("| Author:solosky <solosky772@qq.com>           |");
 		println("| Home:http://maplefetion.googlecode.com       |");
@@ -199,7 +199,6 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
     		this.list();
     		return true;
     	}else {
-    		println("登录失败，用户名或者密码错误。");
     		return false;
     	}
     }
@@ -790,10 +789,21 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
     	case LOGIN_SERVER_SUB_NOTIFY:
     		msg = "订阅异步通知。。";
     		break;
-    	//TODO .. 添加更多的状态信息
+    	
+    	case LOGIN_USER_OVER_DRAW:
+    		msg = "该用户已经停机！";
+    		break;
+    		
+    	case LOGIN_SSI_AUTH_FAILED:
+    		msg = "用户名或者密码错误！";
+    		break;
+    		
     	case LOGIN_SUCCESS: 
     		msg = "登陆成功！";
     		break;
+    	
+    	//TODO .. 添加更多的状态信息
+    		
     	default:
     		msg = Integer.toString(i); 
     	}
