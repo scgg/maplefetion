@@ -59,6 +59,15 @@ public class FetionConfig
 		configLog4j();
 	}
 	
+	
+	/**
+	 * 返回配置属性
+	 */
+	public static Properties getProperties()
+	{
+		return prop;
+	}
+	
 	/**
 	 * 返回指定名字的字符串配置
 	 * @param name

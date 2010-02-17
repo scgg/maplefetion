@@ -25,7 +25,6 @@
  */
 package net.solosky.maplefetion;
 
-import java.io.IOException;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -54,6 +53,18 @@ import org.jdom.Element;
  */
 public class MapleFetionClient implements IFetionClient
 {
+	
+	/**
+	 * MapleFetion版本
+	 */
+	public static final String CLIENT_VERSION = "MapleFetion 1.0 Beta2";
+	
+	/**
+	 * 协议版本
+	 */
+	public static final String PROTOCOL_VERSION = "2009 3.5.1170";
+	
+	
 	/**
 	 * 飞信会话
 	 */

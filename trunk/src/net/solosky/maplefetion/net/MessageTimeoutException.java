@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.net;
 
+import net.solosky.maplefetion.sip.SIPOutMessage;
+
 /**
  *
  * 发送SIP信令在指定的时间没有回复就触发超时异常
@@ -34,4 +36,30 @@ package net.solosky.maplefetion.net;
 public class MessageTimeoutException extends Exception
 {
     private static final long serialVersionUID = 4681144597971987214L;
+    private SIPOutMessage outMessage;
+    
+    /**
+     * 默认构造函数
+     */
+    public MessageTimeoutException()
+    {
+    }
+    
+    /**
+     * 以一个发出包作为构造函数
+     * @param outMessage
+     */
+    public MessageTimeoutException(SIPOutMessage outMessage)
+    {
+    	this.outMessage = outMessage;
+    }
+    
+    /**
+     * 返回超时的消息 
+     * @return
+     */
+    public SIPOutMessage getTimeoutMessage()
+    {
+    	return this.outMessage;
+    }
 }

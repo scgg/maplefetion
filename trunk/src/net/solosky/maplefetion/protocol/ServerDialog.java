@@ -25,7 +25,6 @@
  */
 package net.solosky.maplefetion.protocol;
 
-import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 import java.util.TimerTask;
@@ -244,7 +243,6 @@ public class ServerDialog extends AbstractDialog
 	 */
 	private void getContactList() throws Exception
 	{
-		this.client.getLoginListener().loginStatusChanged(ILoginListener.LOGIN_SERVER_GET_CONTECT_LIST);
     	
 		SIPRequest request = this.messageFactory.createGetContactListRequest();
     	this.transferService.sendSIPMessage(request);

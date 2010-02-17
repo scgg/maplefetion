@@ -178,22 +178,22 @@ public class TransferService implements ISIPMessageListener
 	
 	/**
 	 * 处理包超时异常
-	 * @param out
+	 * @param timeoutMessage
 	 */
-	private void handlePacketTimeout(SIPOutMessage out)
+	private void handlePacketTimeout(SIPOutMessage timeoutMessage)
 	{
 		//如果发出包设置了超时处理器，就调用超时处理器，否则抛出超时异常，结束整个程序
-		if(out.getTimeoutHandler()!=null) {
-			out.getTimeoutHandler().handleTimeout(out);
+		if(timeoutMessage.getTimeoutHandler()!=null) {
+			timeoutMessage.getTimeoutHandler().handleTimeout(timeoutMessage);
 		}else {
-			this.handleTimeOutException();
+			this.handleTimeOutException(timeoutMessage);
 		}
 	}
 	
 	/**
 	 * 超时退出程序
 	 */
-	private synchronized void handleTimeOutException()
+	private synchronized void handleTimeOutException(SIPOutMessage timeoutMessage)
 	{
 		//遍历所有发出队列里面的包，如果有是请求包并在等待回复，则通知回复
 		Iterator<SIPOutMessage> it = this.sendQueue.iterator();
@@ -209,7 +209,7 @@ public class TransferService implements ISIPMessageListener
     		}
     	}
     	//通知对话对象，发生了超时异常
-    	this.transfer.getSIPMessageListener().ExceptionCaught(new IllegalStateException("A SIPMessage has sended 3 times without any response."));
+    	this.listener.ExceptionCaught(new MessageTimeoutException(timeoutMessage));
 	}
 
 	
