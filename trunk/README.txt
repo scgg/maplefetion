@@ -12,9 +12,20 @@ MapleFetion是由solosky开发的一个飞信开发工具，提供了最基本的飞信功能，你可以使用
 MapleFetion也提供了一个命令行下面的飞信，提供最精简的飞信功能。请修改shell/MapleFetion.bat
 里面手机号码和密码，然后再运行。
 
-使用例子请参照net.solosky.maplefetion.MapleFetion的用法。
+使用例子请参照net.solosky.maplefetion.MapleFetionDemo的用法。
 
 MapleFetion基于Apache License V2.0 开源发布，使用时请注明作者。
+
+注：
+MapleFetion 1.0由于设计上的缺陷，现已经暂停开发，MapleFetion 1.0-Beta3将是最后一个1.0的版本，以后可能会考虑发布一个精简版的。
+MapleFetion 2.0正在紧张开发中，重新设计，估计在3月份底发布，敬请期待！
+
+MapeFetion 2.0 特性预览：
+1. 支持SSISignV2登录。
+2.支持飞信群。
+3.支持多种连接方式，SIPC-Proxy SIPC-SSL-Proxy HTTP
+4.完全异步操作。
+5.其他功能看需要添加。
 
 
 ---------------------------------------------

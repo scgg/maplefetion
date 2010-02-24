@@ -164,13 +164,12 @@ public class MapleFetionDemo implements INotifyListener,ILoginListener,IMessageC
 	 public void welcome() throws Exception
 	{
 		println("================================================");
-		println("|              MapleFetion 1.0 beta2           |");
+		println("|              MapleFetion 1.0 beta3           |");
 		println("|----------------------------------------------|");
 		println("| Author:solosky <solosky772@qq.com>           |");
 		println("| Home:http://maplefetion.googlecode.com       |");
 		println("-----------------------------------------------|");
 		println("|这是一个命令行下的飞信，实现了飞信的基本功能。|");
-		println("|倘若好友昵称没有完全显示，可以输入update更新。|");
 		println("|如果需要帮助，请输入help。欢迎提出BUG和建议。 |");
 		println("================================================");
 	
