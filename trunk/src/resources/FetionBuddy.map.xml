@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map class="net.solosky.maplefetion.bean.FetionBuddy">
+    <field xml="nickname" bean="nickName" type="java.lang.String" readonly="false" />
+    <field xml="impresa" bean="impresa" type="java.lang.String" readonly="false" />
+</map>

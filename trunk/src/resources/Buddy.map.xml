@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map class="net.solosky.maplefetion.bean.Buddy">
+	<field xml="buddy-lists" bean="cordId" type="java.lang.String" readonly="false" />
+	<field xml="local-name" bean="localName" type="java.lang.String" readonly="false" />
+</map>
