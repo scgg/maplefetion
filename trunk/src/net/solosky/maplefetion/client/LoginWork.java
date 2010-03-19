@@ -295,6 +295,13 @@ public class LoginWork implements Runnable
 	        dialog.getGroupList(listener);
 	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
 	        
+			//如果群列表为空，就不发送下面的一些请求了
+			FetionStore store = this.context.getFetionStore();
+			if(store.getGroupList().size()==0){
+				logger.debug("The group list is empty, group dialog login is skipped.");
+				return true;
+			}
+
 	        //如果当前存储版本和服务器相同，就不获取群信息和群成员列表，
 	        //TODO ..这里只是解决了重新登录的问题，事实上这里问题很大，群信息分成很多
 	        //用户加入的群列表 groupListVersion
