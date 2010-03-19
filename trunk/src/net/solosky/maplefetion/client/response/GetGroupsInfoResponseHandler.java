@@ -66,6 +66,7 @@ public class GetGroupsInfoResponseHandler extends AbstractResponseHandler
     protected void doHandle(SipcResponse response) throws FetionException
     {
     	FetionStore store = this.context.getFetionStore();
+		if(response.getBody()==null)	return;
     	Element root = XMLHelper.build(response.getBody().toSendString());
 		List groupList = XMLHelper.findAll(root, "/results/groups/*group");
 		Iterator it = groupList.iterator();

@@ -80,7 +80,7 @@ public class LocaleSettingHelper
 		Element root = doc.getRootElement();
         
         Element servers = root.getChild("servers");
-        FetionConfig.setString("server.ssi-sign-in",  servers.getChildText("ssi-app-sign-in"));
+        FetionConfig.setString("server.ssi-sign-in-v2",  servers.getChildText("ssi-app-sign-in-v2"));
         FetionConfig.setString("server.sipc-proxy",   servers.getChildText("sipc-proxy"));
         FetionConfig.setString("server.http-tunnel",  servers.getChildText("http-tunnel"));
 	}

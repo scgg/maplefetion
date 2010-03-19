@@ -301,6 +301,7 @@ public class FetionClient implements FetionContext
     			this.state==FetionClient.STATE_IO_ERROR ||
     			this.state==FetionClient.STATE_OTHER_LOGIN ||
     			this.state==FetionClient.STATE_UNKOWN_ERROR) {
+    		//this.dialogFactory.closeAllDialog();
     		this.dispose();
     	}
     	this.notifyListener.clientStateChanged(status);

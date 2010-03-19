@@ -150,7 +150,7 @@ public class LoginWork implements Runnable
 				this.isConfigFetched = true;
 				return true;
 			} catch (Exception e) {
-				logger.debug("Load localeSetting error - exception=" + e);
+				logger.debug("Load localeSetting error", e);
 				this.updateLoginStatus(LoginListener.LOGIN_LOCALE_SEETING_CONNECT_FIALED);
 				return false;
 			}
@@ -303,6 +303,8 @@ public class LoginWork implements Runnable
 	        //暂时就这样，逐步完善中.....
 	        logger.debug("GroupListVersion: server="+userVersion.getGroupVersion()+", local="+storeVersion.getGroupVersion());
 	        if(storeVersion.getGroupVersion()!=userVersion.getGroupVersion()) {
+				//更新存储版本
+				storeVersion.setGroupVersion(userVersion.getGroupVersion());
     	        //获取群信息
     	        future.clear();
     	        dialog.getGroupsInfo(this.context.getFetionStore().getGroupList(), listener);

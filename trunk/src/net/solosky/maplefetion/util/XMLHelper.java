@@ -97,14 +97,14 @@ public class XMLHelper
 	public static List findAll(Element tree, String path)
 	{
 		if(tree==null || path==null)	
-			return null;
+			return new ArrayList();	//防止产生Null异常
 		if(path.charAt(0)=='/')
 			path = path.substring( path.indexOf('/', 1)+1);
 		String[] paths = path.split("/");
 		for(int i=0; i<paths.length-1; i++) {
 			tree = tree.getChild(paths[i]);
 			if(tree==null)
-				return new ArrayList();
+				return new ArrayList();	//防止产生Null异常
 		}
 		List els = null;
 		String last = paths[paths.length-1];

@@ -65,23 +65,26 @@ public class GetGroupListResponseHandler extends AbstractResponseHandler
     @Override
     protected void doHandle(SipcResponse response) throws FetionException
     {
-    	//解析群列表
-		Element root = XMLHelper.build(response.getBody().toSendString());
-		List groupList = XMLHelper.findAll(root, "/results/group-list/*group");
-		Iterator it = groupList.iterator();
-		FetionStore store = this.context.getFetionStore();
-		while(it.hasNext()) {
-			Element e = (Element) it.next();
-			Group group = new Group();
-			BeanHelper.setValue(group, "uri", e.getAttributeValue("uri"));
-			//group.setIdentity( Integer.parseInt(e.getAttributeValue("identity")));
-			store.addGroup(group);
-		}
-		
 		//群列表版本
+		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element v = XMLHelper.find(root, "/results/group-list");
 		int groupVersion = Integer.parseInt(v.getAttributeValue("version"));
 		this.context.getFetionUser().getStoreVersion().setGroupVersion(groupVersion);
+		//版本不一致
+		if(this.context.getFetionStore().getStoreVersion().getGroupVersion()!=groupVersion){
+			//解析群列表
+			this.context.getFetionStore().clearGroupList();
+			List groupList = XMLHelper.findAll(root, "/results/group-list/*group");
+			Iterator it = groupList.iterator();
+			FetionStore store = this.context.getFetionStore();
+			while(it.hasNext()) {
+				Element e = (Element) it.next();
+				Group group = new Group();
+				BeanHelper.setValue(group, "uri", e.getAttributeValue("uri"));
+				//group.setIdentity( Integer.parseInt(e.getAttributeValue("identity")));
+				store.addGroup(group);
+			}
+		}
     }
 
 }

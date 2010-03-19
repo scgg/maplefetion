@@ -93,7 +93,7 @@ public class SSISignV2 implements SSISign
 	private String buildUrl(long mobileNo, String pass, String pid, String pic)
 	{
 		StringBuffer b = new StringBuffer();
-		b.append(FetionConfig.getString("server.ssi-sign-in")+"?");
+		b.append(FetionConfig.getString("server.ssi-sign-in-v2")+"?");
 		b.append("mobileno="+Long.toString(mobileNo));
 		b.append("&domains=fetion.com.cn%3bm161.com.cn%3bwww.ikuwa.cn");
 		b.append("&digest="+(new PasswordEncrypter().encrypt(pass)));		//就是用以前写的密码加密工具，我在这里很郁闷。。
