@@ -119,7 +119,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 客户端状态
 	 */
-	private int state;
+	private ClientState state;
 	
 	
 	 /////////////客户端状态常量///////////////////
@@ -292,25 +292,25 @@ public class FetionClient implements FetionContext
     }
 
     /* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#updateStatus(int)
+     * @see net.solosky.maplefetion.FetionContext#updateStatus(ClientState)
      */
-    public synchronized void updateState(int status)
+    public synchronized void updateState(ClientState state)
     {
-    	this.state = status;
-    	if(this.state==FetionClient.STATE_DISCONNECTED ||
-    			this.state==FetionClient.STATE_IO_ERROR ||
-    			this.state==FetionClient.STATE_OTHER_LOGIN ||
-    			this.state==FetionClient.STATE_UNKOWN_ERROR) {
+    	this.state = state;
+    	if(this.state==ClientState.CONNECTION_ERROR ||
+    			this.state==ClientState.DISCONNECTED ||
+    			this.state==ClientState.OTHER_LOGIN||
+    			this.state==ClientState.SYSTEM_ERROR ) {
     		//this.dialogFactory.closeAllDialog();
     		this.dispose();
     	}
-    	this.notifyListener.clientStateChanged(status);
+    	this.notifyListener.clientStateChanged(state);
     }
     
     /* (non-Javadoc)
      * @see net.solosky.maplefetion.FetionContext#getStatus()
      */
-    public synchronized int getState()
+    public synchronized ClientState getState()
     {
     	return this.state;
     }
@@ -330,9 +330,9 @@ public class FetionClient implements FetionContext
     	this.dispose();
     	//更新客户端状态
     	if(exception instanceof TransferException) {
-    		this.updateState(STATE_IO_ERROR);
+    		this.updateState(ClientState.CONNECTION_ERROR);
     	}else {
-    		this.updateState(STATE_UNKOWN_ERROR);
+    		this.updateState(ClientState.SYSTEM_ERROR);
     	}
     }
 
@@ -351,14 +351,14 @@ public class FetionClient implements FetionContext
      */
     public void logout()
     {
-    	if(this.state==FetionClient.STATE_ONLINE) {
+    	if(this.state==ClientState.ONLINE) {
         	Runnable r = new Runnable(){
     			public void run(){
     				try {
                         dialogFactory.closeAllDialog();
                         transferFactory.closeFactory();
                         globalTimer.cancel();
-                    	updateState(STATE_LOGOUT);
+                    	updateState(ClientState.LOGOUT);
                     } catch (FetionException e) {
                     	logger.warn("closeDialog error.", e);
                     }

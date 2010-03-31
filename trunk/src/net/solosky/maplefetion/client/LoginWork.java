@@ -28,10 +28,10 @@ package net.solosky.maplefetion.client;
 
 import java.util.Iterator;
 
-import net.solosky.maplefetion.FetionClient;
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
-import net.solosky.maplefetion.LoginListener;
+import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.StoreVersion;
@@ -80,7 +80,7 @@ public class LoginWork implements Runnable
 	/**
 	 * 当前登录状态
 	 */
-	private int status;
+	private LoginState state;
 	
 	/**
 	 * 用户状态
@@ -108,7 +108,7 @@ public class LoginWork implements Runnable
 	 */
 	public void login()
 	{
-		this.context.updateState(FetionClient.STATE_LOGGING);
+		this.context.updateState(ClientState.LOGGING);
 		if( this.updateSystemConfig() && 	//获取自适应配置
 			this.SSISign()  &&  			//SSI登录
 			this.openServerDialog() && 		//服务器连接并验证
@@ -117,10 +117,10 @@ public class LoginWork implements Runnable
 			if(groupEnabled) {	//启用了群
 				if( this.getGroupsInfo() &&	 	//获取群信息
 					this.openGroupDialogs()) {	//建立群会话
-					this.updateLoginStatus(LoginListener.LOGIN_SUCCESS);
+					this.updateLoginState(LoginState.LOGIN_SUCCESS);
 				}
 			}else {
-				this.updateLoginStatus(LoginListener.LOGIN_SUCCESS);
+				this.updateLoginState(LoginState.LOGIN_SUCCESS);
 			}
 		}
 		
@@ -143,15 +143,15 @@ public class LoginWork implements Runnable
     {
     	if(!this.isConfigFetched) {
     		try {
-				this.updateLoginStatus(LoginListener.LOGIN_LOAD_LOCALE_SETTING_DOING);
+				this.updateLoginState(LoginState.SEETING_LOAD_DOING);
 				Document doc = LocaleSettingHelper.load(this.context.getFetionUser());
 				LocaleSettingHelper.active(doc);
-				this.updateLoginStatus(LoginListener.LOGIN_LOAD_LOCALE_SETTING_SUCCESS);
+				this.updateLoginState(LoginState.SETTING_LOAD_SUCCESS);
 				this.isConfigFetched = true;
 				return true;
 			} catch (Exception e) {
 				logger.debug("Load localeSetting error", e);
-				this.updateLoginStatus(LoginListener.LOGIN_LOCALE_SEETING_CONNECT_FIALED);
+				this.updateLoginState(LoginState.SETTING_LOAD_FAIL);
 				return false;
 			}
     	}else {
@@ -164,15 +164,14 @@ public class LoginWork implements Runnable
      */
     private boolean SSISign()
     {
+    	this.updateLoginState(LoginState.SSI_SIGN_IN_DOING);
     	if (this.verifyImage == null) {
-        	this.updateLoginStatus(LoginListener.LOGIN_SSI_SIGN_IN_DOING);
-        	this.status = this.signAction.signIn(this.context.getFetionUser());
+        	this.state = this.signAction.signIn(this.context.getFetionUser());
         } else {
-        	this.updateLoginStatus(LoginListener.LOGIN_SSI_SEND_VERIFY_CODE_DOING);
-        	this.status = this.signAction.signIn(this.context.getFetionUser(), this.verifyImage);
+        	this.state = this.signAction.signIn(this.context.getFetionUser(), this.verifyImage);
         }
-		this.updateLoginStatus(this.status);
-		return this.status==LoginListener.LOGIN_SSI_SIGN_IN_SUCCESS;
+		this.updateLoginState(this.state);
+		return this.state==LoginState.SSI_SIGN_IN_SUCCESS;
     }
     
     /**
@@ -180,9 +179,8 @@ public class LoginWork implements Runnable
      */
     private boolean openServerDialog()
     {
-    	this.updateLoginStatus(LoginListener.LOGIN_SERVER_USER_LOGIN_DOING);
+    	this.updateLoginState(LoginState.SIPC_REGISTER_DOING);
 		ServerDialog serverDialog = this.context.getDialogFactory().createServerDialog();
-		this.status = LoginListener.LOGIN_SERVER_USER_LOGIN_SUCCESS;
 		try {
 	        serverDialog.openDialog();
 	        
@@ -196,24 +194,25 @@ public class LoginWork implements Runnable
 	    	//用户验证
 	    	future.clear();
 	    	serverDialog.userAuth(presence, listener);
-	    	Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);	
-	        
+	    	Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+	    	
+	    	state = LoginState.SIPC_REGISGER_SUCCESS;
 		} catch (TransferException e) {
 			logger.warn("serverDialog: failed to connect to server.", e);
-			this.status = LoginListener.LOGIN_SERVER_CONNECT_FAILED;
+			this.state = LoginState.SIPC_CONNECT_FAIL;
 		} catch (DialogException e) {
 			logger.warn("serverDialog: login failed.", e);
-			this.status = LoginListener.LOGIN_OHTER_FAILED;
+			this.state = LoginState.OHTER_ERROR;
 		} catch (RequestTimeoutException e) {
 			logger.warn("serverDialog: login request timeout.", e);
-			status = LoginListener.LOGIN_SERVER_LOGIN_TIMEOUT;
+			state = LoginState.SIPC_TIMEOUT;
         } catch (InterruptedException e) {
         	logger.warn("serverDialog: login thread interrupted.", e);
-        	status = LoginListener.LOGIN_OHTER_FAILED;
+        	state = LoginState.OHTER_ERROR;
         }
-    	this.updateLoginStatus(this.status);
+    	this.updateLoginState(this.state);
     	
-    	return this.status == LoginListener.LOGIN_SERVER_USER_LOGIN_SUCCESS;
+    	return this.state == LoginState.SIPC_REGISGER_SUCCESS;
     }
     
     /**
@@ -272,7 +271,7 @@ public class LoginWork implements Runnable
         } catch (Exception e) {
         	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
         	logger.fatal("get contacts info failed.", e); 
-        	this.updateLoginStatus(LoginListener.LOGIN_OHTER_FAILED);
+        	this.updateLoginState(LoginState.OHTER_ERROR);
         	return false;
         }
     	
@@ -329,7 +328,7 @@ public class LoginWork implements Runnable
         } catch (Exception e) {
         	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
         	logger.fatal("get groups info failed.", e); 
-        	this.updateLoginStatus(LoginListener.LOGIN_OHTER_FAILED);
+        	this.updateLoginState(LoginState.OHTER_ERROR);
         	return false;
         }
     }
@@ -339,14 +338,12 @@ public class LoginWork implements Runnable
      */
     private boolean openGroupDialogs()
     {
-    	this.updateLoginStatus(LoginListener.LOGIN_SERVER_GROUP_LOGIN_DOING);
 		Iterator<Group> it = this.context.getFetionStore().getGroupList().iterator();
 		try {
 	        while (it.hasNext()) {
 	        	GroupDialog groupDialog = this.context.getDialogFactory().createGroupDialog(it.next());
 	        	groupDialog.openDialog();
 	        }
-	        this.updateLoginStatus(LoginListener.LOGIN_SERVER_GROUP_LOGIN_SUCCESS);
 	        return true;
         } catch (Exception e) {
         	logger.fatal("open group dialogs failed.", e);
@@ -358,14 +355,14 @@ public class LoginWork implements Runnable
      * 更新登录状态
      * @param status
      */
-    private void updateLoginStatus(int status)
+    private void updateLoginState(LoginState state)
     {
     	if(this.context.getLoginListener()!=null)
-    		this.context.getLoginListener().loginStatusUpdated(status);
-    	if(status>0x400) {	//大于400都是登录出错
-    		this.context.updateState(FetionClient.STATE_LOGOUT);
-    	}else if(status==LoginListener.LOGIN_SUCCESS) {
-    		this.context.updateState(FetionClient.STATE_ONLINE);
+    		this.context.getLoginListener().loginStateChanged(state);
+    	if(state.getValue()>0x400) {	//大于400都是登录出错
+    		this.context.updateState(ClientState.LOGOUT);
+    	}else if(state==LoginState.LOGIN_SUCCESS) {
+    		this.context.updateState(ClientState.ONLINE);
     	}
     }
     ////////////////////////////////////////////////////////////////////

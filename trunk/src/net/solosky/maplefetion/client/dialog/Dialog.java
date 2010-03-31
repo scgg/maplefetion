@@ -60,19 +60,14 @@ public abstract class Dialog
 	/**
 	 * 对话框状态
 	 */
-	protected int state;
-	
-	public final static int STATE_CLOSED = 1;
-	public final static int STATE_OPENED = 2;
-	public final static int STATE_OPENNING = 3;
-	
+	protected DialogState state;
 	/**
 	 * 默认的构造函数
 	 */
 	public Dialog(FetionContext context)
 	{
 		this.context = context;
-		this.state  = Dialog.STATE_OPENNING;
+		this.state  = DialogState.OPENNING;
 		this.session = new DialogSession();
 	}
 	
@@ -121,9 +116,9 @@ public abstract class Dialog
 	 */
 	protected void ensureOpened()
 	{
-		if(this.state == STATE_CLOSED) {
+		if(this.state == DialogState.CLOSED) {
 			throw new IllegalStateException("Dialog is closed.");
-		}else if(this.state == STATE_OPENNING) {
+		}else if(this.state == DialogState.OPENNING) {
 			throw new IllegalStateException("Dialog is openning.");
 		}else {
 			//State is open....
@@ -164,7 +159,7 @@ public abstract class Dialog
      */
     public boolean isColsed()
     {
-    	return this.state == Dialog.STATE_CLOSED;
+    	return this.state == DialogState.CLOSED;
     }
 
 	/**
@@ -172,14 +167,14 @@ public abstract class Dialog
      */
     public boolean isOpened()
     {
-    	return this.state == Dialog.STATE_OPENED;
+    	return this.state == DialogState.OPENED;
     }
     
     /**
      * 设置对话框状态
      * @param state
      */
-    public synchronized void setState(int state)
+    public synchronized void setState(DialogState state)
     {
     	this.state = state;
     }

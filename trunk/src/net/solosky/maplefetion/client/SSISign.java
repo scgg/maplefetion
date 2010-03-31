@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.client;
 
+import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.net.TransferException;
@@ -40,17 +41,17 @@ public interface SSISign
 	/**
 	 * 尝试登录
 	 * param user 用户对象
-	 * @return		状态值，定义在LoginListener中
+	 * @return		状态值
 	 */
-	public int signIn(User user);
+	public LoginState signIn(User user);
 	
 	/**
 	 * 以验证码登录
 	 * @param user	用户对象
 	 * @param img	验证码
-	 * @return	状态值，定义在LoginListener中
+	 * @return	状态值
 	 */
-	public int signIn(User user, VerifyImage img);
+	public LoginState signIn(User user, VerifyImage img);
 	
 
 	/**
@@ -59,6 +60,6 @@ public interface SSISign
 	 * @return
 	 * @throws TransferException
 	 */
-	public int signOut(User user);
+	public LoginState signOut(User user);
 
 }

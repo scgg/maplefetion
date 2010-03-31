@@ -92,12 +92,12 @@ public interface FetionContext
 	/**
 	 * 设置客户端状态
 	 */
-	public abstract void updateState(int status);
+	public abstract void updateState(ClientState state);
 
 	/**
 	 * 返回客户端状态
 	 */
-	public abstract int getState();
+	public abstract ClientState getState();
 
 	/**
 	 * 处理不可恢复的异常的回调方法

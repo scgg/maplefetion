@@ -32,7 +32,7 @@ import java.net.URLConnection;
 import javax.net.ssl.HttpsURLConnection;
 
 import net.solosky.maplefetion.FetionConfig;
-import net.solosky.maplefetion.LoginListener;
+import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.util.BeanHelper;
@@ -64,7 +64,7 @@ public class SSISignV2 implements SSISign
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.SSISign#signOut()
      */
-	public int signOut(User user)
+	public LoginState signOut(User user)
 	{
 		throw new IllegalAccessError("Not implemented.");
 	}
@@ -114,28 +114,27 @@ public class SSISignV2 implements SSISign
 	 * @throws IOException
 	 * @throws ParseException 
 	 */
-	private int signIn(long mobileNo, String pass, String pid, String pic)
+	private LoginState signIn(long mobileNo, String pass, String pid, String pic)
 	{
-		int status = 0;
+		LoginState state = null;
 		String url = this.buildUrl(mobileNo, pass, pid, pic);
 		try {
 	        HttpsURLConnection conn = (HttpsURLConnection) this.getConnection(url);
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
 	        if(conn.getResponseCode()==421) {	
 	        	logger.debug("SSISignIn: need verify.");
-	        	status = LoginListener.LOGIN_SSI_NEED_VERIFY;
-	        	
+	        	state = LoginState.SSI_NEED_VERIFY;
 	        }else if(conn.getResponseCode()==420) {
 	        	logger.debug("SSISignIn: invalid verify code.");
-	        	status = LoginListener.LOGIN_SSI_VERIFY_FAILED;
+	        	state = LoginState.SSI_VERIFY_FAIL;
 	        	
 	        }else if(conn.getResponseCode()==401) {
 	        	logger.debug("SSISignIn: invalid user or password.");
-	        	status = LoginListener.LOGIN_SSI_AUTH_FAILED;
+	        	state = LoginState.SSI_AUTH_FAIL;
 	        	
 	        }else if(conn.getResponseCode()==200) {
 	        	logger.debug("SSISignIn: sign in success.");
-	        	status = LoginListener.LOGIN_SSI_SIGN_IN_SUCCESS;
+	        	state = LoginState.SSI_SIGN_IN_SUCCESS;
 	        	
 	        	String header = conn.getHeaderField("Set-Cookie");
 	        	int s = header.indexOf("ssic=");
@@ -147,32 +146,28 @@ public class SSISignV2 implements SSISign
 	        	Element userEl = root.getChild("user");
 	        	String uri = userEl.getAttributeValue("uri");
 	        	String uid = userEl.getAttributeValue("user-id");
-	        	String sid = uri.substring(4, uri.indexOf('@'));
-	        	
 	        	this.user.setSsic(ssic);
 	        	this.user.setUri(uri);
-//			this.user.setUserId(Integer.parseInt(uid));
-//			this.user.setFetionId(Integer.parseInt(sid));
 	        	BeanHelper.setValue(this.user, "userId", (Integer.parseInt(uid)));
 	        	
 	        	logger.debug("SSISignIn: ssic = "+ssic);
 	        	this.user.setSsic(ssic);
 	        }
         } catch (NumberFormatException e) {
-        	status = LoginListener.LOGIN_OHTER_FAILED;
+        	state = LoginState.OHTER_ERROR;
         } catch (ParseException e) {
-        	status = LoginListener.LOGIN_OHTER_FAILED;
+        	state = LoginState.OHTER_ERROR;
         } catch (IOException e) {
-	        status = LoginListener.LOGIN_SSI_CONNECT_FAILED; 
+        	state = LoginState.SSI_CONNECT_FAIL;
         }
-		return status;
+		return state;
 	}
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.SSISign#signIn(net.solosky.maplefetion.bean.User)
      */
     @Override
-    public int signIn(User user)
+    public LoginState signIn(User user)
     {
     	this.user = user;
 	    return this.signIn(user.getMobile(), user.getPassword(), null, null);
@@ -182,7 +177,7 @@ public class SSISignV2 implements SSISign
      * @see net.solosky.maplefetion.client.SSISign#signIn(net.solosky.maplefetion.bean.User, net.solosky.maplefetion.bean.VerifyImage)
      */
     @Override
-    public int signIn(User user, VerifyImage img)
+    public LoginState signIn(User user, VerifyImage img)
     {
     	this.user = user;
 	    return this.signIn(user.getMobile(), user.getPassword(), img.getImageId(), img.getVerifyCode());

@@ -18,26 +18,21 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionListener.java
+ * File     : DialogState.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-3-31
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion;
-
+package net.solosky.maplefetion.client.dialog;
 
 /**
- *
- * 登录监听器
+ * 
+ * 对话框状态枚举
  *
  * @author solosky <solosky772@qq.com>
  */
-public interface LoginListener
-{
-	
-	/**
-	 * 登录状态发生了改变，仅在登录时候有效
-	 * @param state
-	 */
-	public void loginStateChanged(LoginState state);
+public enum DialogState {
+	OPENNING,		//对话框正在打开
+	OPENED,			//对话框已经打开
+	CLOSED			//对话框已经关闭
 }

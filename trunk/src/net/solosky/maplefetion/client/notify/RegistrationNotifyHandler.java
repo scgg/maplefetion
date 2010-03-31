@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.client.notify;
 
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.sipc.SipcNotify;
@@ -53,10 +54,10 @@ public class RegistrationNotifyHandler extends AbstractNotifyHandler
     	
     	//用户在其他地方登陆
     	if(eventType!=null && eventType.equals("deregistered")) {
-    		this.context.updateState(FetionClient.STATE_OTHER_LOGIN);
+    		this.context.updateState(ClientState.OTHER_LOGIN);
     		this.dialog.closeDialog();
     	}else if(eventType.equals("disconnect")){
-    		this.context.updateState(FetionClient.STATE_DISCONNECTED);
+    		this.context.updateState(ClientState.DISCONNECTED);
     		this.dialog.closeDialog();
     	}else{
     		logger.warn("Unknown registration event type:"+eventType);

@@ -17,27 +17,27 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionListener.java
+ * Package  : net.solosky.maplefetion
+ * File     : ClientState.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-3-31
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion;
 
-
 /**
  *
- * 登录监听器
+ *  客户端状态枚举
+ *  当状态改变的时候，比如网络连接断开，客户端状态就会改变，用户可以在NotifyListener.clientStateChanged()中监听状态改变
  *
  * @author solosky <solosky772@qq.com>
  */
-public interface LoginListener
-{
-	
-	/**
-	 * 登录状态发生了改变，仅在登录时候有效
-	 * @param state
-	 */
-	public void loginStateChanged(LoginState state);
+public enum ClientState {
+	ONLINE,				//在线状态
+	LOGGING,			//登录状态
+	LOGOUT,				//退出状态，初始状态
+	OTHER_LOGIN,		//其他客户端登录
+	DISCONNECTED,		//服务器关闭了连接
+	CONNECTION_ERROR,	//网络连接出错
+	SYSTEM_ERROR		//客户端内部错误
 }

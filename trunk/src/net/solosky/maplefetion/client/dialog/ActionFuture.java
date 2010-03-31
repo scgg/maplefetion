@@ -26,6 +26,7 @@
 package net.solosky.maplefetion.client.dialog;
 
 import net.solosky.maplefetion.net.RequestTimeoutException;
+import net.solosky.maplefetion.net.TransferException;
 
 
 /**
@@ -45,6 +46,8 @@ public class ActionFuture
 	private boolean isNotifyed;
 	//是否超时
 	private boolean isTimeout;
+	//是否有传输异常
+	private boolean isIoError;
 	
 	/**
 	 * 构造函数
@@ -52,8 +55,7 @@ public class ActionFuture
 	public ActionFuture()
 	{
 		this.lock = new Object();
-		this.status = 0;
-		this.isNotifyed = false;
+		this.clear();
 	}
 	
 	/**
@@ -87,9 +89,10 @@ public class ActionFuture
 	 * 如果在指定的时间操作仍没有完成 或者操作已经发生了超时操作，就抛出RequestTimeoutException
 	 * 
 	 * @throws InterruptedException 如果等待过程被中断就抛出中断异常
+	 * @throws TransferException    如果等待过程中出现网络异常就抛出
 	 * @throws ReqeustTimeoutExcetion 如果请求超时会跑出请求超时异常
 	 */
-	public int waitStatus(long timeout) throws RequestTimeoutException, InterruptedException
+	public int waitStatus(long timeout) throws RequestTimeoutException, InterruptedException, TransferException
 	{
 		synchronized (lock) {
 	        //判断是否已经提前通知过了
@@ -100,10 +103,12 @@ public class ActionFuture
 	        lock.wait(timeout);
 	        
              //如果超时或者在等待的时间没有通知，就跑出请求超时异常
-             if(this.isTimeout || !this.isNotifyed)
+             if(this.isTimeout || !this.isNotifyed) {
             	 throw new RequestTimeoutException();
-             else
-            	 return this.status;
+             }else if(this.isIoError) {
+            	 throw new TransferException();
+             }else {}
+            return this.status;
         }
 	}
 	
@@ -134,13 +139,26 @@ public class ActionFuture
 	}
 	
 	/**
+	 * 设置传输异常
+	 */
+	public void setIoError()
+	{
+		synchronized (lock) {
+	        this.isNotifyed = true;
+	        this.isIoError = true;
+	        this.lock.notifyAll();
+        }
+	}
+	/**
 	 * 清除等待结果，便于下一次等待
 	 */
 	public void clear()
 	{
 		synchronized (lock) {
+			this.status = 0;
 	        this.isNotifyed = false;
 	        this.isTimeout  = false;
+	        this.isIoError = false;
         }
 	}
 	

@@ -66,8 +66,32 @@ public class Message
 	 */
 	public Message()
 	{
+		this("", "宋体", -16777216, 10.5);
 	}
 	
+	/**
+	 * 以一个无格式的字符串构造消息
+	 */
+	public Message(String plain)
+	{
+		this(plain, "宋体", -16777216, 10.5);
+	}
+	
+	
+	/**
+	 * 详细的构造函数
+	 * @param text
+	 * @param font
+	 * @param color
+	 * @param size
+	 */
+	public Message(String text, String font, int color, double size)
+	{
+		this.text = text;
+		this.font = font;
+		this.color = color;
+		this.size = size;
+	}
 	/**
 	 * 解析带有消息格式的字符串为消息对象
 	 * 如<Font Face='宋体' Color='-16777216' Size='10.5'>sadsads</Font>

@@ -92,7 +92,7 @@ public class MobileChatDialog extends ChatDialog
     public void closeDialog()
     {
     	//不做任何事情
-    	this.setState(STATE_CLOSED);
+    	this.setState(DialogState.CLOSED);
     }
 
 	/* (non-Javadoc)
@@ -102,7 +102,7 @@ public class MobileChatDialog extends ChatDialog
     public void openDialog() throws TransferException, DialogException
     {
 	    //不做任何事情
-    	this.setState(STATE_OPENED);
+    	this.setState(DialogState.OPENED);
 	    
     }
     

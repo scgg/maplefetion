@@ -29,6 +29,7 @@ import java.util.Collection;
 import java.util.Iterator;
 import java.util.TimerTask;
 
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.ExceptionHandler;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
@@ -154,14 +155,15 @@ public class ServerDialog extends Dialog implements ExceptionHandler
         	int keepInterval = FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000;
     		this.context.getGlobalTimer().schedule(this.keepLiveTask, keepInterval, keepInterval);
     		
-    		this.state = STATE_OPENED;
-    		} catch (FetionException fe) {
-    			
-    			if(fe instanceof TransferException) {
-    				throw (TransferException) fe;
-    			}else {
-    				throw new DialogException(fe);
-    			}
+    		//设置对话框状态为打开状态
+    		this.setState(DialogState.OPENED);
+    		
+		} catch (FetionException fe) {
+			if(fe instanceof TransferException) {
+				throw (TransferException) fe;
+			}else {
+				throw new DialogException(fe);
+			}
         }		
 		
     }
@@ -188,17 +190,17 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     @Override
     public void handleException(FetionException e)
     {
-    	if(e instanceof TransferException ) {
+    	if(e instanceof TransferException) {
         	try {
 	            this.processorChain.stopProcessorChain();
             } catch (FetionException fe) {
             	logger.warn("closeProcessorChain failed.", fe);
             }
-            if( this.context.getState()==FetionClient.STATE_ONLINE ) {
+            if( this.context.getState()==ClientState.ONLINE ) {
                 logger.fatal("ServerDialog fatal error, close the client, please try to login again.", e);
             	this.context.handleException(e);
             }
-    	}else if(this.context.getState()==FetionClient.STATE_LOGGING){
+    	}else if(this.context.getState()==ClientState.LOGGING){
     		logger.fatal("ServerDialog login error, close the client...", e);
     		this.context.handleException(e);
     	}else {
@@ -364,7 +366,10 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 				public void actionFinished(int status)
 				{
 					if(status!=ActionStatus.ACTION_OK) {
-						logger.warn("ServerDialog keepAlive failed. status="+status);
+						logger.fatal("ServerDialog keepAlive failed. status="+status);
+						if(context.getState()==ClientState.ONLINE) {
+							context.handleException(new TransferException("Client keepAlive failed."));
+						}
 					}
 				}
 			};
@@ -607,6 +612,5 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		SipcRequest request = this.messageFactory.createGetContactDetailRequest(buddy.getUri());
 		request.setResponseHandler(new GetContactDetailResponseHandler(context, this, listener));
 		this.process(request);
-		
 	}
 }

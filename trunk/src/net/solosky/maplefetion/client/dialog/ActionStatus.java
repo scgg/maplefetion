@@ -40,4 +40,5 @@ public interface ActionStatus extends SipcStatus
 	public static final int OTHER_ERROR = 800;	//其他未知错误
 	
 	public static final int INVALD_CORD_ID = 901;		//无效的分组编号
+	public static final int INVALD_BUDDY = 902;		//不是好友
 }

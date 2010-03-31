@@ -230,7 +230,7 @@ public class TransferService extends AbstractProcessor
 					// 重新发送这个包
 					this.processOutcoming(out);
 				} else { // 这个包已经超过重发次数，通知对话对象，发生了超时异常
-					logger.warn("A OutMessage is resend three times, handle this timeout exception...");
+					logger.warn("A request is resend three times, handle this timeout exception...");
 					this.handleRequestTimeout(out);
 				}
 			}
@@ -248,18 +248,9 @@ public class TransferService extends AbstractProcessor
 		//发出包设置了超时处理器，就调用超时处理器，否则抛出超时异常，结束整个程序
 		if (request.getResponseHandler() != null) {
 			request.getResponseHandler().timeout(request);
-		} else {
-			this.handleTimeOutException(request);
+		}else {
+			logger.warn("Request already time out, but there isn't a timeout handler, ignore it. Request="+request);
 		}
-	}
-
-	/**
-	 * 超时退出程序
-	 */
-	private synchronized void handleTimeOutException(SipcRequest request)
-	{
-		// 通知对话对象，发生了超时异常
-		this.raiseException(new RequestTimeoutException(request));
 	}
 
 }

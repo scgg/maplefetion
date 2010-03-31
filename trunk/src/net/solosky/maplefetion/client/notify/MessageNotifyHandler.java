@@ -35,6 +35,8 @@ import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
+import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
@@ -43,6 +45,7 @@ import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.UriHelper;
 
 /**
@@ -86,6 +89,17 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
         FetionStore store = this.context.getFetionStore();
 	    Buddy from   = store.getBuddy(notify.getFrom());
 	    String body  = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
+	    Message msg  = null;
+	    SipcHeader contentHeader = notify.getHeader(SipcHeader.CONTENT_TYPE);
+	    if(contentHeader!=null && "text/plain".equals(contentHeader.getValue())) {
+	    	msg = Message.wrap(body);
+	    }else {
+	    	try {
+	            msg = Message.parse(body);
+            } catch (ParseException e) {
+            	msg = Message.wrap(body);
+            }
+	    }
 	    
 	    //如果好友没有找到，可能是陌生人发送的信息，
 	    if(from==null) {
@@ -110,8 +124,22 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	   
 	    //通知消息监听器
 	    ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(from);
-	    chatDialog.updateActiveTime();
-	   this.context.getNotifyListener().buddyMessageRecived(from, Message.parse(body), chatDialog);
+	    if(chatDialog==null) {
+	    	final ChatDialog dialog = this.context.getDialogFactory().createChatDialog(from);
+	    	final Buddy ffrom = from;
+	    	final Message fmsg = msg;
+	    	dialog.openDialog(new ActionListener() {
+	    		public void actionFinished(int status) {
+	    			if(status==ActionStatus.ACTION_OK) {
+    	    			 dialog.updateActiveTime();
+    	    			 context.getNotifyListener().buddyMessageRecived(ffrom, fmsg, dialog);
+    	    		}
+	    		}
+	    	});
+	    }else {
+	    	chatDialog.updateActiveTime();
+	    	this.context.getNotifyListener().buddyMessageRecived(from, Message.parse(body), chatDialog);
+	    }
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
     }
     

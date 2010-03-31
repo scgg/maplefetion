@@ -55,6 +55,13 @@ public interface NotifyListener
 	 */
 	public void buddyMessageRecived(Buddy from, Message message, ChatDialog dialog);
 	
+	/**
+	 * 接收到了群消息
+	 * @param group		来自群
+	 * @param from		来自群成员
+	 * @param message	消息内容
+	 * @param dialog	群对话框
+	 */
 	public void groupMessageRecived(Group group, Member from, Message message, GroupDialog dialog);
 	
 	/**
@@ -84,6 +91,9 @@ public interface NotifyListener
 	public void presenceChanged(FetionBuddy buddy);
 	
 	
-	
-	public void clientStateChanged(int status);
+	/**
+	 * 客户端状态发生了改变
+	 * @param state
+	 */
+	public void clientStateChanged(ClientState state);
 }

@@ -38,7 +38,6 @@ public class Presence
 	public static final int BUSY = 600;
 	public static final int AWAY = 100;
 	public static final int HIDEN = 000;
-	public static final int MOBILE = 000;
 	
 	/**
 	 * 在线状态

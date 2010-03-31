@@ -128,46 +128,38 @@ public class FetionDemo implements LoginListener, NotifyListener
 		}
 	}
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.LoginListener#loginStatusUpdated(int)
+     * @see net.solosky.maplefetion.LoginListener#loginStateChanged(LoginState)
      */
-    @Override
-    public void loginStatusUpdated(int status)
+	@Override
+    public void loginStateChanged(LoginState state)
     {
-	    switch (status)
+	    switch (state)
         {
-	    case LOGIN_LOAD_LOCALE_SETTING_DOING:
+	    case SEETING_LOAD_DOING:
 	    	println("获取自适应系统配置中...");
 	    	break;
 	    	
-	    case LOGIN_SSI_SIGN_IN_DOING:
+	    case SSI_SIGN_IN_DOING:
 	    	println("SSI登录中...");
 	    	break;
 
-        case LOGIN_SSI_SIGN_IN_SUCCESS:
+        case SSI_SIGN_IN_SUCCESS:
         	println("SSI登录成功...");
         	break;
         	
-        case LOGIN_SSI_SEND_VERIFY_CODE_DOING:
-        	println("发送验证码...");
-        	break;
-        	
-        case LOGIN_SERVER_USER_LOGIN_DOING:
+        case SIPC_REGISTER_DOING:
         	println("建立服务器会话...");
         	break;
-        	
-        case LOGIN_SERVER_GROUP_LOGIN_DOING:
-        	println("建立群会话...");
-        	break;
-        	
+
         case LOGIN_SUCCESS:
         	println("登录成功");
         	this.loginSuccess();
         	break;
         	
         	
-        case LOGIN_SSI_NEED_VERIFY:
-        case LOGIN_SSI_VERIFY_FAILED:
-        	if(status==LOGIN_SSI_NEED_VERIFY)
+        case SSI_NEED_VERIFY:
+        case SSI_VERIFY_FAIL:
+        	if(state==LoginState.SSI_NEED_VERIFY)
         		println("需要验证, 请输入目录下的v.png里面的验证码:");
         	else
         		println("验证码验证失败，刷新验证码中...");
@@ -182,20 +174,20 @@ public class FetionDemo implements LoginListener, NotifyListener
         	}
 	        break;
 
-        case LOGIN_SSI_CONNECT_FAILED:
+        case SSI_CONNECT_FAIL:
         	println("SSI连接失败!");
         	break;
         	
-        case LOGIN_SERVER_LOGIN_TIMEOUT:
+        case SIPC_TIMEOUT:
         	println("登陆超时！");
         	break;
         	
-        case LOGIN_SSI_AUTH_FAILED:
+        case SSI_AUTH_FAIL:
         	println("用户名或者密码错误!");
         	break;
         
         default:
-        	println("其他状态:"+Integer.toHexString(status));
+        	println("其他状态:"+state.name());
 	        break;
         }
 	    
@@ -307,7 +299,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 				}else {
 					impresa = "";
 				}
-				println(Integer.toString(startId)+"\t"+fomartString(buddy.getDisplayName(),10)+"\t"
+				println(Integer.toString(startId)+"\t"+formatRelation(buddy.getRelation().getValue())+"\t"+fomartString(buddy.getDisplayName(),10)+"\t"
 						+fomartPresence(buddy)
 						+"\t"+impresa);
 				startId++;
@@ -803,6 +795,22 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    }
 	    
 	    /**
+	     * 格式化关系
+	     */
+	    public String formatRelation(int relation)
+	    {
+	    	switch(relation) {
+	    	case Relation.RELATION_BUDDY: return "B";
+	    	case Relation.RELATION_UNCONFIRMED: return "W";
+	    	case Relation.RELATION_DECLINED: return "X";
+	    	case Relation.RELATION_STRANGER: return "？";
+	    	case Relation.RELATION_BANNED: return "@";
+	    	default: return "-";
+	    	}
+	    	
+	    }
+	    
+	    /**
 	     * 登录成功之后，启动主循环
 	     */
 	    public void loginSuccess()
@@ -818,7 +826,7 @@ public class FetionDemo implements LoginListener, NotifyListener
                     } catch (Exception e) {
 	                    println("程序运行出错");
                     	e.printStackTrace();
-                    	if(client.getState()==FetionClient.STATE_ONLINE) {
+                    	if(client.getState()==ClientState.ONLINE) {
                     		client.logout();
                     	}
                     }
@@ -1045,7 +1053,7 @@ public class FetionDemo implements LoginListener, NotifyListener
     		println("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
     	else 
     		println("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());
-
+    	dialog.sendChatMessage(message, null);
     	prompt();
 	    
     }
@@ -1080,14 +1088,14 @@ public class FetionDemo implements LoginListener, NotifyListener
 
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.NotifyListener#statusChanged(int)
+     * @see net.solosky.maplefetion.NotifyListener#statusChanged(ClientState)
      */
     @Override
-    public void clientStateChanged(int status)
+    public void clientStateChanged(ClientState state)
     {
-	    switch (status)
+	    switch (state)
         {
-        case FetionClient.STATE_OTHER_LOGIN:
+        case OTHER_LOGIN:
         	println("你已经从其他客户端登录。");
         	println("30秒之后重新登录..");
         	try {
@@ -1097,16 +1105,16 @@ public class FetionDemo implements LoginListener, NotifyListener
             } catch (InterruptedException e) {
             }
 	        break;
-        case FetionClient.STATE_IO_ERROR:
+        case CONNECTION_ERROR:
         	println("客户端连接异常");
 	        break;
-        case FetionClient.STATE_DISCONNECTED:
+        case DISCONNECTED:
         	println("服务器关闭了连接");
         	break;
-        case FetionClient.STATE_LOGOUT:
+        case LOGOUT:
         	println("已经退出。。");
         	break;
-        case FetionClient.STATE_ONLINE:
+        case ONLINE:
         	println("当前是在线状态。");
         	break;
         	

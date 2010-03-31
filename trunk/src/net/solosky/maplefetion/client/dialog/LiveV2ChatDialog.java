@@ -97,11 +97,9 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	/**
 	 * @param mainBuddy
 	 * @param client
-	 * @throws TransferException
 	 */
-	public LiveV2ChatDialog(Buddy mainBuddy, FetionContext client) throws TransferException
-	{
-		super(mainBuddy, client);
+	public LiveV2ChatDialog(Buddy mainBuddy, FetionContext client)
+	{	super(mainBuddy, client);
 		this.messageFactory   = new MessageFactory(client.getFetionUser());
 		this.buddyEnterHelper = new BuddyEnterHelper();
 		this.buddyList        = new ArrayList<Buddy>();
@@ -216,7 +214,6 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     @Override
     public boolean isMutipartySupported()
     {
-	    // TODO Auto-generated method stub
 	    return false;
     }
 
@@ -239,7 +236,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     @Override
     public void closeDialog()
     {
-    	this.setState(STATE_CLOSED);
+    	this.setState(DialogState.CLOSED);
     	try {
     		//TODO NOTE:如果发生了传输异常这里就不应该发送离开消息，否则会抛出第二个TransferException
         	if(!this.processorChain.isChainClosed()) {
@@ -284,7 +281,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     		this.buddyEnterHelper.waitBuddyEnter(this.mainBuddy);
     		
     		//对话框建立成功
-    		this.setState(STATE_OPENED);
+    		this.setState(DialogState.OPENED);
         }catch (TransferException te) {        	//传输异常，直接抛出
         	throw te;
         }catch (DialogException de) {			//对话框异常，直接抛出
