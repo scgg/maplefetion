@@ -25,6 +25,10 @@
  */
 package net.solosky.maplefetion.util;
 
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.bean.MobileBuddy;
+
 /**
  *
  *  URI工具类，帮助URI处理
@@ -50,5 +54,24 @@ public class UriHelper
 	public static boolean isMobile(String uri)
 	{
 		return uri!=null && uri.indexOf("tel")!=-1;
+	}
+	
+	
+	/**
+	 * 根据一个URI来创建好友对象
+	 * @param uri
+	 * @return
+	 */
+	public static Buddy createBuddy(String uri)
+	{
+		Buddy buddy = null;
+		if(isMobile(uri)) {
+			buddy = new MobileBuddy();
+		}else {
+			buddy = new FetionBuddy();
+		}
+		buddy.setUri(uri);
+		
+		return buddy;
 	}
 }

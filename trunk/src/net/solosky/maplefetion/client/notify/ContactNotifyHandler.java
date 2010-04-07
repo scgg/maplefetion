@@ -32,6 +32,7 @@ import java.util.List;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
@@ -41,6 +42,7 @@ import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.ParseHelper;
+import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -125,14 +127,16 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	String uri  = app.getAttributeValue("uri");
     	final String desc = app.getAttributeValue("desc");
     	//建立一个新好友，并把关系设置为陌生人
-    	FetionBuddy buddy = new FetionBuddy();
+    	Buddy buddy = UriHelper.createBuddy(uri);
     	buddy.setUri(uri);
     	buddy.getRelation().setValue(Relation.RELATION_STRANGER);
     	context.getFetionStore().addBuddy(buddy);
-    	//获取陌生人的信息
-    	SipcRequest request = this.dialog.getMessageFactory().createGetContactDetailRequest(uri);
-    	request.setResponseHandler(new GetContactInfoResponseHandler(buddy));
-    	dialog.process(request);
+    	//如果是飞信好友，获取陌生人的信息
+    	if(buddy instanceof FetionBuddy) {
+        	SipcRequest request = this.dialog.getMessageFactory().createGetContactDetailRequest(uri);
+        	request.setResponseHandler(new GetContactInfoResponseHandler((FetionBuddy)buddy));
+        	dialog.process(request);
+    	}
     	//通知监听器
 		context.getNotifyListener().buddyApplication(buddy, desc);
 		logger.debug("Recived a buddy application:"+desc);

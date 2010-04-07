@@ -67,9 +67,9 @@ public class BeanHelper
     	        mapper.loadMapXML(in);
     	        MAPPER_CACHE.put(beanClass.getName(), mapper);
             } catch (FileNotFoundException e) {
-    	       logger.warn("Cannot find map file in classpath:"+beanClass.getName()+".map.xml");
+    	       logger.warn("Cannot find map file in classpath:"+beanClass.getName()+".map.xml",e);
             } catch (ParseException e) {
-	            logger.warn("XML parse error.");
+	            logger.warn("XML parse error.",e);
             } catch (ClassNotFoundException e) {
 	            logger.warn("Bean field type is not a valid class.", e);
             }

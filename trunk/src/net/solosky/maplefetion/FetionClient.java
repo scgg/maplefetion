@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion;
 
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Timer;
 
@@ -122,38 +123,7 @@ public class FetionClient implements FetionContext
 	private ClientState state;
 	
 	
-	 /////////////客户端状态常量///////////////////
-	/**
-	 * 退出状态
-	 */
-	public static final int STATE_LOGOUT = 0x01;
-	/**
-	 * 正在登陆
-	 */
-	public static final int STATE_LOGGING = 0x02;
-	/**
-	 * 登陆成功，在线状态
-	 */
-	public static final int STATE_ONLINE = 0x03;
-	/**
-	 * 网络连接异常
-	 */
-	public static final int STATE_IO_ERROR = 0x14;
-	/**
-	 * 服务器关闭了连接
-	 */
-	public static final int STATE_DISCONNECTED = 0x15;
-	/**
-	 * 其他客户端登录
-	 */
-	public static final int STATE_OTHER_LOGIN = 0x16;
-	/**
-	 * 未知错误
-	 */
-	public static final int STATE_UNKOWN_ERROR = 0x17;
-	
-
-	/**
+	 /**
 	 * 日志记录
 	 */
 	private static Logger logger = Logger.getLogger(FetionClient.class);
@@ -496,6 +466,18 @@ public class FetionClient implements FetionContext
 	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionListener listener)
 	{
 		this.dialogFactory.getServerDialog().setBuddyCord(buddy, cordList, listener);
+	}
+	
+	/**
+	 * 设置好友分组
+	 * @param buddy
+	 * @param cordIds
+	 * @param listener
+	 */
+	public void setBuddyCord(Buddy buddy, Cord cord, ActionListener listener)
+	{
+		ArrayList<Cord> list = new ArrayList<Cord>();
+		this.dialogFactory.getServerDialog().setBuddyCord(buddy, list, listener);
 	}
 	
 	/**

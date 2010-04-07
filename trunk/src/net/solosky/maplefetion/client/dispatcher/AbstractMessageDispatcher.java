@@ -149,7 +149,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 		try {
 			handler.handle(response);
 		} catch (FetionException e) {
-			logger.warn("Exception caught when dispacth response.",e);
+			logger.warn("Exception caught when dispatch response.",e);
 		}
 	}
     

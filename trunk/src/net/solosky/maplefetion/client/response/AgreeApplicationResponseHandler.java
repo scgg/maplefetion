@@ -30,7 +30,9 @@ import org.jdom.Element;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.MobileBuddy;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.sipc.SipcResponse;
@@ -64,12 +66,15 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
     protected void doHandle(SipcResponse response) throws FetionException
     {
     	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
-        	Buddy buddy = new MobileBuddy();
     		Element root = XMLHelper.build(response.getBody().toSendString());
-    		Element element = XMLHelper.find(root, "/results/contacts/mobile-buddies/mobile-buddy");
-    		
-    		BeanHelper.toBean(MobileBuddy.class, buddy, element);
-    		buddy.getRelation().setValue(Integer.parseInt(element.getAttributeValue("relation-status")));
+    		Element element = XMLHelper.find(root, "/results/contacts/contact");
+    		if(element!=null && element.getAttributeValue("uri")!=null) {
+    			Buddy buddy = this.context.getFetionStore().getBuddy(element.getAttributeValue("uri"));
+    			if(element.getChild("personal")!=null && buddy instanceof FetionBuddy) {
+    				BeanHelper.toBean(FetionBuddy.class, buddy, element.getChild("personal"));
+    			}
+    			buddy.getRelation().setValue(Relation.RELATION_BUDDY);
+    		}
     	}
     }
 
