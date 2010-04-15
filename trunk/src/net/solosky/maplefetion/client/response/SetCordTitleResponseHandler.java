@@ -18,43 +18,42 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.response
- * File     : DeleteBuddyResponseHandler.java
+ * File     : SetCordTitleResponseHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-2-11
+ * Created  : 2010-4-15
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.client.response;
 
+import org.jdom.Element;
+
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
+import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.XMLHelper;
 
 /**
  *
- * 删除好友
  *
  * @author solosky <solosky772@qq.com>
  */
-public class DeleteBuddyResponseHandler extends AbstractResponseHandler
+public class SetCordTitleResponseHandler extends AbstractResponseHandler
 {
-	/**
-	 * 删除的好友
-	 */
-	private Buddy deletedBuddy;
 
 	/**
-     * @param client
+     * @param context
      * @param dialog
      * @param listener
      */
-    public DeleteBuddyResponseHandler(FetionContext client, Dialog dialog,ActionListener listener, Buddy deletedBuddy)
+    public SetCordTitleResponseHandler(FetionContext context, Dialog dialog,
+            ActionListener listener)
     {
-	    super(client, dialog, listener);
-	    this.deletedBuddy = deletedBuddy;
+	    super(context, dialog, listener);
     }
 
 	/* (non-Javadoc)
@@ -64,7 +63,21 @@ public class DeleteBuddyResponseHandler extends AbstractResponseHandler
     protected void doHandle(SipcResponse response) throws FetionException
     {
     	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
-    		this.context.getFetionStore().deleteBuddy(this.deletedBuddy);
+    		Element root = XMLHelper.build(response.getBody().toSendString());
+    		Element node = XMLHelper.find(root, "/results/contacts/buddy-lists/buddy-list");
+    		if(node!=null) {
+    			Cord cord = this.context.getFetionStore().getCord(Integer.parseInt(node.getAttributeValue("id")));
+    			if(cord!=null)
+    				BeanHelper.setValue(cord, "title", node.getAttributeValue("name"));
+    		}
+    		
+    		node = XMLHelper.find(root, "/results/contacts");
+    		if(node!=null) {
+    			int version = Integer.parseInt(node.getAttributeValue("version"));
+    			this.context.getFetionStore().getStoreVersion().setContactVersion(version);
+    			this.context.getFetionUser().getStoreVersion().setContactVersion(version);
+    		}
+    		this.context.getFetionStore().flush();
     	}
     }
 

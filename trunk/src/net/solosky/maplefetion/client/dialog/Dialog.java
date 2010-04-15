@@ -37,7 +37,7 @@ import net.solosky.maplefetion.sipc.SipcOutMessage;
  * 一个对话可以是一些列操作的分类
  * ServerDialog : 和主服务器通信，处理登录，添加好友等操作，有且仅有一个，在登录时创建
  * ChatDialog   : 聊天对话，和用户交谈时创建，处理聊天信息，不同的登录模式聊天对话框处理方式不同
- *		MobileChatDialog  : 和短信在线好友聊天的对话框
+ *		BasicChatDialog  : 和短信在线好友聊天的对话框
  *		LiveV2ChatDialog  : 和在线好友聊天时候就是用在线聊天对话
  *		LiveV1ChatDialog  : 使用旧版本协议和在线好友聊天时的对话框
  * GroupDialog  : 群对话，和群里的消息和处理群的登录和退出，在登录的时候自动创建

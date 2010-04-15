@@ -72,8 +72,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     public void handle(SipcResponse response) throws FetionException
     {
     	this.doHandle(response);
-    	if(this.listener!=null)
-    		this.listener.actionFinished(response.getStatusCode());
+    	this.callback(response);
     }
 
     protected abstract void doHandle(SipcResponse response) throws FetionException;
@@ -88,6 +87,12 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     {
     	if(this.listener!=null)
     		this.listener.actionFinished(ActionStatus.IO_ERROR);
+    }
+    
+    protected void callback(SipcResponse response)
+    {
+    	if(this.listener!=null)
+    		this.listener.actionFinished(response.getStatusCode());
     }
     
 }

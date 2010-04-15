@@ -31,7 +31,6 @@ import java.util.TimerTask;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.ExceptionHandler;
-import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
@@ -45,8 +44,11 @@ import net.solosky.maplefetion.client.dispatcher.ServerMessageDispatcher;
 import net.solosky.maplefetion.client.response.AddBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AgreeApplicationResponseHandler;
+import net.solosky.maplefetion.client.response.CreateCordResponseHandler;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteBuddyResponseHandler;
+import net.solosky.maplefetion.client.response.DeleteCordResponseHandler;
+import net.solosky.maplefetion.client.response.FindBuddyByMobileResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactDetailResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactListResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactsInfoResponseHander;
@@ -56,6 +58,7 @@ import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
 import net.solosky.maplefetion.client.response.GetPersonalInfoResponseHandler;
 import net.solosky.maplefetion.client.response.ServerRegisterResponseHandler;
 import net.solosky.maplefetion.client.response.SetBuddyInfoResponseHandler;
+import net.solosky.maplefetion.client.response.SetCordTitleResponseHandler;
 import net.solosky.maplefetion.client.response.SetPresenceResponseHandler;
 import net.solosky.maplefetion.client.response.UserAuthResponseHandler;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -175,8 +178,9 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     	
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new ServerMessageDispatcher(context, this, this));						//消息分发服务
-		this.processorChain.addLast(new MessageLogger("ServerDialog"));									//日志记录
-		this.processorChain.addLast(transferService);														//传输服务
+		if(FetionConfig.getBoolean("log.sipc.enable"))
+			this.processorChain.addLast(new MessageLogger("ServerDialog"));									//日志记录
+		this.processorChain.addLast(transferService);															//传输服务
 		this.processorChain.addLast(this.context.getTransferFactory().createDefaultTransfer());				//信令传输对象
 		
 		this.processorChain.startProcessorChain();
@@ -613,4 +617,66 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		request.setResponseHandler(new GetContactDetailResponseHandler(context, this, listener));
 		this.process(request);
 	}
+	
+	
+	/**
+	 * 创建新的好友分组
+	 * @param title		分组名称
+	 * @param listener
+	 */
+	public void createCord(String title, ActionListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createCreateCordRequest(title);
+		request.setResponseHandler(new CreateCordResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	
+	/**
+	 * 删除分组
+	 * @param cord		需删除的的分组
+	 * @param listener
+	 */
+	public void deleteCord(Cord cord, ActionListener listener)
+	{
+		this.ensureOpened();
+		Collection<Buddy> list = this.context.getFetionStore().getBuddyListByCord(cord);
+		if(list!=null && list.size()>0)
+			throw new IllegalArgumentException(cord+" is not empty, please move out the buddies in this cord and try again.");
+		SipcRequest request = this.messageFactory.createDeleteCordRequest(cord.getId());
+		request.setResponseHandler(new DeleteCordResponseHandler(context,this, listener));
+		this.process(request);
+	}
+	
+	
+	/**
+	 * 设置分组标题
+	 * @param cord		需设置分组的对象
+	 * @param title		分组标题
+	 * @param listener	
+	 */
+	public void setCordTitle(Cord cord, String title, ActionListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createSetCordTitleRequest(cord.getId(), title);
+		request.setResponseHandler(new SetCordTitleResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	
+	/**
+	 * 以手机号码查找好友
+	 * @param mobile		手机号码
+	 * @param listener
+	 */
+	public void findBuddyByMobile(long mobile, ActionListener listener)
+	{
+		this.ensureOpened();
+		this.session.removeAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
+		SipcRequest request = this.messageFactory.createGetContactDetailRequest("tel:"+mobile);
+		request.setResponseHandler(new FindBuddyByMobileResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
 }

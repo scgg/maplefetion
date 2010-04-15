@@ -18,7 +18,7 @@
 /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.dialog
- * File     : MobileChatDialog.java
+ * File     : BasicChatDialog.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-1-14
  * License  : Apache License 2.0 
@@ -28,23 +28,23 @@ package net.solosky.maplefetion.client.dialog;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.net.Transfer;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
 
 /**
  * 
- * 和手机在线的好友聊天
+ * 和手机在线和离线的好友聊天
+ * 聊天消息是通过SIPC服务器中转的
  * 
  * @author solosky <solosky772@qq.com>
  */
-public class MobileChatDialog extends ChatDialog
+public class BasicChatDialog extends ChatDialog
 {
 	/**
 	 * @param mainBuddy
 	 * @param client
 	 */
-	public MobileChatDialog(FetionContext client, Buddy mainBuddy)
+	public BasicChatDialog(FetionContext client, Buddy mainBuddy)
 	{
 		super(mainBuddy, client);
 	}
@@ -117,7 +117,7 @@ public class MobileChatDialog extends ChatDialog
     
     public String toString()
     {
-    	return "[MobileChatDialog - " +
+    	return "[BasicChatDialog - " +
 		"MainBuddy= "+ mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
 

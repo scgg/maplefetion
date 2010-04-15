@@ -16,61 +16,21 @@
  */
 
  /**
- * Project  : MapleFetion
- * Package  : net.solosky.maplefetion.bean
- * File     : FetionCord.java
+ * Project  : MapleFetion2
+ * Package  : net.solosky.maplefetion.client.dialog
+ * File     : SessionKey.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-20
+ * Created  : 2010-4-15
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.bean;
+package net.solosky.maplefetion.client.dialog;
 
 /**
- * 飞信好友分组
  *
- * @author solosky <solosky772@qq.com> 
+ *
+ * @author solosky <solosky772@qq.com>
  */
-public class Cord
+public interface SessionKey
 {
-	/**
-	 * 分组编号
-	 */
-	private int id;
-	
-	/**
-	 * 分组名
-	 */
-	private String title;
-	
-	/**
-	 * 默认构造函数
-	 */
-	public Cord(int id, String title)
-	{
-		this.id = id;
-		this.title = title;
-	}
-
-	/**
-     * @return the cordId
-     */
-    public int getId()
-    {
-    	return id;
-    }
-
-
-	/**
-     * @return the title
-     */
-    public String getTitle()
-    {
-    	return title;
-    }
-    
-    public String toString()
-    {
-    	return "[Cord, id="+this.id+", title="+this.title+"]";
-    }
-	
+	public static final String FIND_BUDDY_BY_MOBILE_RESULT = "FIND_BUDDY_BY_MOBILE_RESULT";
 }

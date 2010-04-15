@@ -52,15 +52,9 @@ import net.solosky.maplefetion.util.NodeBuilder;
  */
 public class MessageFactory
 {
-	/**
-	 * CALLID
-	 */
-	private int callID;
-	
-	private int sequence;
-	
+	private int globalCallId;
+	private int gloalSequence;
 	private User user;
-	
 	private String lastMethod;
 	
 	
@@ -72,9 +66,9 @@ public class MessageFactory
 	public MessageFactory(User user)
 	{
 		this.user = user;
-		this.callID = 0;
+		this.globalCallId = 0;
 		this.lastMethod = "";
-		this.sequence = 1;
+		this.gloalSequence = 1;
 	}
 	
 	/**
@@ -87,12 +81,12 @@ public class MessageFactory
 	    SipcRequest req = new SipcRequest(m,this.user.getDomain());
 	    req.addHeader(SipcHeader.FROM, Integer.toString(this.user.getFetionId()));
 	    if(m.equals(this.lastMethod)) {
-	    	req.addHeader(SipcHeader.CALLID,   Integer.toString(this.callID));
+	    	req.addHeader(SipcHeader.CALLID,   Integer.toString(this.globalCallId));
 	    	req.addHeader(SipcHeader.SEQUENCE, Integer.toString(this.getNextSequence())+" "+m);
 	    }else {
 	    	req.addHeader(SipcHeader.CALLID,   Integer.toString(this.getNextCallID()));
 	    	req.addHeader(SipcHeader.SEQUENCE, "1 "+m);
-	    	this.sequence = 1;
+	    	this.gloalSequence = 1;
 	    }
 	    req.setAliveTime((int) (FetionConfig.getInteger("fetion.sip.default-alive-time")+System.currentTimeMillis()/1000));
 	    this.lastMethod = m;
@@ -229,7 +223,7 @@ public class MessageFactory
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	
     	String body = MessageTemplate.TMPL_GET_CONTACT_DETAIL;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{args}", " uri=\""+uri+"\" ");
     	req.setBody(new SipcBody(body));
     	
     	req.addHeader(SipcHeader.EVENT, "GetContactsInfo");
@@ -521,6 +515,45 @@ public class MessageFactory
     }
     
     /**
+     * 建立新的分组
+     */
+    public SipcRequest createCreateCordRequest(String title)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT,"CreateBuddyList");
+    	
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_CREATE_CORD.replace("{title}", title)) );
+    	return req;
+    }
+    
+    /**
+     * 删除分组
+     */
+    public SipcRequest createDeleteCordRequest(int cordId)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT,"DeleteBuddyList");
+    	
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_DELETE_CORD.replace("{cordId}", Integer.toString(cordId))) );
+    	return req;
+    }
+    
+    /**
+     * 更新分组标题
+     */
+    public SipcRequest createSetCordTitleRequest(int cordId, String title)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT,"SetBuddyListInfo");
+    	
+    	String body = MessageTemplate.TMPL_UPDATE_CORD;
+    	body = body.replace("{cordId}", Integer.toString(cordId));
+    	body = body.replace("{title}", title);
+    	req.setBody(new SipcBody(body));
+    	return req;
+    }
+    
+    /**
      * 设置在线状态
      */
     public SipcRequest createSetPresenceRequest(int presence)
@@ -743,7 +776,7 @@ public class MessageFactory
      */
     private int getNextCallID()
     {
-    	return ++callID;
+    	return ++globalCallId;
     }
     
     /**
@@ -751,6 +784,6 @@ public class MessageFactory
      */
     private int getNextSequence()
     {
-    	return ++sequence;
+    	return ++gloalSequence;
     }
 }

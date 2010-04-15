@@ -125,7 +125,7 @@ public class DialogFactory
 		int presence = buddy.getPresence().getValue();
 		// 如果用户手机在线 或者电脑离线，将建立手机聊天对话框
 		if (presence == Presence.OFFLINE) {
-			dialog = new MobileChatDialog(this.context, buddy);
+			dialog = new BasicChatDialog(this.context, buddy);
 		} else if (presence == Presence.ONLINE || presence == Presence.AWAY
 		        || presence == Presence.BUSY || presence == Presence.HIDEN) { // 如果用户电脑在线，建立在线聊天对话框
 			TransferFactory factory = this.context.getTransferFactory();
@@ -159,7 +159,7 @@ public class DialogFactory
 		if (this.context.getTransferFactory().isMutiConnectionSupported()) {
 			dialog = new LiveV2ChatDialog(inviteNotify, context);
 		} else {
-			Buddy buddy = this.context.getFetionStore().getBuddy(
+			Buddy buddy = this.context.getFetionStore().getBuddyByUri(
 			        inviteNotify.getFrom());
 			dialog = new LiveV1ChatDialog(buddy, context);
 		}

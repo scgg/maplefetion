@@ -49,24 +49,24 @@ public interface FetionStore
 	public abstract void addBuddy(Buddy buddy);
 
 	/**
-	 * 是否是好友
-	 * @param sid
-	 * @return
-	 */
-	public boolean hasBuddy(String uri);
-
-	/**
-	 * 返回飞信好友
+	 * 根据飞信Uri地址返回好友
 	 * @param uri
 	 * @return
 	 */
-	public Buddy getBuddy(String uri);
+	public Buddy getBuddyByUri(String uri);
+	
+	/**
+	 * 根据飞信用ID返回好友
+	 * @param userId
+	 * @return
+	 */
+	public Buddy getBuddyByUserId(int userId);
 
 	/**
 	 * 删除好友
 	 * @param uid
 	 */
-	public void removeBuddy(String uid);
+	public void deleteBuddy(Buddy buddy);
 
 	/**
 	 * 返回全部好友列表
@@ -102,6 +102,12 @@ public interface FetionStore
 	 * 返回一个分组
 	 */
 	public Cord getCord(int cordId);
+	
+	/**
+	 * 删除一个分组
+	 * @param cord
+	 */
+	public void deleteCord(Cord cord);
 
 	/**
 	 * 返回所有分组列表
@@ -165,7 +171,7 @@ public interface FetionStore
      * 删除群对象
      * @param uri		群地址
      */
-    public void removeGroup(String uri);
+    public void deleteGroup(Group group);
     
     /**
      * 添加群对象
@@ -185,7 +191,7 @@ public interface FetionStore
      * @param group
      * @param member
      */
-    public void removeGroupMember(Group group, Member member);
+    public void deleteGroupMember(Group group, Member member);
     
     /**
      * 返回群的成员列表

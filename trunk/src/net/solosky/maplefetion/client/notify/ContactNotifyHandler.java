@@ -91,7 +91,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		Element e =  (Element) it.next();
     		String uri = e.getAttributeValue("uri");
     		String status = e.getAttributeValue("status-code");
-    		FetionBuddy buddy = (FetionBuddy) context.getFetionStore().getBuddy(uri);
+    		FetionBuddy buddy = (FetionBuddy) context.getFetionStore().getBuddyByUri(uri);
     		if(status!=null && status.equals("200") && buddy!=null) {
     			//个人信息
     			Element p = e.getChild("personal");
@@ -154,7 +154,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	while(it.hasNext()) {
     		Element e = (Element) it.next();
     		String uri = e.getAttributeValue("uri");
-    		Buddy buddy = context.getFetionStore().getBuddy(uri);
+    		Buddy buddy = context.getFetionStore().getBuddyByUri(uri);
     		if(buddy!=null) {
     			//检查用户关系的变化
     			int relation = Integer.parseInt(e.getAttributeValue("relation-status"));
@@ -190,7 +190,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	while(it.hasNext()) {
     		Element e =  (Element) it.next();
     		String uri = e.getAttributeValue("uri");
-    		final Buddy buddy = context.getFetionStore().getBuddy(uri);
+    		final Buddy buddy = context.getFetionStore().getBuddyByUri(uri);
     		if(buddy!=null) {
     			//检查用户关系的变化
     			int relation = Integer.parseInt(e.getAttributeValue("relation-status"));

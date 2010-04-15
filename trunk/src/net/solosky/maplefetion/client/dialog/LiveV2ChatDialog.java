@@ -29,6 +29,7 @@ import java.util.ArrayList;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.ExceptionHandler;
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
@@ -114,7 +115,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	{
 		super(client);
 		this.inviteNotify   = inviteNotify;
-		this.mainBuddy      = client.getFetionStore().getBuddy(inviteNotify.getFrom());
+		this.mainBuddy      = client.getFetionStore().getBuddyByUri(inviteNotify.getFrom());
 		this.messageFactory = new MessageFactory(client.getFetionUser());
 		this.buddyEnterHelper = new BuddyEnterHelper();
 		this.buddyList        = new ArrayList<Buddy>();
@@ -135,7 +136,8 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 		
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new LiveV2MessageDispatcher(context, this, this)); 				// 消息分发服务
-		this.processorChain.addLast(new MessageLogger("LiveV2ChatDialog-" + mainBuddy.getFetionId())); 								// 日志记录
+		if(FetionConfig.getBoolean("log.sipc.enable"))
+			this.processorChain.addLast(new MessageLogger("LiveV2ChatDialog-" + mainBuddy.getFetionId())); 								// 日志记录
 		this.processorChain.addLast(transferService); 													// 传输服务
 		this.processorChain.addLast(transfer);															//传输对象
 		
@@ -341,7 +343,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#getBuddyList()
+     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#getBuddyByUriList()
      */
     @Override
     public ArrayList<Buddy> getBuddyList()
@@ -368,7 +370,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	 * 如：
 	 *	//首先要创建对话框
 	 * try{
-	 * 		Buddy buddy = client.getFetionStore().getBuddy(uri);
+	 * 		Buddy buddy = client.getFetionStore().getBuddyByUri(uri);
 	 *  	ChatDialog dialog = client.getDialogFactory().createChatDialog(buddy);
 	 *      dialog.openDialog();
 	 *   	dialog.sendChatMessage(msg, actionListener);
@@ -414,7 +416,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     @Override
     public void buddyEntered(String uri)
     {
-    	Buddy buddy = this.context.getFetionStore().getBuddy(uri);
+    	Buddy buddy = this.context.getFetionStore().getBuddyByUri(uri);
     	if(buddy!=null) {
     		this.buddyEnterHelper.buddyEntered(buddy);
     		this.buddyList.add(buddy);

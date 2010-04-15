@@ -62,10 +62,10 @@ public class MessageLogger extends AbstractProcessor
 	public MessageLogger(String name)
 	{
 		this.name = name;
-		enableLogging = FetionConfig.getBoolean("log.sip.enable");
+		enableLogging = FetionConfig.getBoolean("log.sipc.enable");
 		if(!enableLogging)
 			return;
-		String fileName = FetionConfig.getString("log.sip.dir")+name+".log";
+		String fileName = FetionConfig.getString("log.sipc.dir")+name+".log";
 		try {
 			writer = new BufferedWriter(new FileWriter(fileName));
 		}catch (IOException e) {

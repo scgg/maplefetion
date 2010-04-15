@@ -69,7 +69,7 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
     		Element root = XMLHelper.build(response.getBody().toSendString());
     		Element element = XMLHelper.find(root, "/results/contacts/contact");
     		if(element!=null && element.getAttributeValue("uri")!=null) {
-    			Buddy buddy = this.context.getFetionStore().getBuddy(element.getAttributeValue("uri"));
+    			Buddy buddy = this.context.getFetionStore().getBuddyByUri(element.getAttributeValue("uri"));
     			if(element.getChild("personal")!=null && buddy instanceof FetionBuddy) {
     				BeanHelper.toBean(FetionBuddy.class, buddy, element.getChild("personal"));
     			}

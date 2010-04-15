@@ -47,7 +47,6 @@ public class LiveV1ChatDialog extends ChatDialog
     public LiveV1ChatDialog(Buddy mainBuddy, FetionContext client)
     {
 	    super(mainBuddy, client);
-	    // TODO Auto-generated constructor stub
     }
 
 	/* (non-Javadoc)

@@ -18,9 +18,9 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.response
- * File     : GetContactDetailResponseHandler.java
+ * File     : FindBuddyByMobileResponseHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-3-14
+ * Created  : 2010-4-15
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.client.response;
@@ -29,13 +29,13 @@ import org.jdom.Element;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.bean.BuddyExtend;
-import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.client.dialog.SessionKey;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.XMLHelper;
 
 /**
@@ -43,19 +43,20 @@ import net.solosky.maplefetion.util.XMLHelper;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class GetContactDetailResponseHandler extends AbstractResponseHandler
+public class FindBuddyByMobileResponseHandler extends AbstractResponseHandler
 {
 
+	private int statusCode;
 	/**
      * @param context
      * @param dialog
      * @param listener
      */
-    public GetContactDetailResponseHandler(FetionContext context,
+    public FindBuddyByMobileResponseHandler(FetionContext context,
             Dialog dialog, ActionListener listener)
     {
 	    super(context, dialog, listener);
-	    // TODO Auto-generated constructor stub
+	    this.statusCode = SipcStatus.ACTION_OK;
     }
 
 	/* (non-Javadoc)
@@ -64,21 +65,39 @@ public class GetContactDetailResponseHandler extends AbstractResponseHandler
     @Override
     protected void doHandle(SipcResponse response) throws FetionException
     {
-    	if(response.getStatusCode()==ActionStatus.ACTION_OK) {
+    	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
     		Element root = XMLHelper.build(response.getBody().toSendString());
 			Element contact = XMLHelper.find(root, "/results/contacts/contact");
-			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
-			FetionBuddy buddy = (FetionBuddy) this.context.getFetionStore().getBuddyByUri(contact.getAttributeValue("uri"));
-			if(personal!=null && buddy!=null ) {
-				BeanHelper.toBean(FetionBuddy.class, buddy, personal);
-				BuddyExtend extend = buddy.getExtend();
-				if(extend==null) {
-					extend = new BuddyExtend();
-					buddy.setExtend(extend);
-				}
-				BeanHelper.toBean(BuddyExtend.class, extend, personal);
+			int status = Integer.parseInt(contact.getAttributeValue("status-code"));
+			if(status==SipcStatus.ACTION_OK) {
+    			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
+    			if(personal!=null) {
+    				int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
+    				Buddy buddy = this.context.getFetionStore().getBuddyByUserId(userId);
+    				if(buddy!=null) {
+        				this.dialog.getSession()
+        					.setAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT,
+        							this.context.getFetionStore().getBuddyByUserId(userId));
+        				this.statusCode = ActionStatus.ACTION_OK;		//找到该用户并且是好友，操作正确完成
+    				}else {
+    					this.statusCode = ActionStatus.INVALD_BUDDY;	//找到该用户但不是好友
+    				}
+    			}
+			}else if(status==SipcStatus.NOT_FOUND) {
+				this.statusCode = ActionStatus.NOT_FOUND;				//该用户找不到
+			}else {
+				this.statusCode = ActionStatus.OTHER_ERROR;				//其他未知错误
 			}
+    	}else {
+    		this.statusCode = response.getStatusCode();
     	}
+    }
+    
+    //重载callback 调用自定义的回调状态
+    protected void callback(SipcResponse response)
+    {
+    	if(this.listener!=null)
+    		this.listener.actionFinished(this.statusCode);
     }
 
 }

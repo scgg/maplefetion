@@ -67,7 +67,7 @@ public class SetBuddyInfoResponseHandler extends AbstractResponseHandler
 		   Element el = XMLHelper.find(root, "/results/contacts/buddies/buddy");
 		   
 		   if(el!=null) {
-			   Buddy buddy = this.context.getFetionStore().getBuddy(el.getAttributeValue("uri"));
+			   Buddy buddy = this.context.getFetionStore().getBuddyByUri(el.getAttributeValue("uri"));
 			   BeanHelper.toBean(Buddy.class, buddy, el);
 		   }
 		   

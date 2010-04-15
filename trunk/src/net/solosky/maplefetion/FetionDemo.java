@@ -240,6 +240,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    	println("decline 好友编号           拒绝陌生人添加好友请求");
 	    	println("to 好友编号 消息内容       给好友发送消息");
 	    	println("sms 好友编号 消息内容      给好友发送短信");
+	    	println("tel 手机号码 消息内容       通过手机号给好友发送消息（对方必须是好友才行）");
 	    	println("enter 好友编号             和好友对话");
 	    	println("leave                      离开当前对话");
 	    	println("dialog                     显示当前所有会话");
@@ -249,6 +250,9 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    	println("impresa 个性签名           修改个性签名");
 			println("localname 好友编号 新名字  修改好友的显示名字");
 			println("cord 好友编号 新组编号     修改好友分组");
+			println("newcord 分组标题           创建新的分组");
+			println("delcord 分组编号           删除分组");
+			println("cordtitle 分组编号 分组标题   修改分组标题");
 			println("self 消息内容              给自己发送短信");
 			println("presence away/online/busy/hiden   改变自己在线状态");
 	    	println("exit                       退出登录");
@@ -299,7 +303,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 				}else {
 					impresa = "";
 				}
-				println(Integer.toString(startId)+"\t"+formatRelation(buddy.getRelation().getValue())+"\t"+fomartString(buddy.getDisplayName(),10)+"\t"
+				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation().getValue())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
 						+fomartPresence(buddy)
 						+"\t"+impresa);
 				startId++;
@@ -333,7 +337,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void to(String uri,final String message)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		ChatDialog dialog = this.client.getDialogFactory().findChatDialog(buddy);
 	    		if(dialog!=null) {
@@ -351,12 +355,32 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    	}
 	    }
 	    
+	    public void tel(final String tel, String msg)
+	    {
+	    	long mobile = Long.parseLong(tel);
+	    	this.client.sendChatMessage(mobile, Message.wrap(msg), new ActionListener() {
+                public void actionFinished(int status)
+                {
+                	if(status==ActionStatus.ACTION_OK||status==ActionStatus.SEND_SMS_OK) {
+                		println("发送消息给用户"+tel+"成功！");
+                	}else if(status==ActionStatus.INVALD_BUDDY){
+                		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+                	}else if(status==ActionStatus.NOT_FOUND) {
+                		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+                	}else {
+                		println("发送消息给用户"+tel+"失败, 其他错误，代码"+status);
+                	}
+                }
+	    		
+	    	});
+	    }
+	    
 	    /**
 	     * 发送手机短信消息
 	     */
 	    public void sms(String uri, final String message)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		this.client.sendSMSMessage(buddy, Message.wrap(message), new ActionListener(){
 					public void actionFinished(int status){
@@ -415,7 +439,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void detail(String uri)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy==null) {
 	    		println("找不到好友，请重新输入好友信息");
 	    	}else if(buddy instanceof MobileBuddy) {
@@ -506,7 +530,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void localname(String uri, String localName)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		this.client.setBuddyLocalName(buddy, localName, new ActionListener() {
 	    			public void actionFinished(int status){
@@ -528,7 +552,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void cord(String uri, String cordId)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	Collection<Cord> cordList = new ArrayList<Cord>();
 	    	//本来一个好友可以分到多个组的，为了简单这里只实现了修改一个分组
 	    	int cid = -1;
@@ -562,7 +586,77 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    		println("找不到这个好友，请检查你的输入！");
 	    	}
 	    }
+	    
 	    /**
+	     * 创建新的分组
+	     * @param title
+	     */
+	    public void newcord(String title)
+	    {
+	    	client.createCord(title, new ActionListener() {
+
+				@Override
+                public void actionFinished(int status)
+                {
+					if(status==ActionStatus.ACTION_OK) {
+                		println("创建新的分组成功！");
+        	    	}else {
+        	    		println("创建新的分组失败！");
+        	    	}
+                }
+	    		
+	    	});
+	    }
+	    
+	    /**
+	     * 设置分组标题
+	     * @param cordid
+	     * @param title
+	     */
+	    public void cordtitle(String cordId, String title)
+	    {
+	    	Cord cord = this.getCord(cordId);
+	    	if(cord!=null) {
+	    		this.client.setCordTitle(cord, title, new ActionListener() {
+                    public void actionFinished(int status)
+                    {
+                    	if(status==ActionStatus.ACTION_OK) {
+                    		println("设置分组标题成功！");
+            	    	}else {
+            	    		println("设置分组标题失败！");
+            	    	}
+                    }
+	    		});
+	    	}
+	    }
+	    
+	    /**
+	     * 删除分组
+	     * @param cordid
+	     */
+	    public void delcord(String cordId)
+	    {
+	    	Cord cord = this.getCord(cordId);
+	    	if(cord!=null) {
+	    		Collection<Buddy> list = this.client.getFetionStore().getBuddyListByCord(cord);
+	    		if(list!=null && list.size()>0) {
+	    			println("分组编号 "+cordId+" 中好友不为空，请移除该组的好友后再尝试删除。");
+	    			return;
+	    		}
+	    		this.client.deleteCord(cord, new ActionListener() {
+                    public void actionFinished(int status)
+                    {
+                    	if(status==ActionStatus.ACTION_OK) {
+                    		println("删除分组成功！");
+            	    	}else {
+            	    		println("删除分组失败！");
+            	    	}
+                    }
+	    		});
+	    	}
+	    }
+	    
+	    /*
 	     * 添加好友
 	     * @throws Exception 
 	     */
@@ -585,7 +679,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void del(String uri)
 	    {
-	    	Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		client.deleteBuddy(buddy, new ActionListener() {
 	    			public void actionFinished(int status) {
@@ -606,7 +700,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void agree(String uri)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		this.client.agreedApplication(buddy,  new ActionListener() {
 	    			public void actionFinished(int status) {
@@ -627,7 +721,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void decline(String uri)
 	    {
-	    	final Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
 	    		this.client.declinedApplication(buddy,  new ActionListener() {
 	    			public void actionFinished(int status) {
@@ -646,7 +740,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	     */
 	    public void enter(String uri)
 	    {
-	    	Buddy buddy = this.client.getFetionStore().getBuddy(uri);
+	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	this.activeChatDialog = this.client.getDialogFactory().findChatDialog(buddy);
 	    	if(this.activeChatDialog==null) {
 	    		try {
@@ -889,6 +983,9 @@ public class FetionDemo implements LoginListener, NotifyListener
 		}else if(cmd[0].equals("sms")) {
 			if(cmd.length>=3)
 				this.sms(this.buddymap.get(cmd[1]),line.substring(line.indexOf(cmd[2])));
+		}else if(cmd[0].equals("tel")) {
+			if(cmd.length>=3)
+				this.tel(cmd[1], cmd[2]);
 		}else if(cmd[0].equals("nickname")) {
 			if(cmd.length>=2)
 				this.nickname(cmd[1]);
@@ -898,6 +995,15 @@ public class FetionDemo implements LoginListener, NotifyListener
 		}else if(cmd[0].equals("del")) {
 			if(cmd.length>=2)
 				this.del(this.buddymap.get(cmd[1]));
+		}else if(cmd[0].equals("newcord")) {
+			if(cmd.length>=2)
+				this.newcord(cmd[1]);
+		}else if(cmd[0].equals("delcord")) {
+			if(cmd.length>=2)
+				this.delcord(cmd[1]);
+		}else if(cmd[0].equals("cordtitle")) {
+			if(cmd.length>=3)
+				this.cordtitle(cmd[1], cmd[2]);
 		}else if(cmd[0].equals("add")) {
 			if(cmd.length>=2)
 				this.add(cmd[1]);
@@ -989,6 +1095,24 @@ public class FetionDemo implements LoginListener, NotifyListener
         	out.close();
         } catch (Exception e) {
         }
+    }
+    
+    private Cord getCord(String cordId)
+    {
+    	int cid = -1;
+        try {
+            cid = Integer.parseInt(cordId);
+        } catch (NumberFormatException e) {
+        	println("分组编号不是数字，请检查后重新输入。");
+        	return null;
+        }
+		Cord cord = this.client.getFetionStore().getCord(cid);
+		if(cord==null) {
+			println("分组编号不存在，请检查后重新输入。");
+			return null;
+		}else {
+			return cord;
+		}
     }
 
     

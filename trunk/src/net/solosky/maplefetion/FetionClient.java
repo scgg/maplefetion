@@ -41,10 +41,15 @@ import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
+import net.solosky.maplefetion.client.dialog.DialogSession;
+import net.solosky.maplefetion.client.dialog.ServerDialog;
+import net.solosky.maplefetion.client.dialog.SessionKey;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
+import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
 import net.solosky.maplefetion.sipc.SipcMessage;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.VerifyImageFetcher;
 
@@ -145,8 +150,55 @@ public class FetionClient implements FetionContext
 							NotifyListener notifyListener,
 							LoginListener loginListener)
 	{
-		this(new User(mobileNo, pass, "fetion.com.cn"), transferFactory, fetionStore, notifyListener, loginListener);
+		this(new User(mobileNo, pass, "fetion.com.cn"),
+				transferFactory,
+				fetionStore, 
+				notifyListener,
+				loginListener);
 	}
+	
+	
+	/**
+	 * 使用默认的传输模式和存储模式构造
+	 * @param mobileNo			手机号码
+	 * @param pass				密码
+	 * @param notifyListener	通知监听器
+	 * @param loginListener		登录监听器
+	 */
+	public FetionClient(long mobileNo, 
+						String pass, 
+						NotifyListener notifyListener,
+						LoginListener loginListener)
+	{
+		this(new User(mobileNo, pass, "fetion.com.cn"), 
+				new TcpTransferFactory(),
+				new SimpleFetionStore(), 
+				notifyListener, 
+				loginListener);
+	}
+	
+	
+	/**
+	 * 完整的构造函数
+	 * @param user				登录用户
+	 * @param transferFactory	连接工厂
+	 * @param fetionStore		存储接口
+	 * @param notifyListener	通知监听器
+	 * @param loginListener		登录监听器
+	 */
+    public FetionClient(User user, 
+    					TransferFactory transferFactory,
+    					FetionStore fetionStore, 
+    					NotifyListener notifyListener, 
+    					LoginListener loginListener)
+    {
+    	this.user            = user;
+    	this.transferFactory = transferFactory;
+    	this.store           = fetionStore;
+    	this.loginListener   = loginListener;
+		this.notifyListener  = notifyListener;
+		
+    }
 	
 	
 	/* (non-Javadoc)
@@ -214,29 +266,6 @@ public class FetionClient implements FetionContext
     	return notifyListener;
     }
 
-
-	/**
-	 * 完整的构造函数
-	 * @param user				登录用户
-	 * @param transferFactory	连接工厂
-	 * @param fetionStore		存储接口
-	 * @param notifyListener	通知监听器
-	 * @param loginListener		登录监听器
-	 */
-    public FetionClient(User user, 
-    					TransferFactory transferFactory,
-    					FetionStore fetionStore, 
-    					NotifyListener notifyListener, 
-    					LoginListener loginListener)
-    {
-    	this.user            = user;
-    	this.transferFactory = transferFactory;
-    	this.store           = fetionStore;
-    	this.loginListener   = loginListener;
-		this.notifyListener  = notifyListener;
-		
-    }
-    
     /**
      * 初始化
      */
@@ -314,6 +343,15 @@ public class FetionClient implements FetionContext
     public VerifyImage fetchVerifyImage()
     {
     	return VerifyImageFetcher.fetch();
+    }
+    
+    /**
+     * 返回服务器对话
+     * @return
+     */
+    public ServerDialog getServerDialog()
+    {
+    	return this.dialogFactory.getServerDialog();
     }
 
 	/**
@@ -420,6 +458,35 @@ public class FetionClient implements FetionContext
 		this.dialogFactory.getServerDialog().sendSMSMessage(toBuddy, message, listener);
 	}
 	
+	
+	/**
+	 * 通过手机号给好友发送消息，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败
+	 * 注意：这个方法不是多线程安全的，因为中间使用了一个共享变量，虽然DailogSession是线程安全的
+	 * 但由于是异步操作，完成的顺序是不确定的，所以请务必保证一个请求完成之后再发起另外一个请求
+	 * @param mobile		手机号码
+	 * @param message		消息
+	 * @param listener
+	 */
+	public synchronized void sendChatMessage(long mobile, final Message message, final ActionListener listener)
+	{
+		ActionListener tmpls = new ActionListener() {
+            public void actionFinished(int status)
+            {
+            	if(status==ActionStatus.ACTION_OK) {
+            		DialogSession session = dialogFactory.getServerDialog().getSession();
+            		Buddy buddy = (Buddy)session.getAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
+            		if(buddy!=null) {
+            			sendChatMessage(buddy, message, listener);
+            		}else {
+            			listener.actionFinished(ActionStatus.INVALD_BUDDY);
+            		}
+            	}else {
+            		listener.actionFinished(status);
+            	}
+            }
+		};
+		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, tmpls);
+	}
 	/**
 	 * 设置个人信息
 	 * 
@@ -539,5 +606,36 @@ public class FetionClient implements FetionContext
 	public void getBuddyDetail(FetionBuddy buddy, ActionListener listener)
 	{
 		this.dialogFactory.getServerDialog().getBuddyDetail(buddy, listener);
+	}
+	
+	/**
+	 * 创建新的好友分组
+	 * @param title		分组名称
+	 * @param listener
+	 */
+	public void createCord(String title, ActionListener listener)
+	{
+		this.dialogFactory.getServerDialog().createCord(title, listener);
+	}
+	
+	/**
+	 * 删除一个分组
+	 * @param cord		分组对象
+	 * @param listener
+	 */
+	public void deleteCord(Cord cord, ActionListener listener)
+	{
+		this.dialogFactory.getServerDialog().deleteCord(cord, listener);
+	}
+	
+	/**
+	 * 设置分组名称
+	 * @param cord		分组对象
+	 * @param title		分组名称
+	 * @param listener
+	 */
+	public void setCordTitle(Cord cord, String title, ActionListener listener)
+	{
+		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
 	}
 }

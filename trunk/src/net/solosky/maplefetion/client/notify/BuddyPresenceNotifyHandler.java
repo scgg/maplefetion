@@ -32,7 +32,7 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
-import net.solosky.maplefetion.client.dialog.MobileChatDialog;
+import net.solosky.maplefetion.client.dialog.BasicChatDialog;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.ParseHelper;
@@ -65,7 +65,7 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
 	 	    Element personal = presence.getChild("personal");
 	 	    List extendz = presence.getChildren("extended");
     	    String uri = presence.getAttributeValue("uri");
-    	    FetionBuddy buddy = (FetionBuddy) context.getFetionStore().getBuddy(uri);	//这里一定是FetionBuddy
+    	    FetionBuddy buddy = (FetionBuddy) context.getFetionStore().getBuddyByUri(uri);	//这里一定是FetionBuddy
     	    if(buddy==null && context.getFetionUser().getUri().equals(uri)) {
     	    	buddy = context.getFetionUser();			//这里可能是用户自己
     	    }
@@ -88,7 +88,7 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
             	    	//注意，如果好友上线了，并且当前打开了手机聊天对话框，需要关闭这个手机聊天对话框
             	    	if(curpresense == Presence.AWAY || curpresense==Presence.BUSY || curpresense==Presence.ONLINE ) {
             	    		ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(buddy);
-            	    		if(chatDialog!=null && chatDialog instanceof MobileChatDialog) {
+            	    		if(chatDialog!=null && chatDialog instanceof BasicChatDialog) {
             	    			this.context.getDialogFactory().closeDialog(chatDialog);
             	    		}
             	    	}

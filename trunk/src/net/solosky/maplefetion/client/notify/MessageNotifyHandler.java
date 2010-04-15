@@ -87,7 +87,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    
     	//查找消息是哪个好友发送的
         FetionStore store = this.context.getFetionStore();
-	    Buddy from   = store.getBuddy(notify.getFrom());
+	    Buddy from   = store.getBuddyByUri(notify.getFrom());
 	    String body  = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
 	    Message msg  = null;
 	    SipcHeader contentHeader = notify.getHeader(SipcHeader.CONTENT_TYPE);

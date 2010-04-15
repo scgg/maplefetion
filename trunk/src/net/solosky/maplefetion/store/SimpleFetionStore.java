@@ -34,9 +34,8 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
-import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.StoreVersion;
+import net.solosky.maplefetion.bean.User;
 
 /**
  * 
@@ -95,30 +94,38 @@ public class SimpleFetionStore implements FetionStore
 	}
 	
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.store.IFetionStore#isBuddy(java.lang.String)
+     * @see net.solosky.maplefetion.store.FetionStore#getBuddyByUri(java.lang.String)
      */
-	public boolean hasBuddy(String uri)
-	{
-		if(uri==null)	return false;
-		return this.buddyList.containsKey(uri);
-	}
-	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.store.IFetionStore#getBuddy(java.lang.String)
-     */
-	public Buddy getBuddy(String uri)
-	{
-		if(uri==null)	return null;
+    @Override
+    public Buddy getBuddyByUri(String uri)
+    {
+    	if(uri==null)	return null;
 		return this.buddyList.get(uri);
-	}
+    }
+
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.store.IFetionStore#removeBuddy(java.lang.String)
+     * @see net.solosky.maplefetion.store.FetionStore#getBuddyByUserId(int)
      */
-	public void removeBuddy(String uri)
-	{
-		if(uri==null)	return;
-		this.buddyList.remove(uri);
-	}
+    @Override
+    public Buddy getBuddyByUserId(int userId)
+    {
+    	Iterator<Buddy> it = this.buddyList.values().iterator();
+    	while(it.hasNext()) {
+    		Buddy buddy = it.next();
+    		if(buddy.getUserId()==userId)
+    			return buddy;
+    	}
+    	return null;
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.store.FetionStore#removeBuddyByUri(java.lang.String)
+     */
+    @Override
+    public void deleteBuddy(Buddy buddy)
+    {
+		this.buddyList.remove(buddy.getUri());
+    }
 	
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.store.IFetionStore#getBuddyList()
@@ -188,6 +195,11 @@ public class SimpleFetionStore implements FetionStore
 			   return cord;
 	   }
 	   return null;
+    }
+    
+    public void deleteCord(Cord cord)
+    {
+    	this.cordList.remove(cord);
     }
 	
 	/* (non-Javadoc)
@@ -278,9 +290,9 @@ public class SimpleFetionStore implements FetionStore
      * @see net.solosky.maplefetion.store.FetionStore#removeGroup(java.lang.String)
      */
     @Override
-    public void removeGroup(String uri)
+    public void deleteGroup(Group group)
     {
-	    this.groupList.remove(uri);
+	    this.groupList.remove(group.getUri());
     }
 
 	/* (non-Javadoc)
@@ -346,7 +358,7 @@ public class SimpleFetionStore implements FetionStore
      * @see net.solosky.maplefetion.store.FetionStore#removeGroupMember(net.solosky.maplefetion.bean.Group, net.solosky.maplefetion.bean.Member)
      */
     @Override
-    public void removeGroupMember(Group group, Member member)
+    public void deleteGroupMember(Group group, Member member)
     {
     	Hashtable<String,Member> table = this.groupMemberList.get(group.getUri());
     	if(table!=null) {
