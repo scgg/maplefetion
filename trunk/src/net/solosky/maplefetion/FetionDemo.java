@@ -53,6 +53,7 @@ import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
+import net.solosky.maplefetion.net.http.HttpTransferFactory;
 import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
@@ -102,7 +103,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	
 	public FetionDemo(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, new TcpTransferFactory(),
+		this.client = new FetionClient(mobile, pass, new HttpTransferFactory(),
 				new SimpleFetionStore(), this, this);
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));

@@ -53,6 +53,17 @@ public class ByteArrayWriter implements ByteWriter
 		this.buffer = new byte[255];
 		this.size    = 0; 
 	}
+	
+	/**
+	 * 以一个数组构造
+	 * @param bytes
+	 * @param len
+	 */
+	public ByteArrayWriter(byte[] bytes)
+	{
+		this.buffer = bytes;
+		this.size  = bytes.length;
+	}
 
 	/* (non-Javadoc)
      * @see net.solosky.net.maplefetion.net.buffer.ByteWriter#size()
@@ -116,5 +127,16 @@ public class ByteArrayWriter implements ByteWriter
     		System.arraycopy(this.buffer, 0, newBytes, 0, this.size);
     		this.buffer = newBytes;
     	}
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.buffer.ByteWriter#writerBytes(byte[], int, int)
+     */
+    @Override
+    public void writeBytes(byte[] bytes, int offset, int len)
+    {
+    	this.compact(len);
+    	System.arraycopy(bytes, offset, this.buffer, this.size, len);
+    	this.size += len;
     }
 }

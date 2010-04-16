@@ -17,15 +17,16 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.net.tcp
- * File     : TcpTransferFactory.java
+ * Package  : net.solosky.maplefetion.net.http
+ * File     : HttpTransferFactory.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-18
+ * Created  : 2010-4-16
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.net.tcp;
+package net.solosky.maplefetion.net.http;
 
 import java.net.UnknownHostException;
+import java.util.UUID;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
@@ -36,14 +37,15 @@ import net.solosky.maplefetion.net.TransferFactory;
 
 /**
  *
- *	TCP连接工厂
+ * HTTP连接传输工厂
+ * 
+ * HTTP连接时有且仅有一个活动的连接
  *
  * @author solosky <solosky772@qq.com>
  */
-public class TcpTransferFactory implements TransferFactory
+public class HttpTransferFactory implements TransferFactory
 {
 
-	private Port localPort;
 	private FetionContext context;
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.net.TransferFactory#closeFactory()
@@ -60,42 +62,17 @@ public class TcpTransferFactory implements TransferFactory
     @Override
     public Transfer createDefaultTransfer() throws TransferException
     {
-    	String proxy = FetionConfig.getString("server.sipc-proxy");
-	    try {
-	    	TcpTransfer transfer = (TcpTransfer) this.createTransfer(new Port(proxy));
-	    	this.localPort = new Port(transfer.getSocket().getLocalAddress(), transfer.getSocket().getLocalPort());
-	        return transfer;
-        } catch (UnknownHostException e) {
-	        throw new TransferException("Unkown host - proxy="+proxy);
-        }
+	    String pragma = "xz4BBcV"+UUID.randomUUID().toString();
+	    return new HttpTransfer(FetionConfig.getString("server.http-tunnel"), this.context.getFetionUser().getSsic(), pragma);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.TransferFactory#createTransfer(java.lang.String, int)
+     * @see net.solosky.maplefetion.net.TransferFactory#createTransfer(net.solosky.maplefetion.net.Port)
      */
     @Override
     public Transfer createTransfer(Port port) throws TransferException
     {
-	   return new TcpTransfer(port.getAddress(), port.getPort());
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.TransferFactory#isMutiConnectionSupported()
-     */
-    @Override
-    public boolean isMutiConnectionSupported()
-    {
-	    return true;
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.TransferFactory#openFactory()
-     */
-    @Override
-    public void openFactory()
-    {
-	    // TODO Auto-generated method stub
-	    
+    	throw new TransferException("HttpTransfer only support one active transfer..");
     }
 
 	/* (non-Javadoc)
@@ -104,7 +81,29 @@ public class TcpTransferFactory implements TransferFactory
     @Override
     public Port getDefaultTransferLocalPort()
     {
-	    return this.localPort;
+    	try {
+	        return new Port("127.0.0.1:8001");
+        } catch (UnknownHostException e) {
+	        return null;
+        }
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.TransferFactory#isMutiConnectionSupported()
+     */
+    @Override
+    public boolean isMutiConnectionSupported()
+    {
+	    return false;
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.TransferFactory#openFactory()
+     */
+    @Override
+    public void openFactory()
+    {
+	    
     }
 
 	/* (non-Javadoc)
@@ -113,7 +112,7 @@ public class TcpTransferFactory implements TransferFactory
     @Override
     public void setFetionContext(FetionContext context)
     {
-	    this.context = context;
+    	this.context = context;
     }
 
 }

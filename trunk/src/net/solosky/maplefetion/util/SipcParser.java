@@ -44,7 +44,7 @@ import net.solosky.maplefetion.sipc.SipcResponse;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class MessageParser extends AbstractProcessor
+public class SipcParser extends AbstractProcessor
 {
 	
 	/**
@@ -95,7 +95,7 @@ public class MessageParser extends AbstractProcessor
 	/**
 	 * 默认构造函数
 	 */
-	public MessageParser()
+	public SipcParser()
 	{
 		this.byteWriter = new ByteArrayWriter();
 		this.contentLeft = 0;

@@ -46,6 +46,14 @@ public interface ByteWriter
 	public abstract void writeByte(int b);
 	
 	/**
+	 * 写入一个字节数组
+	 * @param bytes
+	 * @param offset
+	 * @param len
+	 */
+	public abstract void writeBytes(byte[] bytes, int offset, int len);
+	
+	/**
 	 * 返回写入的字节数
 	 * @return
 	 */

@@ -130,7 +130,12 @@ public class LoginWork implements Runnable
     @Override
     public void run()
     {
-	    this.login();
+    	try {
+    		this.login();
+    	}catch(Throwable e) {
+    		logger.fatal("Unkown login error..",e);
+    		this.context.getLoginListener().loginStateChanged(LoginState.OHTER_ERROR);
+    	}
     }
     
     

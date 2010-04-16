@@ -52,6 +52,7 @@ import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BuddyEnterHelper;
 import net.solosky.maplefetion.util.MessageLogger;
 import net.solosky.maplefetion.util.ResponseFuture;
+import net.solosky.maplefetion.util.SipcParser;
 import net.solosky.maplefetion.util.TicketHelper;
 
 import org.apache.log4j.Logger;
@@ -139,6 +140,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 		if(FetionConfig.getBoolean("log.sipc.enable"))
 			this.processorChain.addLast(new MessageLogger("LiveV2ChatDialog-" + mainBuddy.getFetionId())); 								// 日志记录
 		this.processorChain.addLast(transferService); 													// 传输服务
+		this.processorChain.addLast(new SipcParser());													//信令解析器
 		this.processorChain.addLast(transfer);															//传输对象
 		
 		this.processorChain.startProcessorChain();

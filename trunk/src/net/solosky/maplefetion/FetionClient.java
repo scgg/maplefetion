@@ -276,6 +276,7 @@ public class FetionClient implements FetionContext
     	this.dialogFactory   = new DialogFactory(this);
     	this.loginWork       = new LoginWork(this, Presence.ONLINE);
     	
+    	this.transferFactory.setFetionContext(this);
 		this.store.init(user);
     }
     
@@ -544,6 +545,7 @@ public class FetionClient implements FetionContext
 	public void setBuddyCord(Buddy buddy, Cord cord, ActionListener listener)
 	{
 		ArrayList<Cord> list = new ArrayList<Cord>();
+		list.add(cord);
 		this.dialogFactory.getServerDialog().setBuddyCord(buddy, list, listener);
 	}
 	

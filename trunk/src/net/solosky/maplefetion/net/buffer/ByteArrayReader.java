@@ -62,7 +62,7 @@ public class ByteArrayReader implements ByteReader
     @Override
     public boolean hasRemaining()
     {
-	   return this.in.available()!=this.size;
+	   return this.in.available()!=0;
     }
 
 	/* (non-Javadoc)

@@ -31,18 +31,8 @@ import java.io.OutputStream;
 import java.net.InetAddress;
 import java.net.Socket;
 
-import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.net.AbstractTransfer;
 import net.solosky.maplefetion.net.TransferException;
-import net.solosky.maplefetion.net.buffer.ByteArrayWriter;
-import net.solosky.maplefetion.sipc.SipcBody;
-import net.solosky.maplefetion.sipc.SipcHeader;
-import net.solosky.maplefetion.sipc.SipcInMessage;
-import net.solosky.maplefetion.sipc.SipcMessage;
-import net.solosky.maplefetion.sipc.SipcNotify;
-import net.solosky.maplefetion.sipc.SipcOutMessage;
-import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.util.ConvertHelper;
 
 import org.apache.log4j.Logger;
 
@@ -86,11 +76,6 @@ public class TcpTransfer extends AbstractTransfer
 	private volatile boolean closeFlag;
 
 	/**
-	 * 缓冲区，读取数据就存放到这个缓冲区
-	 */
-	private ByteArrayWriter buffer;
-
-	/**
 	 * 构造函数
 	 * 
 	 * @param host
@@ -109,45 +94,6 @@ public class TcpTransfer extends AbstractTransfer
         	throw new TransferException(e);
         }
 		closeFlag = false;
-		buffer = new ByteArrayWriter();
-	}
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.AbstractTransfer#sendSipcMessage(net.solosky.maplefetion.sipc.SipcOutMessage)
-     */
-    @Override
-    protected void sendSipcMessage(SipcOutMessage out) throws TransferException
-    {
-    	try {
-	        writer.write(ConvertHelper.string2Byte(out.toSendString()));
-	        writer.flush();
-        } catch (IOException e) {
-	        throw new TransferException(e);
-        }
-    }
-    
-	/**
-	 * 读取SIP信令
-	 * 
-	 * @throws IOException
-	 */
-	private void readNextSipcMessage(String head) throws IOException
-	{
-		//读取回复或者通知
-		SipcInMessage in = null;
-		if(head.startsWith(SipcMessage.SIP_VERSION)) {
-    		//如果是SIP-C/2.0 xxx msg...，表明是一个回复
-			in = this.readResponse(head);
-		}else {	//表明是服务器发回的通知
-			in = this.readNotify(head);
-		}
-		
-		//通知接受到回复了
-		try {
-			this.sipcMessageRecived(in);
-		}catch (Throwable e) {
-			this.raiseException(new FetionException(e));
-		}
 	}
 
 	@Override
@@ -160,10 +106,11 @@ public class TcpTransfer extends AbstractTransfer
 				try {
 					logger.debug("Socket ready for read: "+ socket);
 					logger.debug("Local port:"+socket.getLocalSocketAddress().toString());
-					
-					String head = null;
-					while((head=readLine())!=null) {
-						readNextSipcMessage(head);
+					byte[] buff = new byte[1024];
+					int len   = 0; 
+					while(!closeFlag) {
+						len = reader.read(buff, 0, buff.length);
+						bytesRecived(buff, 0, len);
 					}
 				} catch (IOException e) {
 					if(!closeFlag) {
@@ -227,122 +174,19 @@ public class TcpTransfer extends AbstractTransfer
     	return socket;
     }
 
-	/**
-     * 读取一行字符
-     * @param buffer	缓存对象
-     * @return			字符串不包含\r\n
-     * @throws IOException 
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.net.AbstractTransfer#sendBytes(byte[], int, int)
      */
-    private String readLine() throws IOException
+    @Override
+    protected void sendBytes(byte[] buff, int offset, int len)
+            throws TransferException
     {
-    	buffer.clear();
-    	int cur  = 0x7FFFFFFF;
-    	int last = 0x7FFFFFFF;
-    	while(true) {
-    		cur = this.reader.read();
-    		if(cur==-1) {	//读取到流的结尾，可能是服务器关闭了连接
-    			return null;
-    		}
-    		//0x0D 0x0A为行结束符
-    		if(last==0x0D && cur==0x0A) {
-    			break;
-    		}else if(last==0x7FFFFFFF) {
-    			last = cur;
-    		}else {
-    			buffer.writeByte(last);
-    			last = cur;
-    		}
-    	}  	
-    	return new String(buffer.toByteArray());
-    }
-    
-    
-    /**
-     * 读取一个服务器回复
-     * @param head		首行信息
-     * @return			回复对象
-     * @throws IOException
-     */
-    private SipcResponse readResponse(String head) throws IOException
-    {
-		SipcResponse response = new SipcResponse(head);
-		
-		//读取消息头
-		SipcHeader header = null;
-		while((header=this.readHeader())!=null)
-				response.addHeader(header);
-		
-		//读取消息正文
-		response.setBody(this.readBody(response.getLength()));
-		
-		return response;
-    }
-    
-    /**
-     * 读取服务器发送的通知，如BN，M
-     * @param head		首行信息
-     * @return			通知对象
-     * @throws IOException 
-     */
-    private SipcNotify readNotify(String head) throws IOException
-    {
-    	//BN 685592830 SIP-C/2.0
-    	SipcNotify notify = new SipcNotify(head);
+    	try {
+	        this.writer.write(buff, offset, len);
+	        this.writer.flush();
+        } catch (IOException e) {
+	       throw new TransferException(e);
+        }
     	
-    	//读取消息头
-		SipcHeader header = null;
-		while((header=this.readHeader())!=null)
-				notify.addHeader(header);
-		
-		//读取消息正文
-		notify.setBody(this.readBody(notify.getLength()));
-		
-		return notify;
-    }
-    
-    /**
-     * 读取回复或者通知的头部
-     * @return 			读取消息头的数量
-     * @throws IOException 
-     */
-    private SipcHeader readHeader() throws IOException
-    {
-			String headline = this.readLine();
-			SipcHeader header = null;
-			//判断这一行是否为结束行,\r\n会被去掉，所以某一行长度为0时表示头部信息读取完毕了
-			if(headline.length()>0) {
-				header = new SipcHeader(headline);
-			}else {
-				header = null;
-			}
-    	return header;
-    }
-    
-    /**
-     * 读取消息体
-     * @param length	消息体长度
-     * @return			消息体对象
-     * @throws IOException
-     */
-    private SipcBody readBody(int length) throws IOException
-    {
-    	SipcBody body = null;
-    	byte tmpByte = 0;
-    	if(length>0) {
-			buffer.clear(); 
-			//一个字符一个字符的读取
-			for(int i=0;i<length; i++) {
-				tmpByte = (byte) reader.read();
-				if(tmpByte==-1) {
-					return null;
-				}
-				buffer.writeByte(tmpByte);
-			}
-			//转化为SIPBody对象
-			body = new SipcBody(new String(buffer.toByteArray(),"utf8"));
-    	}else {
-    		body = null;
-    	}
-    	return body;
     }
 }

@@ -27,7 +27,7 @@ package net.solosky.maplefetion.net;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
-import net.solosky.maplefetion.net.buffer.ByteReader;
+import net.solosky.maplefetion.net.buffer.ByteArrayReader;
 import net.solosky.maplefetion.net.buffer.ByteWriter;
 import net.solosky.maplefetion.sipc.SipcInMessage;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
@@ -40,16 +40,6 @@ import net.solosky.maplefetion.sipc.SipcOutMessage;
  */
 public abstract class AbstractTransfer extends AbstractProcessor implements Transfer
 {
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.net.Transfer#getTransferName()
-     */
-    @Override
-    public String getTransferName()
-    {
-	    // TODO Auto-generated method stub
-	    return null;
-    }
-
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.chain.AbstractProcessor#startProcessor()
      */
@@ -83,14 +73,23 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
      * 直接把这个对象交个下一个处理器，一般是parser
      * @param reader
      */
-    protected void sipcMessageRecived(SipcInMessage in)
+    protected void bytesRecived(byte[] buff, int offset, int len)
     {
     	try {
-	        this.processIncoming(in);
+	        this.processIncoming(new ByteArrayReader(buff, len));
         } catch (FetionException e) {
 	       	this.raiseException(e);
         }
     }
+    
+    /**
+     * 发送数据包
+     * @param buff
+     * @param offfet
+     * @param len
+     * @throws TransferException
+     */
+    protected abstract void sendBytes(byte[] buff, int offfet, int len) throws TransferException;
     
     /**
      * 发送消息，直接交给子类发送
@@ -98,21 +97,13 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
     @Override
     public void processOutcoming(Object o) throws FetionException
     {
-    	if(o instanceof SipcOutMessage) {
-    		SipcOutMessage out = (SipcOutMessage) o;
+    	if(o instanceof ByteWriter) {
+    		ByteWriter writer = (ByteWriter) o;
     		try {
-	           this.sendSipcMessage(out);
+	           this.sendBytes(writer.toByteArray(), 0, writer.size());
             } catch (TransferException e) {
             	this.raiseException(e);
             }
     	}
     }
-    
-    /**
-     * 发送信令，这个是真正的交给传输对象传输方法，需子类实现
-     * @param writer
-     * @throws TransferException
-     */
-	protected abstract void sendSipcMessage(SipcOutMessage out) throws TransferException;
-
 }

@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.net;
 
+import net.solosky.maplefetion.FetionContext;
+
 
 /**
 *
@@ -56,6 +58,12 @@ public interface TransferFactory
 	 * @throws TransferException
 	 */
 	public Port getDefaultTransferLocalPort();
+	
+	/**
+	 * 设置飞信上下文
+	 * @param context
+	 */
+	public void setFetionContext(FetionContext context);
 	
 	/**
 	 * 建立这个连接工厂
