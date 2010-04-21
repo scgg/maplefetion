@@ -28,10 +28,11 @@ package net.solosky.maplefetion.net.tcp;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
-import java.net.InetAddress;
+import java.net.InetSocketAddress;
 import java.net.Socket;
 
 import net.solosky.maplefetion.net.AbstractTransfer;
+import net.solosky.maplefetion.net.Port;
 import net.solosky.maplefetion.net.TransferException;
 
 import org.apache.log4j.Logger;
@@ -78,19 +79,18 @@ public class TcpTransfer extends AbstractTransfer
 	/**
 	 * 构造函数
 	 * 
-	 * @param host
-	 *            主机名
-	 * @param port
-	 *            端口
-	 * @throws TransferException 
 	 */
-	public TcpTransfer(InetAddress host, int port) throws TransferException
+	public TcpTransfer(Port port) throws TransferException
 	{
 		try {
-			socket = new Socket(host, port);
+			logger.debug("Connecting to "+port.toString());
+			socket = new Socket();
+			socket.connect(new InetSocketAddress(port.getAddress(), port.getPort()));
+			logger.debug("Connected to "+port.toString());
 			reader = socket.getInputStream();
 	        writer = socket.getOutputStream();
         } catch (IOException e) {
+        	logger.warn("Cannot connect to "+port.toString());
         	throw new TransferException(e);
         }
 		closeFlag = false;

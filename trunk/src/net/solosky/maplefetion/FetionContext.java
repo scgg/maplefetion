@@ -31,6 +31,7 @@ import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.SingleExecutor;
 
 /**
@@ -98,6 +99,11 @@ public interface FetionContext
 	 * 返回客户端状态
 	 */
 	public abstract ClientState getState();
+	
+	/**
+	 * 返回登录等待对象,  用于同步登录
+	 */
+	public abstract ObjectWaiter<LoginState> getLoginWaiter();
 
 	/**
 	 * 处理不可恢复的异常的回调方法

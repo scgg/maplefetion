@@ -50,6 +50,7 @@ import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
 import net.solosky.maplefetion.sipc.SipcMessage;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
+import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.VerifyImageFetcher;
 
@@ -127,6 +128,10 @@ public class FetionClient implements FetionContext
 	 */
 	private ClientState state;
 	
+	/**
+	 * 登录结果同步对象
+	 */
+	private ObjectWaiter<LoginState> loginWaiter;
 	
 	 /**
 	 * 日志记录
@@ -197,6 +202,7 @@ public class FetionClient implements FetionContext
     	this.store           = fetionStore;
     	this.loginListener   = loginListener;
 		this.notifyListener  = notifyListener;
+		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		
     }
 	
@@ -300,6 +306,7 @@ public class FetionClient implements FetionContext
     	if(this.state==ClientState.CONNECTION_ERROR ||
     			this.state==ClientState.DISCONNECTED ||
     			this.state==ClientState.OTHER_LOGIN||
+    			this.state==ClientState.LOGIN_ERROR||
     			this.state==ClientState.SYSTEM_ERROR ) {
     		//this.dialogFactory.closeAllDialog();
     		this.dispose();
@@ -404,11 +411,31 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
-	 * 客户端登录
+	 * 客户端异步登录登录
 	 */
 	public void login()
 	{
 		this.login(Presence.ONLINE);
+	}
+	
+	/**
+	 * 客户端同步登录
+	 * @return 登录结果
+	 */
+	public LoginState syncLogin()
+	{
+		return this.syncLogin(Presence.ONLINE);
+	}
+	
+	/**
+	 * 客户端同步登录
+	 * @param presence 登录状态
+	 * @return 登录结果
+	 */
+	public LoginState syncLogin(int presence)
+	{
+		this.login(presence);
+		return this.loginWaiter.waitObject();
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////
@@ -640,4 +667,14 @@ public class FetionClient implements FetionContext
 	{
 		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
 	}
+
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.FetionContext#getLoginWaiter()
+     */
+    @Override
+    public ObjectWaiter<LoginState> getLoginWaiter()
+    {
+	    return this.loginWaiter;
+    }
 }

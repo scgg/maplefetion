@@ -148,6 +148,7 @@ public class LoginWork implements Runnable
     {
     	if(!this.isConfigFetched) {
     		try {
+    			logger.debug("Loading locale setting...");
 				this.updateLoginState(LoginState.SEETING_LOAD_DOING);
 				Document doc = LocaleSettingHelper.load(this.context.getFetionUser());
 				LocaleSettingHelper.active(doc);
@@ -364,10 +365,13 @@ public class LoginWork implements Runnable
     {
     	if(this.context.getLoginListener()!=null)
     		this.context.getLoginListener().loginStateChanged(state);
+    	
     	if(state.getValue()>0x400) {	//大于400都是登录出错
-    		this.context.updateState(ClientState.LOGOUT);
+    		this.context.updateState(ClientState.LOGIN_ERROR);
+    		this.context.getLoginWaiter().objectArrive(state);
     	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.context.updateState(ClientState.ONLINE);
+    		this.context.getLoginWaiter().objectArrive(state);
     	}
     }
     ////////////////////////////////////////////////////////////////////

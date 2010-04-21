@@ -34,6 +34,8 @@ import net.solosky.maplefetion.net.Transfer;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
 
+import org.apache.log4j.Logger;
+
 /**
  *
  *	TCP连接工厂
@@ -44,7 +46,7 @@ public class TcpTransferFactory implements TransferFactory
 {
 
 	private Port localPort;
-	private FetionContext context;
+	private static Logger logger = Logger.getLogger(TcpTransferFactory.class);
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.net.TransferFactory#closeFactory()
      */
@@ -60,23 +62,46 @@ public class TcpTransferFactory implements TransferFactory
     @Override
     public Transfer createDefaultTransfer() throws TransferException
     {
-    	String proxy = FetionConfig.getString("server.sipc-proxy");
-	    try {
-	    	TcpTransfer transfer = (TcpTransfer) this.createTransfer(new Port(proxy));
-	    	this.localPort = new Port(transfer.getSocket().getLocalAddress(), transfer.getSocket().getLocalPort());
-	        return transfer;
-        } catch (UnknownHostException e) {
-	        throw new TransferException("Unkown host - proxy="+proxy);
-        }
+    	//尝试建立Sipc-proxy连接
+    	TcpTransfer transfer = this.tryCreateTransfer(FetionConfig.getString("server.sipc-proxy"));
+    	//尝试建立sipc-proxy-ssl连接
+    	if(transfer==null) 
+    		transfer = this.tryCreateTransfer(FetionConfig.getString("server.sipc-ssl-proxy"));
+        
+    	if(transfer==null) {
+    		//仍然建立失败，抛出异常
+    		throw new TransferException("Cannot create Default transfer..");
+    	}else {
+    		//建立成功
+    		this.localPort = new Port(transfer.getSocket().getLocalAddress(), transfer.getSocket().getLocalPort());
+    		return transfer;
+    	}
     }
 
+    
+    /**
+     * 尝试建立传输对象，建立失败不抛出异常
+     * @param port
+     * @return
+     */
+    private TcpTransfer tryCreateTransfer(String portstr)
+    {
+    	try {
+	        return (TcpTransfer) this.createTransfer(new Port(portstr));
+        } catch (TransferException e) {
+        	logger.warn("Connect to "+portstr+" failed..", e);
+        } catch (UnknownHostException e) {
+        	logger.warn("Connect to "+portstr+" failed..", e);
+        }
+        return null;
+    }
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.net.TransferFactory#createTransfer(java.lang.String, int)
      */
     @Override
     public Transfer createTransfer(Port port) throws TransferException
     {
-	   return new TcpTransfer(port.getAddress(), port.getPort());
+	   return new TcpTransfer(port);
     }
 
 	/* (non-Javadoc)
@@ -113,7 +138,6 @@ public class TcpTransferFactory implements TransferFactory
     @Override
     public void setFetionContext(FetionContext context)
     {
-	    this.context = context;
     }
 
 }

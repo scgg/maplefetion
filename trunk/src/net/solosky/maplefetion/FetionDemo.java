@@ -53,8 +53,7 @@ import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
-import net.solosky.maplefetion.net.http.HttpTransferFactory;
-import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
+import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 
@@ -103,7 +102,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	
 	public FetionDemo(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, new HttpTransferFactory(),
+		this.client = new FetionClient(mobile, pass, new AutoTransferFactory(),
 				new SimpleFetionStore(), this, this);
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
@@ -207,7 +206,6 @@ public class FetionDemo implements LoginListener, NotifyListener
 		println("| Home:http://maplefetion.googlecode.com       |");
 		println("-----------------------------------------------|");
 		println("|这是一个命令行下的飞信，实现了飞信的基本功能。|");
-		println("|倘若好友昵称没有完全显示，可以输入update更新。|");
 		println("|如果需要帮助，请输入help。欢迎提出BUG和建议。 |");
 		println("================================================");
 	

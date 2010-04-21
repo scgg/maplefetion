@@ -30,6 +30,7 @@ import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.bean.User;
 
@@ -61,7 +62,7 @@ public class LocaleSettingHelper
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
-        String content = "<config><user mobile-no=\""+user.getMobile()+"\" /><client type=\"PC\" version=\"3.5.1170\" platform=\"W5.1\" /><servers version=\"0\" /><service-no version=\"0\" /><parameters version=\"0\" /><hints version=\"0\" /><http-applications version=\"0\" /><client-config version=\"0\" /><services version=\"0\" /></config>";
+        String content = "<config><user mobile-no=\""+user.getMobile()+"\" /><client type=\"PC\" version=\""+FetionClient.PROTOCOL_VERSION+"\" platform=\"W5.1\" /><servers version=\"0\" /><service-no version=\"0\" /><parameters version=\"0\" /><hints version=\"0\" /><http-applications version=\"0\" /><client-config version=\"0\" /><services version=\"0\" /></config>";
         OutputStream out = conn.getOutputStream();
         out.write(content.getBytes());
         out.flush();
@@ -82,6 +83,7 @@ public class LocaleSettingHelper
         Element servers = root.getChild("servers");
         FetionConfig.setString("server.ssi-sign-in-v2",  servers.getChildText("ssi-app-sign-in-v2"));
         FetionConfig.setString("server.sipc-proxy",   servers.getChildText("sipc-proxy"));
+        FetionConfig.setString("server.sipc-ssl-proxy",   servers.getChildText("sipc-ssl-proxy"));
         FetionConfig.setString("server.http-tunnel",  servers.getChildText("http-tunnel"));
 	}
 	

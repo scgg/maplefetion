@@ -35,6 +35,7 @@ package net.solosky.maplefetion;
 public enum ClientState {
 	ONLINE,				//在线状态
 	LOGGING,			//登录状态
+	LOGIN_ERROR,		//登录出错
 	LOGOUT,				//退出状态，初始状态
 	OTHER_LOGIN,		//其他客户端登录
 	DISCONNECTED,		//服务器关闭了连接
