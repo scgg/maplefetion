@@ -138,7 +138,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
         	dialog.process(request);
     	}
     	//通知监听器
-		context.getNotifyListener().buddyApplication(buddy, desc);
+    	if(this.context.getNotifyListener()!=null)
+    		context.getNotifyListener().buddyApplication(buddy, desc);
 		logger.debug("Recived a buddy application:"+desc);
     }
     
@@ -164,12 +165,14 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     				
     				//因为这里是手机好友，没有详细信息，故不再获取详细信息
     				logger.debug("Mobile buddy agreed your buddy request:"+buddy.getFetionId());
-    				context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
+    				if(this.context.getNotifyListener()!=null)
+    					context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
     				
     			}else if(relation==Relation.RELATION_DECLINED) {	//对方拒绝了请求
     				
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
+    				if(this.context.getNotifyListener()!=null)
+    					context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
     				
     			}else {}
 
@@ -216,7 +219,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		    				}
     		    				
     		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
-    		    				context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
+    		    				if(context.getNotifyListener()!=null)
+    		    					context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
     						}
 
 							@Override
@@ -237,7 +241,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     					dialog.process(request);
     			}else if(relation==Relation.RELATION_DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
+    				if(this.context.getNotifyListener()!=null)
+    					context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
     			}else {}
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));

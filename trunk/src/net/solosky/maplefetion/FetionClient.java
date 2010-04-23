@@ -25,8 +25,13 @@
  */
 package net.solosky.maplefetion;
 
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Timer;
 
 import net.solosky.maplefetion.bean.Buddy;
@@ -37,21 +42,26 @@ import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.LoginWork;
+import net.solosky.maplefetion.client.dialog.ActionFuture;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.client.dialog.DialogSession;
+import net.solosky.maplefetion.client.dialog.FutureActionListener;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
 import net.solosky.maplefetion.client.dialog.SessionKey;
+import net.solosky.maplefetion.net.AutoTransferFactory;
+import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
-import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
 import net.solosky.maplefetion.sipc.SipcMessage;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
+import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.SingleExecutor;
+import net.solosky.maplefetion.util.Validator;
 import net.solosky.maplefetion.util.VerifyImageFetcher;
 
 import org.apache.log4j.Logger;
@@ -176,10 +186,20 @@ public class FetionClient implements FetionContext
 						LoginListener loginListener)
 	{
 		this(new User(mobileNo, pass, "fetion.com.cn"), 
-				new TcpTransferFactory(),
+				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
 				notifyListener, 
 				loginListener);
+	}
+	
+	/**
+	 * 简单的构造函数
+	 * @param mobile	用户手机号码
+	 * @param pass		用户密码
+	 */
+	public FetionClient(long mobile, String pass)
+	{
+		this(mobile, pass, null, null);
 	}
 	
 	
@@ -311,7 +331,8 @@ public class FetionClient implements FetionContext
     		//this.dialogFactory.closeAllDialog();
     		this.dispose();
     	}
-    	this.notifyListener.clientStateChanged(state);
+    	if(this.notifyListener!=null)
+    		this.notifyListener.clientStateChanged(state);
     }
     
     /* (non-Javadoc)
@@ -340,6 +361,16 @@ public class FetionClient implements FetionContext
     		this.updateState(ClientState.CONNECTION_ERROR);
     	}else {
     		this.updateState(ClientState.SYSTEM_ERROR);
+    		//建立错误日志
+        	if(FetionConfig.getBoolean("crush.build")) {
+        		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
+        		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
+        		try {
+    	            CrushBuilder.buildAndSaveCrushReport(exception, new File(name));
+                } catch (IOException e) {
+                	logger.warn("build crush report failed.",e);
+                }
+        	}
     	}
     }
 
@@ -489,31 +520,78 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 通过手机号给好友发送消息，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败
-	 * 注意：这个方法不是多线程安全的，因为中间使用了一个共享变量，虽然DailogSession是线程安全的
-	 * 但由于是异步操作，完成的顺序是不确定的，所以请务必保证一个请求完成之后再发起另外一个请求
+	 * 这是个同步方法，因为调用了findBuddyByMobile
 	 * @param mobile		手机号码
 	 * @param message		消息
-	 * @param listener
+	 * @return 			操作结果的状态码，定义在ActionStatus中
+	 * @throws InterruptedException 	同步出现异常抛出中断异常
+	 * @throws RequestTimeoutException 请求超时抛出超时异常
+	 * @throws TransferException 		传输失败抛出传输异常
 	 */
-	public synchronized void sendChatMessage(long mobile, final Message message, final ActionListener listener)
+	public int sendChatMessage(long mobile,Message message) throws RequestTimeoutException, TransferException, InterruptedException
 	{
-		ActionListener tmpls = new ActionListener() {
-            public void actionFinished(int status)
-            {
-            	if(status==ActionStatus.ACTION_OK) {
-            		DialogSession session = dialogFactory.getServerDialog().getSession();
-            		Buddy buddy = (Buddy)session.getAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
-            		if(buddy!=null) {
-            			sendChatMessage(buddy, message, listener);
-            		}else {
-            			listener.actionFinished(ActionStatus.INVALD_BUDDY);
-            		}
-            	}else {
-            		listener.actionFinished(status);
-            	}
-            }
-		};
-		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, tmpls);
+		Buddy buddy = this.findBuddyByMobile(mobile);
+		if(buddy!=null) {
+    		ActionFuture future  = new ActionFuture();
+    		this.sendChatMessage(buddy, message, new FutureActionListener(future));
+    		return future.waitStatus();
+		}else {
+			return ActionStatus.INVALD_BUDDY;
+		}
+	}
+	
+	
+	/**
+	 * 通过手机号给好友发送短信，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败，同步方法
+	 * @param mobile		手机号码
+	 * @param message		消息
+	 * @return 			操作结果的状态码，定义在ActionStatus中
+	 * @throws InterruptedException 	同步出现异常抛出中断异常
+	 * @throws RequestTimeoutException 请求超时抛出超时异常
+	 * @throws TransferException 		传输失败抛出传输异常
+	 */
+	public int sendSMSMessage(long mobile, Message message) throws RequestTimeoutException, TransferException, InterruptedException
+	{
+		Buddy buddy = this.findBuddyByMobile(mobile);
+		if(buddy!=null) {
+    		ActionFuture future  = new ActionFuture();
+    		this.sendSMSMessage(buddy, message, new FutureActionListener(future));
+    		return future.waitStatus();
+		}else {
+			return ActionStatus.INVALD_BUDDY;
+		}
+	}
+	
+	
+	/**
+	 * 以手机号码查找好友
+	 * 
+	 * 因为飞信权限的原因，直接去遍历手机好友是不行的，因为部分好友设置为对方看不见好友的手机号码，
+	 * 这里需要发起一个获取好友信息的请求然后返回user-id，用这个user-id去遍历好友列表就可以查询到好友
+	 * 这是个同步方法因为ActionListener只能返回一个状态码，没法返回对象，所以只能把结果放在DialogSession里
+	 * 如果设置为异步接口，可能一次进行多个请求，但结果同时只有一个，为了保证程序的正确性，所以这里设置为同步方法
+	 * 这个是设计上的缺陷，暂时这样，可能在下一版本更新为事件驱动设计模式
+	 * @param mobile	手机号码
+	 * @return		如果找到返回好友对象，如果没有找到返回null
+	 * @throws InterruptedException 	同步出现异常抛出中断异常
+	 * @throws RequestTimeoutException 请求超时抛出超时异常
+	 * @throws TransferException 		传输失败抛出传输异常
+	 */
+	public synchronized Buddy findBuddyByMobile(long mobile) throws RequestTimeoutException, InterruptedException, TransferException
+	{
+		if(!Validator.validateMobile(mobile))
+			throw new IllegalArgumentException(mobile+" is not a valid CMCC mobile number.. ");
+		
+		ActionFuture future  = new ActionFuture();
+		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, new FutureActionListener(future));
+		int status = future.waitStatus();
+		if(status==ActionStatus.ACTION_OK) {
+			DialogSession session = dialogFactory.getServerDialog().getSession();
+    		Buddy buddy = (Buddy)session.getAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
+    		return buddy;
+		}else {
+			return null;
+		}
 	}
 	/**
 	 * 设置个人信息

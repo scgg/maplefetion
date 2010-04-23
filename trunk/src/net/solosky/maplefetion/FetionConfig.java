@@ -155,7 +155,7 @@ public class FetionConfig
 	{
 		//在类的根目录查找默认的系统配置文件，maplefetionDefault.properties
 		//这个文件定义的所有飞信的配置，如果配置都是基于这个配置文件，因为存在惯性配置，所以不会存在配置不存在的错误
-		InputStream in = ClassLoader.getSystemResourceAsStream("resources/maplefetionDefault.properties");
+		InputStream in = ClassLoader.getSystemResourceAsStream("resources/maplefetion.default.properties");
 		if(in!=null) {
 			prop = new Properties();
 			try {

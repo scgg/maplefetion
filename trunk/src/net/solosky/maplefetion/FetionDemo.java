@@ -54,6 +54,8 @@ import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.net.AutoTransferFactory;
+import net.solosky.maplefetion.net.RequestTimeoutException;
+import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 
@@ -135,21 +137,35 @@ public class FetionDemo implements LoginListener, NotifyListener
     {
 	    switch (state)
         {
-	    case SEETING_LOAD_DOING:
-	    	println("获取自适应系统配置中...");
-	    	break;
 	    	
-	    case SSI_SIGN_IN_DOING:
-	    	println("SSI登录中...");
+        case	SEETING_LOAD_DOING:		//加载自适应配置
+        	println("获取自适应系统配置...");
 	    	break;
-
-        case SSI_SIGN_IN_SUCCESS:
-        	println("SSI登录成功...");
-        	break;
+        case	SSI_SIGN_IN_DOING:		//SSI登录
+        	println("SSI登录...");
+	    	break;
+        case	SIPC_REGISTER_DOING:		//注册SIPC服务器
+        	println("服务器验证...");
+	    	break;
+        case	GET_CONTACTS_INFO_DOING:	//获取联系人信息
+        	println("获取联系人...");
+	    	break;
+        case	GET_GROUPS_INFO_DOING:	//获取群消息
+        	println("获取群信息...");
+	    	break;
+        case	GROUPS_REGISTER_DOING:	//注册群
+        	println("群登录...");
+	    	break;
         	
-        case SIPC_REGISTER_DOING:
-        	println("建立服务器会话...");
+        //以下是成功信息，不提示
+        case	SETTING_LOAD_SUCCESS:
+        case	SSI_SIGN_IN_SUCCESS:
+        case	SIPC_REGISGER_SUCCESS:
+        case	GET_CONTACTS_INFO_SUCCESS:
+        case	GET_GROUPS_INFO_SUCCESS:
+        case	GROUPS_REGISTER_SUCCESS:
         	break;
+
 
         case LOGIN_SUCCESS:
         	println("登录成功");
@@ -357,21 +373,26 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    public void tel(final String tel, String msg)
 	    {
 	    	long mobile = Long.parseLong(tel);
-	    	this.client.sendChatMessage(mobile, Message.wrap(msg), new ActionListener() {
-                public void actionFinished(int status)
-                {
-                	if(status==ActionStatus.ACTION_OK||status==ActionStatus.SEND_SMS_OK) {
-                		println("发送消息给用户"+tel+"成功！");
-                	}else if(status==ActionStatus.INVALD_BUDDY){
-                		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
-                	}else if(status==ActionStatus.NOT_FOUND) {
-                		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
-                	}else {
-                		println("发送消息给用户"+tel+"失败, 其他错误，代码"+status);
-                	}
-                }
-	    		
-	    	});
+	    	int status;
+            try {
+	            status = this.client.sendChatMessage(mobile, Message.wrap(msg));
+	            if(status==ActionStatus.ACTION_OK||status==ActionStatus.SEND_SMS_OK) {
+	        		println("发送消息给用户"+tel+"成功！");
+	        	}else if(status==ActionStatus.INVALD_BUDDY){
+	        		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+	        	}else if(status==ActionStatus.NOT_FOUND) {
+	        		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+	        	}else {
+	        		println("发送消息给用户"+tel+"失败, 其他错误，代码"+status);
+	        	}
+            } catch (RequestTimeoutException e) {
+            	println("发送消息给用户"+tel+"失败, 超时");
+            } catch (TransferException e) {
+            	println("发送消息给用户"+tel+"失败, 网络异常");
+            } catch (InterruptedException e) {
+            	println("发送消息给用户"+tel+"失败, 发送被中断");
+            }
+	    	
 	    }
 	    
 	    /**

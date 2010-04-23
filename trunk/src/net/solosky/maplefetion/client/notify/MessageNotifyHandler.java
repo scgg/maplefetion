@@ -132,13 +132,15 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    		public void actionFinished(int status) {
 	    			if(status==ActionStatus.ACTION_OK) {
     	    			 dialog.updateActiveTime();
-    	    			 context.getNotifyListener().buddyMessageRecived(ffrom, fmsg, dialog);
+    	    			 if(context.getNotifyListener()!=null)
+    	    				 context.getNotifyListener().buddyMessageRecived(ffrom, fmsg, dialog);
     	    		}
 	    		}
 	    	});
 	    }else {
 	    	chatDialog.updateActiveTime();
-	    	this.context.getNotifyListener().buddyMessageRecived(from, Message.parse(body), chatDialog);
+	    	if(this.context.getNotifyListener()!=null)
+	    		this.context.getNotifyListener().buddyMessageRecived(from, Message.parse(body), chatDialog);
 	    }
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
     }
@@ -149,7 +151,8 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     private void systemMessageReceived(SipcNotify notify)
     {
     	logger.debug("Recived a system message:"+notify.getBody().toSendString());
-	    this.context.getNotifyListener().systemMessageRecived(notify.getBody().toSendString());
+    	if(this.context.getNotifyListener()!=null)
+    		this.context.getNotifyListener().systemMessageRecived(notify.getBody().toSendString());
     }
     
     /**
@@ -168,7 +171,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    String body   = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
 	    GroupDialog groupDialog = this.context.getDialogFactory().findGroupDialog(group);
 	    
-	    if(group!=null && member!=null && groupDialog!=null) {
+	    if(group!=null && member!=null && groupDialog!=null&&this.context.getNotifyListener()!=null) {
 	    	this.context.getNotifyListener().groupMessageRecived(group, member, Message.parse(body), groupDialog);
 	    	logger.debug("Received a group message:[ Group="+group.getName()+", from="+member.getDisplayName()+", msg="+body );
 	    }

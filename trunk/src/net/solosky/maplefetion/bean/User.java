@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.bean;
 
+import net.solosky.maplefetion.util.Validator;
+
 /**
  *
  *	飞信用户
@@ -55,6 +57,8 @@ public class User extends FetionBuddy
 	 */
 	public User(long mobile, String password,String domain)
 	{
+		if(!Validator.validateMobile(mobile))
+			throw new IllegalArgumentException(mobile+" is not a valid Mobile number.");
 		this.mobile = mobile;
 		this.password = password;
 		this.domain = domain;

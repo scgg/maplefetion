@@ -26,6 +26,11 @@
 package net.solosky.maplefetion.client;
 
 
+import java.io.File;
+import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.ClientState;
@@ -47,6 +52,7 @@ import net.solosky.maplefetion.client.dialog.ServerDialog;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.LocaleSettingHelper;
 
 import org.apache.log4j.Logger;
@@ -134,7 +140,17 @@ public class LoginWork implements Runnable
     		this.login();
     	}catch(Throwable e) {
     		logger.fatal("Unkown login error..",e);
-    		this.context.getLoginListener().loginStateChanged(LoginState.OHTER_ERROR);
+    		this.updateLoginState(LoginState.OHTER_ERROR);
+    		//建立错误日志
+        	if(FetionConfig.getBoolean("crush.build")) {
+        		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
+        		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
+        		try {
+    	            CrushBuilder.buildAndSaveCrushReport(e, new File(name));
+                } catch (IOException ex) {
+                	logger.warn("build crush report failed.",ex);
+                }
+        	}
     	}
     }
     
@@ -234,6 +250,7 @@ public class LoginWork implements Runnable
     	FetionStore  store          = this.context.getFetionStore();
     	
     	try {
+    		this.updateLoginState(LoginState.GET_CONTACTS_INFO_DOING);
     		//获取个人信息
     		logger.debug("PersonalVersion: server="+userVersion.getPersonalVersion()+
     				", local="+storeVersion.getPersonalVersion());
@@ -273,6 +290,8 @@ public class LoginWork implements Runnable
 	        dialog.subscribeBuddyNotify(this.context.getFetionStore().getBuddyList(), listener);
 	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
 	        
+	        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS);
+	        
 	        return true;
         } catch (Exception e) {
         	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
@@ -295,6 +314,7 @@ public class LoginWork implements Runnable
     	StoreVersion userVersion    = this.context.getFetionUser().getStoreVersion();
     	
     	try {
+    		this.updateLoginState(LoginState.GET_GROUPS_INFO_DOING);
 	        //获取群列表
 	        future.clear();
 	        dialog.getGroupList(listener);
@@ -330,6 +350,7 @@ public class LoginWork implements Runnable
     	        storeVersion.setGroupVersion(userVersion.getGroupVersion());
 	        }
 	        
+	    	this.updateLoginState(LoginState.GET_GROUPS_INFO_SUCCESS);
 	        return true;
         } catch (Exception e) {
         	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
@@ -344,15 +365,19 @@ public class LoginWork implements Runnable
      */
     private boolean openGroupDialogs()
     {
+    	this.updateLoginState(LoginState.GROUPS_REGISTER_DOING);
 		Iterator<Group> it = this.context.getFetionStore().getGroupList().iterator();
 		try {
 	        while (it.hasNext()) {
 	        	GroupDialog groupDialog = this.context.getDialogFactory().createGroupDialog(it.next());
 	        	groupDialog.openDialog();
 	        }
+	        
+	        this.updateLoginState(LoginState.GROUPS_REGISTER_SUCCESS);
 	        return true;
         } catch (Exception e) {
         	logger.fatal("open group dialogs failed.", e);
+        	this.updateLoginState(LoginState.OHTER_ERROR);
         	return false;
         }
     }

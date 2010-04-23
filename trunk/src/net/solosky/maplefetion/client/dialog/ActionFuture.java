@@ -66,23 +66,12 @@ public class ActionFuture
 	 * 建议使用这个方法等待操作结果
 	 * 
 	 * @throws InterruptedException 如果等待过程被中断就抛出中断异常
+ * @throws TransferException    如果等待过程中出现网络异常就抛出
 	 * @throws ReqeustTimeoutExcetion 如果请求超时会跑出请求超时异常
 	 */
-	public int waitStatus() throws RequestTimeoutException, InterruptedException
+	public int waitStatus() throws RequestTimeoutException, InterruptedException, TransferException
 	{
-		synchronized (lock) {
-	        //判断是否已经提前通知过了
-			if(this.isNotifyed)
-				return this.status;
-			
-			//尝试等待
-	        lock.wait();
-             //判断是否超时
-             if(this.isTimeout)
-            	 throw new RequestTimeoutException();
-             else
-            	 return this.status;
-        }
+		return this.waitStatus(0);
 	}
 	/**
 	 * 在指定的时间内等待操作结果，
