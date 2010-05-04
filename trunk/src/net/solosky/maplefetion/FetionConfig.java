@@ -26,6 +26,7 @@
 package net.solosky.maplefetion;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileReader;
 import java.io.IOException;
@@ -137,7 +138,7 @@ public class FetionConfig
 	public static void loadConfig(File file) throws FileNotFoundException, IOException
 	{
 		Properties userDefinedPerProperties = new Properties();
-		userDefinedPerProperties.load(new FileReader(file));
+		userDefinedPerProperties.load(new FileInputStream(file));
 		Iterator<Object> it = userDefinedPerProperties.keySet().iterator();
 		while(it.hasNext()) {
 			String key = (String) it.next();
