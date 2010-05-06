@@ -27,6 +27,8 @@ package net.solosky.maplefetion.sipc;
 
 import java.util.Iterator;
 
+import net.solosky.maplefetion.util.ConvertHelper;
+
 /**
 *
 *	SIP收据
@@ -70,7 +72,15 @@ public class SipcReceipt extends SipcOutMessage
 		while(it.hasNext()) {
 			buffer.append(it.next().toSendString());
 		}
+		
+		if(this.body!=null) {
+			int len =ConvertHelper.string2Byte(body.toSendString()).length;
+			if(len>0)
+				buffer.append("L: "+len+"\r\n");
+		}
+		
 		buffer.append("\r\n");
+		
 		if(this.body!=null)
 			buffer.append(body.toSendString());
 		

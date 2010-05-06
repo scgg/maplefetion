@@ -50,9 +50,23 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
     {
     	logger.debug("Recived a invite - from = "+notify.getFrom());
 		//发送已收到消息
-		SipcReceipt receipt = this.dialog.getMessageFactory().createChatMessageReceipt(
-				notify.getFrom() ,Integer.toString(notify.getCallID()), notify.getSequence());
+		SipcReceipt receipt = null;
+		if(this.context.getTransferFactory().isMutiConnectionSupported()) {
+    		receipt = this.dialog.getMessageFactory()
+    					.createDefaultReceipt(notify.getFrom() ,
+    							Integer.toString(notify.getCallID()),
+    							notify.getSequence());
+		}else {
+			receipt = this.dialog.getMessageFactory()
+            			.createHttpInviteReceipt(notify.getFrom() ,
+            					Integer.toString(notify.getCallID()),
+            					notify.getSequence(),
+            					this.context.getTransferFactory().getDefaultTransferLocalPort());
+			
+		}
 		this.dialog.process(receipt);
+		
+		
 		//建立会话
     	final ChatDialog dialog = context.getDialogFactory().createChatDialog(notify);
     	Runnable r = new Runnable(){

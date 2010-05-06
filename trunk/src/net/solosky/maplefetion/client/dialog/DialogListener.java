@@ -16,37 +16,27 @@
  */
 
  /**
- * Project  : MapleFetion
- * Package  : net.solosky.maplefetion.protocol.notify
- * File     : DefaultNotifyHandler.java
+ * Project  : MapleFetion2
+ * Package  : net.solosky.maplefetion.client.dialog
+ * File     : DialogListener.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-26
+ * Created  : 2010-5-6
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.notify;
-
-import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.sipc.SipcNotify;
-import net.solosky.maplefetion.sipc.SipcReceipt;
-
+package net.solosky.maplefetion.client.dialog;
 
 /**
- *	飞信秀的通知处理
  *
- * @author solosky <solosky772@qq.com> 
+ * 对话框监听器，主要用于监听对话框状态的改变
+ *
+ * @author solosky <solosky772@qq.com>
  */
-public class FetionShowNotifyHandler extends AbstractNotifyHandler
+public interface DialogListener
 {
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.protocol.ISIPNotifyHandler#handle(net.solosky.maplefetion.sip.SIPNotify)
-     */
-    @Override
-    public void handle(SipcNotify notify) throws FetionException
-    {
-    	SipcReceipt receipt = this.dialog.getMessageFactory()
-    		.createDefaultReceipt(notify.getFrom(), 
-    				Integer.toString(notify.getCallID()), notify.getSequence());
-    	this.dialog.process(receipt);
-    }
+	/**
+	 * 对话框状态发生了改变
+	 * @param state		状态
+	 */
+	public void dialogStateChanged(DialogState state);
 }

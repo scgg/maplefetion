@@ -82,7 +82,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     {
     	//发送信息收到回复
 	    SipcReceipt receipt = this.dialog.getMessageFactory()
-	    .createChatMessageReceipt(notify.getFrom(), Integer.toString(notify.getCallID()), notify.getSequence());
+	    .createDefaultReceipt(notify.getFrom(), Integer.toString(notify.getCallID()), notify.getSequence());
 	    this.dialog.process(receipt);
 	    
     	//查找消息是哪个好友发送的
@@ -140,7 +140,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    }else {
 	    	chatDialog.updateActiveTime();
 	    	if(this.context.getNotifyListener()!=null)
-	    		this.context.getNotifyListener().buddyMessageRecived(from, Message.parse(body), chatDialog);
+	    		this.context.getNotifyListener().buddyMessageRecived(from, msg, chatDialog);
 	    }
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
     }
@@ -162,7 +162,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     {
     	//发送信息收到回复
 	    SipcReceipt receipt = this.dialog.getMessageFactory()
-	    .createChatMessageReceipt(notify.getFrom(), Integer.toString(notify.getCallID()), notify.getSequence());
+	    .createDefaultReceipt(notify.getFrom(), Integer.toString(notify.getCallID()), notify.getSequence());
 	    this.dialog.process(receipt);
 	    
 	    Group  group  = this.context.getFetionStore().getGroup(notify.getFrom());

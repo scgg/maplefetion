@@ -39,6 +39,7 @@ public interface SipcMethod
 	public final static String SERVICE  = "S";
 	public final static String INVATE   = "I";
 	public final static String MESSAGE  = "M";
+	public final static String OPTION   = "O";
 	public final static String BENOTIFY = "BN";
 	public final static String SUBSCRIBE = "SUB";
 }

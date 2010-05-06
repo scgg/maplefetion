@@ -97,10 +97,21 @@ public class MessageFactory
      * 服务器登录请求
      * @return
      */
-    public SipcRequest createServerRegisterRequest(int presence)
+    public SipcRequest createServerRegisterRequest(int presence, boolean isSupportedMutiConnection)
     {
-    	 SipcRequest req =this.createDefaultSipcRequest(SipcMethod.REGISTER);
-         req.setBody(new SipcBody(MessageTemplate.TMPL_USER_AUTH.replace("{presence}", Integer.toString(presence))));
+    	 SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
+    	 String caps = null;
+    	 if(isSupportedMutiConnection) {
+    		 caps = "simple-im;im-session;temp-group;personal-group;xeno-im;direct-sms;sms2fetion";
+    	 }else {
+    		 caps = "simple-im;im-session;temp-group;personal-group;im-relay;xeno-im;direct-sms;sms2fetion";
+    	 }
+    	 
+    	 String body = MessageTemplate.TMPL_USER_AUTH;
+    	 body = body.replace("{presence}", Integer.toString(presence));
+    	 body = body.replace("{caps}", caps);
+    	 
+         req.setBody(new SipcBody(body));
          
          return req;
     }
@@ -109,9 +120,9 @@ public class MessageFactory
      * 用户登录验证
      * @return
      */
-    public SipcRequest createUserAuthRequest(String nonce, int presence)
+    public SipcRequest createUserAuthRequest(String nonce, int presence, boolean isSupportedMutiConnection)
     {
-    	SipcRequest  req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
+    	SipcRequest  req = this.createServerRegisterRequest(presence, isSupportedMutiConnection);
     	
     	AuthGenerator auth = new AuthGenerator(Integer.toString(this.user.getFetionId()), this.user.getPassword(), this.user.getDomain(), nonce);
     	auth.generate();
@@ -119,9 +130,9 @@ public class MessageFactory
     	String authString = "Digest algorithm=\"SHA1-sess\",response=\""
     					+auth.getResponse()+"\",cnonce=\""+auth.getCnonce()
     					+"\",salt=\""+auth.getSalt()+"\",ssic=\""+user.getSsic()+"\"";
+    	
     	req.addHeader(SipcHeader.AUTHORIZATION, authString);
     	
-    	req.setBody(new SipcBody(MessageTemplate.TMPL_USER_AUTH.replace("{presence}", Integer.toString(presence))));
     	
     	return req;
     }
@@ -650,7 +661,7 @@ public class MessageFactory
     /**
      * 开始群会话
      */
-    public SipcRequest createGroupInviteRequest(String uri, Port localPort)
+    public SipcRequest createInviteRequest(String uri, Port localPort)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.INVATE);
     	req.addHeader(SipcHeader.TO, uri);
@@ -681,7 +692,7 @@ public class MessageFactory
     /**
      * 确认会话收到请求
      */
-    public SipcRequest createGroupAckRequest(String uri)
+    public SipcRequest createAckRequest(String uri)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.ACK);
     	req.addHeader(SipcHeader.TO, uri);
@@ -711,7 +722,7 @@ public class MessageFactory
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.MESSAGE);
     	req.addHeader(SipcHeader.CONTENT_TYPE, "text/html-fragment");
-    	//req.addHeader(SipcHeader.CONTENT_TYPE, "text/plain");
+    	req.addHeader(SipcHeader.CONTENT_TYPE, "text/plain");
     	req.addHeader(SipcHeader.SUPPORTED, "SaveHistory");
     	req.addHeader(SipcHeader.TO, uri);
     	req.setBody(new SipcBody(message));
@@ -752,7 +763,7 @@ public class MessageFactory
     /**
      * 信息收到收据
      */
-    public SipcReceipt createChatMessageReceipt(String fromUri, String callId,String sequence)
+    public SipcReceipt createDefaultReceipt(String fromUri, String callId,String sequence)
     {
     	SipcReceipt receipt = this.createDefaultReceipt(callId, sequence);
     	receipt.addHeader(SipcHeader.FROM, fromUri);
@@ -760,16 +771,33 @@ public class MessageFactory
     	return receipt;
     }
     
-    /**
-     * 飞信秀收据
-     */
-    public SipcReceipt createFetionShowReceipt(String fromUri, String callId,String sequence)
+    
+    public SipcReceipt createHttpInviteReceipt(String uri, String callId, String sequence, Port local)
     {
     	SipcReceipt receipt = this.createDefaultReceipt(callId, sequence);
-    	receipt.addHeader(SipcHeader.FROM, fromUri);
+    	receipt.addHeader(SipcHeader.FROM, uri);
+    	receipt.addHeader(SipcHeader.SUPPORTED,"text/html-fragment");
+    	receipt.addHeader(SipcHeader.SUPPORTED, "text/plain");
+    	receipt.addHeader(SipcHeader.SUPPORTED,"multiparty");
+    	receipt.addHeader(SipcHeader.SUPPORTED,"nudge");
+    	receipt.addHeader(SipcHeader.SUPPORTED,"share-background");
+    	receipt.addHeader(SipcHeader.SUPPORTED,"fetion-show");
+    	
+    	
+    	//正文是一些固定的参数
+    	StringBuffer buffer = new StringBuffer();
+    	buffer.append("v=0\r\n");
+    	buffer.append("o=-0 0 IN "+local.toString()+"\r\n");
+    	buffer.append("s=session\r\n");
+    	buffer.append("c=IN IP4 "+local.toString()+"\r\n");
+    	buffer.append("t=0 0\r\n");
+    	buffer.append("m=message "+Integer.toString(local.getPort())+" sip "+uri);
+    	
+    	receipt.setBody(new SipcBody(buffer.toString()));
     	
     	return receipt;
     }
+    
     /**
      * 下一次CALLID
      * @return

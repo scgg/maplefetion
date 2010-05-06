@@ -89,9 +89,9 @@ public class TcpTransferFactory implements TransferFactory
     	try {
 	        return (TcpTransfer) this.createTransfer(new Port(portstr));
         } catch (TransferException e) {
-        	logger.warn("Connect to "+portstr+" failed..", e);
+        	logger.warn("Connect to "+portstr+" failed!!");
         } catch (UnknownHostException e) {
-        	logger.warn("Connect to "+portstr+" failed..", e);
+        	logger.warn("Connect to "+portstr+" failed!!");
         }
         return null;
     }

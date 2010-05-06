@@ -31,7 +31,6 @@ import java.util.TimerTask;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
-import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
@@ -116,10 +115,10 @@ public class DialogFactory
 	 * @return
 	 */
 	public synchronized ChatDialog createChatDialog(Buddy buddy)
-	        throws FetionException
+	        throws DialogException
 	{
 		ChatDialog dialog = this.findChatDialog(buddy);
-		if (dialog != null && !dialog.isColsed())
+		if (dialog != null && dialog.getState()!=DialogState.CLOSED && dialog.getState()!=DialogState.FAILED)
 			return dialog;
 
 		int presence = buddy.getPresence().getValue();
@@ -151,7 +150,7 @@ public class DialogFactory
 	 *            邀请的通知
 	 * @return
 	 */
-	public synchronized ChatDialog createChatDialog(SipcNotify inviteNotify)
+	public synchronized ChatDialog createChatDialog(SipcNotify inviteNotify) throws DialogException
 	{
 		// 当收到会话邀请时，发起邀请的好友一定是在线，手机在线的好友是不会发起会话邀请的，所以这里无需判断好友状态
 		ChatDialog dialog = null;
@@ -159,9 +158,7 @@ public class DialogFactory
 		if (this.context.getTransferFactory().isMutiConnectionSupported()) {
 			dialog = new LiveV2ChatDialog(inviteNotify, context);
 		} else {
-			Buddy buddy = this.context.getFetionStore().getBuddyByUri(
-			        inviteNotify.getFrom());
-			dialog = new LiveV1ChatDialog(buddy, context);
+			dialog = new LiveV1ChatDialog(inviteNotify, context);
 		}
 		this.chatDialogList.add(dialog);
 
@@ -200,6 +197,25 @@ public class DialogFactory
 			}
 		}
 		return dialog;
+	}
+	
+	
+	/**
+	 * 返回一个聊天对话框，首先查找当前活动的聊天对话，如果找到并且没有关闭就返回这个对话
+	 * 如果不存在或者会话已经关闭就新建立一个对话并返回
+	 * @param buddy		好友对象
+	 * @return			聊天对话
+	 * @throws DialogException
+	 */
+	public ChatDialog getChatDialog(Buddy buddy) throws DialogException
+	{
+		ChatDialog dialog = this.findChatDialog(buddy);
+		if(dialog!=null && dialog.getState()!=DialogState.CLOSED) {
+			return dialog;
+		}else {
+			return this.createChatDialog(buddy);
+		}
+		
 	}
 
 	/**
@@ -281,7 +297,7 @@ public class DialogFactory
 			Iterator<ChatDialog> it = chatDialogList.iterator();
 			while (it.hasNext()) {
 				ChatDialog dialog = it.next();
-				if (dialog.isColsed())
+				if (dialog.getState()==DialogState.CLOSED)
 					it.remove();
 				else if (dialog.getActiveTime() + maxIdleTime < (int) (System.currentTimeMillis() / 1000)) {
 					dialog.closeDialog();

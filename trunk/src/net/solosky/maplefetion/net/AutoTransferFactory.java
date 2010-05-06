@@ -81,7 +81,7 @@ public class AutoTransferFactory implements TransferFactory
 	        return transfer;
         } catch (TransferException e) {
         	this.activeFactory.closeFactory();
-        	logger.warn("Create tcp default transfer failed..");
+        	logger.warn("Create tcp default transfer failed!!!");
         }
         
         //下面尝试建立HTTP连接
@@ -94,8 +94,8 @@ public class AutoTransferFactory implements TransferFactory
 	        return transfer;
         } catch (TransferException e) {
         	this.activeFactory.closeFactory();
-        	logger.debug("Create Http default transfer failed...");
-        	throw new TransferException("Cannot create a valid transfer..");
+        	logger.debug("Create Http default transfer failed!!!");
+        	throw new TransferException("Cannot create a valid transfer!!!");
         }
     	
     }

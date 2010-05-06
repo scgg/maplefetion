@@ -46,6 +46,7 @@ import net.solosky.maplefetion.client.dialog.ActionFuture;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.client.dialog.DialogSession;
 import net.solosky.maplefetion.client.dialog.FutureActionListener;
@@ -466,7 +467,11 @@ public class FetionClient implements FetionContext
 	public LoginState syncLogin(int presence)
 	{
 		this.login(presence);
-		return this.loginWaiter.waitObject();
+		try {
+	        return this.loginWaiter.waitObject();
+        } catch (Exception e) {
+	        return LoginState.OHTER_ERROR;
+        }
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////
@@ -476,33 +481,27 @@ public class FetionClient implements FetionContext
 	 * @param toBuddy  发送聊天消息的好友
 	 * @param message  需发送的消息
 	 * @param listener 操作结果监听器
+	 * @throws DialogException 如果对话框建立失败抛出
 	 */
-	public void sendChatMessage(final Buddy toBuddy, final Message message, final ActionListener listener)
+	public void sendChatMessage(final Buddy toBuddy, final Message message, final ActionListener listener) throws DialogException
 	{
 		ChatDialog dialog = this.dialogFactory.findChatDialog(toBuddy);
 		if(dialog==null) {
-			//建立对话框，建立和打开对话框都是同步操作，为了这里实现异步操作，这里封装为一个Runnable对象交给单线程池去运行
-			Runnable r = new Runnable(){
-				public void run()
-				{
-					try {
-	                    ChatDialog newDialog = dialogFactory.createChatDialog(toBuddy);
-	                    synchronized (newDialog) {
-		                    newDialog.openDialog();
-		                    newDialog.sendChatMessage(message, listener);
-                        }
-                    } catch (FetionException e) {
-                    	logger.warn("openDialog failed.", e);
-                    	listener.actionFinished(ActionStatus.IO_ERROR);
-                    }
-				}
-			};
-			this.singleExecutor.submit(r);
-		}else {
-			synchronized (dialog) {
-				dialog.sendChatMessage(message, listener);
+			final ChatDialog fdialog = this.dialogFactory.createChatDialog(toBuddy);
+			synchronized (fdialog) {
+				fdialog.openDialog(new ActionListener() {
+					public void actionFinished(int status) {
+						if(status==ActionStatus.ACTION_OK) {
+							fdialog.sendChatMessage(message, listener);
+						}
+					}
+				});
             }
 		}
+		synchronized (dialog) {
+			dialog.sendChatMessage(message, listener);
+        }
+		
 	}
 	
 	
@@ -527,8 +526,9 @@ public class FetionClient implements FetionContext
 	 * @throws InterruptedException 	同步出现异常抛出中断异常
 	 * @throws RequestTimeoutException 请求超时抛出超时异常
 	 * @throws TransferException 		传输失败抛出传输异常
+	 * @throws DialogException 		如果对话框建立失败抛出
 	 */
-	public int sendChatMessage(long mobile,Message message) throws RequestTimeoutException, TransferException, InterruptedException
+	public int sendChatMessage(long mobile,Message message) throws RequestTimeoutException, TransferException, InterruptedException, DialogException
 	{
 		Buddy buddy = this.findBuddyByMobile(mobile);
 		if(buddy!=null) {

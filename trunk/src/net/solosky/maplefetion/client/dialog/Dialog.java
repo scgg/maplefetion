@@ -60,14 +60,19 @@ public abstract class Dialog
 	/**
 	 * 对话框状态
 	 */
-	protected DialogState state;
+	protected volatile DialogState state;
+	
+	/**
+	 * 对话框监听器
+	 */
+	protected DialogListener listener;
 	/**
 	 * 默认的构造函数
 	 */
 	public Dialog(FetionContext context)
 	{
 		this.context = context;
-		this.state  = DialogState.OPENNING;
+		this.state  = DialogState.CREATED;
 		this.session = new DialogSession();
 	}
 	
@@ -120,8 +125,10 @@ public abstract class Dialog
 			throw new IllegalStateException("Dialog is closed.");
 		}else if(this.state == DialogState.OPENNING) {
 			throw new IllegalStateException("Dialog is openning.");
-		}else {
-			//State is open....
+		}else if(this.state == DialogState.CREATED){
+			throw new IllegalStateException("Dialog just created.");
+		}else if(this.state == DialogState.FAILED) {
+			throw new IllegalStateException("Dialog is failed to open.");
 		}
 	}
 	
@@ -131,18 +138,26 @@ public abstract class Dialog
 	 */
 	public void openDialog(final ActionListener listener)
 	{
+		if(this.getState()!=DialogState.CREATED) {
+			throw new IllegalStateException("cannot open dialog again. State="+this.getState().name());
+		}else {
+			this.setState(DialogState.OPENNING);
+		}
+		
 		Runnable r = new Runnable() {
 			public void run() {
 				try {
-	                openDialog();
-	                listener.actionFinished(ActionStatus.ACTION_OK);
-                } catch (TransferException e) {
-                	listener.actionFinished(ActionStatus.IO_ERROR);
-                } catch (RequestTimeoutException e) {
-	               listener.actionFinished(ActionStatus.TIME_OUT);
-                } catch (DialogException e) {
-	                listener.actionFinished(ActionStatus.OTHER_ERROR);
-                }
+					synchronized (this) {
+						  openDialog();
+			              listener.actionFinished(ActionStatus.ACTION_OK);
+						}
+	                } catch (TransferException e) {
+	                	listener.actionFinished(ActionStatus.IO_ERROR);
+	                } catch (RequestTimeoutException e) {
+		               listener.actionFinished(ActionStatus.TIME_OUT);
+	                } catch (DialogException e) {
+		                listener.actionFinished(ActionStatus.OTHER_ERROR);
+	                }
 			}
 		};
 		this.context.getSingleExecutor().submit(r);
@@ -154,28 +169,33 @@ public abstract class Dialog
      */
     public abstract MessageFactory getMessageFactory();
     
+    
     /**
-     * 对话框是否关闭
+     * 返回对话框状态
+     * @return
      */
-    public boolean isColsed()
+    public synchronized DialogState getState()
     {
-    	return this.state == DialogState.CLOSED;
-    }
-
-	/**
-     * @return the isOpened
-     */
-    public boolean isOpened()
-    {
-    	return this.state == DialogState.OPENED;
+    	return this.state;
     }
     
     /**
      * 设置对话框状态
      * @param state
      */
-    public synchronized void setState(DialogState state)
+    protected synchronized void setState(DialogState state)
     {
     	this.state = state;
+    	if(this.listener!=null)
+    		this.listener.dialogStateChanged(state);
+    }
+    
+    /**
+     * 设置对话框监听器
+     * @param listener
+     */
+    public void setDialogListener(DialogListener listener)
+    {
+    	this.listener = listener;
     }
 }

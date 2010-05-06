@@ -29,8 +29,6 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
 import net.solosky.maplefetion.net.buffer.ByteArrayReader;
 import net.solosky.maplefetion.net.buffer.ByteWriter;
-import net.solosky.maplefetion.sipc.SipcInMessage;
-import net.solosky.maplefetion.sipc.SipcOutMessage;
 
 /**
  *

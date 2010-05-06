@@ -35,7 +35,7 @@ import net.solosky.maplefetion.FetionClient;
  */
 public class MessageTemplate
 {
-	public static final String TMPL_USER_AUTH = "<args><device type=\"PC\" version=\"0\" client-version=\""+FetionClient.PROTOCOL_VERSION+"\" /><caps value=\"simple-im;im-session;temp-group;personal-group;im-relay;xeno-im;direct-sms;sms2fetion\" /><events value=\"contact;permission;system-message;personal-group;compact\" /><user-info attributes=\"all\" /><presence><basic value=\"{presence}\" desc=\"\" /></presence></args>";
+	public static final String TMPL_USER_AUTH = "<args><device type=\"PC\" version=\"0\" client-version=\""+FetionClient.PROTOCOL_VERSION+"\" /><caps value=\"{caps}\" /><events value=\"contact;permission;system-message;personal-group;compact\" /><user-info attributes=\"all\" /><presence><basic value=\"{presence}\" desc=\"\" /></presence></args>";
 	public static final String TMPL_GET_PERSONAL_INFO = "<args><personal attributes=\"all\" /><services version=\"\" attributes=\"all\" /><quota attributes=\"all\" /></args>";
 	public static final String TMPL_GET_CONTACT_LIST = "<args><contacts><buddy-lists /><buddies attributes=\"all\" /><mobile-buddies attributes=\"all\" /><chat-friends /><blacklist /><allow-list /></contacts></args>";
 	public static final String TMPL_GET_CONTACTS_INFO = "<args><contacts attributes=\"provisioning;impresa;mobile-no;nickname;name;gender;portrait-crc;ivr-enabled\" extended-attributes=\"score-level\">{contactList}</contacts></args>";
@@ -54,7 +54,6 @@ public class MessageTemplate
 	public static final String TMPL_SET_BUDDY_LOCAL_NAME = "<args><contacts><buddies><buddy uri=\"{uri}\" local-name=\"{localName}\" /></buddies></contacts></args>";
 	public static final String TMPL_SET_BUDDY_CORD = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" /></buddies></contacts></args>";
 	public static final String TMPL_SET_PRESENCE = "<args><presence><basic value=\"{presence}\" /></presence></args>";
-	
 	
 	public static final String TMPL_CREATE_CORD = "<args><contacts><buddy-lists><buddy-list name=\"{title}\" /></buddy-lists></contacts></args>";
 	public static final String TMPL_DELETE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" /></buddy-lists></contacts></args>";

@@ -242,7 +242,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 */
 	public void register(int presence, ActionListener listener)
 	{
-		SipcRequest request = this.getMessageFactory().createServerRegisterRequest(presence);
+		SipcRequest request = this.getMessageFactory().createServerRegisterRequest(presence, 
+					this.context.getTransferFactory().isMutiConnectionSupported());
 		request.setResponseHandler(new ServerRegisterResponseHandler(context, this, listener));
 		this.process(request);
 		
@@ -256,7 +257,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void userAuth(int presence, ActionListener listener) 
 	{
 		String nonce = (String) this.session.getAttribute("NONCE");
-		SipcRequest request = this.getMessageFactory().createUserAuthRequest(nonce, presence);
+		SipcRequest request = this.getMessageFactory().createUserAuthRequest(nonce, presence, 
+				this.context.getTransferFactory().isMutiConnectionSupported());
 		request.setResponseHandler(new UserAuthResponseHandler(context, this, listener));
 		this.process(request);
 	}

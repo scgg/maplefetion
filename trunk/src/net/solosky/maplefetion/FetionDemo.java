@@ -52,6 +52,9 @@ import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
+import net.solosky.maplefetion.client.dialog.DialogException;
+import net.solosky.maplefetion.client.dialog.DialogState;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -84,7 +87,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	/**
 	 * 当前聊天好友
 	 */
-	private ChatDialog activeChatDialog;
+	private ChatDialogProxy activeChatDialog;
 	
 	/**
 	 * 好友序号到好友飞信地址的映射
@@ -360,7 +363,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    		}else {
 	    			try {
 	                    dialog = this.client.getDialogFactory().createChatDialog(buddy);
-	                    this.open(dialog, message);
+	                    this.send(dialog, message);
                     } catch (FetionException e) {
 	                    println("建立对话框失败~"+e.getMessage());
                     }
@@ -381,7 +384,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	        	}else if(status==ActionStatus.INVALD_BUDDY){
 	        		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
 	        	}else if(status==ActionStatus.NOT_FOUND) {
-	        		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+	        		println("发送消息给用户"+tel+"失败, 该用户不是移动用户。");
 	        	}else {
 	        		println("发送消息给用户"+tel+"失败, 其他错误，代码"+status);
 	        	}
@@ -391,6 +394,8 @@ public class FetionDemo implements LoginListener, NotifyListener
             	println("发送消息给用户"+tel+"失败, 网络异常");
             } catch (InterruptedException e) {
             	println("发送消息给用户"+tel+"失败, 发送被中断");
+            } catch (DialogException e) {
+            	println("发送消息给用户"+tel+"失败, 建立会话失败");
             }
 	    	
 	    }
@@ -423,7 +428,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    {
 	    	this.client.sendSMSMessage(this.client.getFetionUser(), Message.wrap(message), new ActionListener(){
                 public void actionFinished(int status){
-	                if(status==ActionStatus.ACTION_OK) {
+	                if(status==ActionStatus.SEND_SMS_OK) {
 	                	println("给自己发送短信成功！");
 	                }else {
 	                	println("给自己发送短信失败！");
@@ -761,11 +766,9 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    public void enter(String uri)
 	    {
 	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
-	    	this.activeChatDialog = this.client.getDialogFactory().findChatDialog(buddy);
 	    	if(this.activeChatDialog==null) {
 	    		try {
-	                this.activeChatDialog = this.client.getDialogFactory().createChatDialog(buddy);
-	                this.open(this.activeChatDialog, null);
+	                this.activeChatDialog = new ChatDialogProxy(buddy, client);
 	                println("提示：你现在可以和 "+ buddy.getDisplayName()+" 聊天了。");
                 } catch (FetionException e) {
                 	println("建立对话框失败~"+e.getMessage());
@@ -779,7 +782,7 @@ public class FetionDemo implements LoginListener, NotifyListener
 	    public void leave()
 	    {
 	    	try {
-	            this.client.getDialogFactory().closeDialog(this.activeChatDialog);
+	    		this.activeChatDialog.closeDialog();
 	            this.activeChatDialog = null;
             } catch (Exception e) {
             	println("关闭对话框失败~"+e.getMessage());
@@ -806,26 +809,6 @@ public class FetionDemo implements LoginListener, NotifyListener
 				}
 			});
 	    }
-	    
-	    /**
-	     * 建立一个对话框并发送消息
-	     * @param buddy
-	     * @param message
-	     */
-	    private void open(final ChatDialog dialog, final String message)
-	    {
-	    	dialog.openDialog(new ActionListener() {
-            	public void actionFinished(int status) {
-            		if(status==ActionStatus.ACTION_OK) {
-            			if(message!=null)
-            				send(dialog, message);
-            		}else {
-            			println("打开聊天对话框失败");
-            		}
-            	}
-            });
-	    }
-	    
 	    
 	    /**
 	     * 设置登录用户的状态
@@ -1051,13 +1034,18 @@ public class FetionDemo implements LoginListener, NotifyListener
 		else {
 			if( line!=null && line.length()>0 ){
 				if(this.activeChatDialog!=null) {
-					if(this.activeChatDialog.isColsed()) {
-						this.activeChatDialog = this.client.getDialogFactory()
-											.createChatDialog(this.activeChatDialog.getMainBuddy());
-						this.open(this.activeChatDialog, line);
-					}else {
-						this.send(this.activeChatDialog, line);
-					}
+					final Buddy buddy = this.activeChatDialog.getMainBuddy(); 
+					this.activeChatDialog.sendChatMessage(Message.wrap(line),new ActionListener(){
+						public void actionFinished(int status){
+							if(status==ActionStatus.ACTION_OK){
+								println("提示："+buddy.getDisplayName()+" 在线，消息已经发送到飞信客户端。");
+							}else if(status==ActionStatus.SEND_SMS_OK){
+								println("提示："+buddy.getDisplayName()+" 不在线，消息已以长短信的方式发送到好友手机。");
+							}else{
+								println("[系统消息]:你发给 "+buddy.getDisplayName()+" 的短信  "+line+" 发送失败！");
+							}
+						}
+					});
 				}else{
 					println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
 				}
@@ -1088,7 +1076,7 @@ public class FetionDemo implements LoginListener, NotifyListener
     public void prompt()
     {
     	try {
-    	if(this.activeChatDialog!=null && this.activeChatDialog.isOpened())
+    	if(this.activeChatDialog!=null && this.activeChatDialog.getState()==DialogState.OPENED)
 			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion^["+this.activeChatDialog.getMainBuddy().getDisplayName()+"]>>");
 		else
 			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion>>");
@@ -1197,7 +1185,6 @@ public class FetionDemo implements LoginListener, NotifyListener
     		println("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
     	else 
     		println("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());
-    	dialog.sendChatMessage(message, null);
     	prompt();
 	    
     }

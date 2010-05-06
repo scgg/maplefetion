@@ -72,6 +72,7 @@ public abstract class ChatDialog extends Dialog
 	public ChatDialog(FetionContext client)
 	{
 		super(client);
+		this.activeTime = (int) System.currentTimeMillis()/1000;
 	}
 	
 	/**
@@ -97,6 +98,8 @@ public abstract class ChatDialog extends Dialog
 	 * @throws TransferException
 	 */
 	public abstract void sendChatMessage(Message message, ActionListener listener);
+	
+	
 	/**
 	 * 给好友发送在线消息
 	 * @param message		消息内容
@@ -155,6 +158,4 @@ public abstract class ChatDialog extends Dialog
     {
     	this.activeTime = (int) (System.currentTimeMillis()/1000);
     }
-	
-	
 }

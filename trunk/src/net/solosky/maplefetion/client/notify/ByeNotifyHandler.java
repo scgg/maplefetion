@@ -16,37 +16,43 @@
  */
 
  /**
- * Project  : MapleFetion
- * Package  : net.solosky.maplefetion.protocol.notify
- * File     : DefaultNotifyHandler.java
+ * Project  : MapleFetion2
+ * Package  : net.solosky.maplefetion.client.notify
+ * File     : ByeNotifyHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-26
+ * Created  : 2010-5-6
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.client.notify;
 
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.DialogState;
 import net.solosky.maplefetion.sipc.SipcNotify;
-import net.solosky.maplefetion.sipc.SipcReceipt;
-
 
 /**
- *	飞信秀的通知处理
+ * 
+ * 好友离开对话的通知
  *
- * @author solosky <solosky772@qq.com> 
+ * @author solosky <solosky772@qq.com>
  */
-public class FetionShowNotifyHandler extends AbstractNotifyHandler
+public class ByeNotifyHandler extends AbstractNotifyHandler
 {
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.protocol.ISIPNotifyHandler#handle(net.solosky.maplefetion.sip.SIPNotify)
+     * @see net.solosky.maplefetion.client.NotifyHandler#handle(net.solosky.maplefetion.sipc.SipcNotify)
      */
     @Override
     public void handle(SipcNotify notify) throws FetionException
     {
-    	SipcReceipt receipt = this.dialog.getMessageFactory()
-    		.createDefaultReceipt(notify.getFrom(), 
-    				Integer.toString(notify.getCallID()), notify.getSequence());
-    	this.dialog.process(receipt);
+    	Buddy buddy = this.context.getFetionStore().getBuddyByUri(notify.getFrom());
+    	if(buddy!=null) {
+    		ChatDialog dialog = this.context.getDialogFactory().findChatDialog(buddy);
+    		if(dialog!=null && dialog.getState()!=DialogState.CLOSED) {
+    			this.context.getDialogFactory().closeDialog(dialog);
+    		}
+    	}
     }
+
 }

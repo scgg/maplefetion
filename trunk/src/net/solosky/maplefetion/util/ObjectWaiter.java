@@ -71,22 +71,33 @@ public class ObjectWaiter<T>
 	/**
 	 * 等待对象
 	 * 如果结果没有返回，就在此等待
+	 * @param time 等待多久如果结果没有到来就返回
 	 * @return  等待结果对象
+	 * @throws Exception 如果超时或结果出现异常就抛出
 	 */
-	public T waitObject()
+	public T waitObject(long timeout) throws Exception
 	{
 		synchronized (lock) {
 			this.isWaiting = true;
 			this.target   = null;
 			this.exception = null;
-	        try {
-	            lock.wait();
-            } catch (InterruptedException e) {
-	           Logger.getLogger(ObjectWaiter.class).warn("ActionWaiter Interrupted..");
-            }
+	        lock.wait(timeout);
+	        if(this.exception!=null)
+	        	throw this.exception;
 	        this.isWaiting = false;
 	        return this.target;
         }
+	}
+	
+	
+	/**
+	 * 等待结果，如果结果没有到来就一直等待
+	 * @return
+	 * @throws Exception
+	 */
+	public T waitObject() throws Exception
+	{
+		return this.waitObject(0);
 	}
 	
 	/**

@@ -137,15 +137,11 @@ public class GroupDialog extends Dialog
      */
     private void invite() throws TransferException, IllegalResponseException, RequestTimeoutException, InterruptedException
     {
-    	SipcRequest request = this.getMessageFactory().createGroupInviteRequest(
+    	SipcRequest request = this.getMessageFactory().createInviteRequest(
     			this.group.getUri(),this.context.getTransferFactory().getDefaultTransferLocalPort());
     	this.helper.set(request);
     	ResponseFuture future = ResponseFuture.wrap(request);
     	this.process(request);
-//    	//注意这个请求会回复两次，第一次返回100 trying,表示正在查找群
-//    	assertStatus(future.waitResponse().getStatusCode(), SipcStatus.TRYING);
-//    	//第二次返回200 OK表示会话已经建立
-//    	assertStatus(future.waitResponse().getStatusCode(), SipcStatus.ACTION_OK);
     	
     	int status = future.waitResponse().getStatusCode();
     	if(status==SipcStatus.TRYING) {
@@ -163,7 +159,7 @@ public class GroupDialog extends Dialog
     private void ack() throws TransferException
     {
     	//这个请求不需要回复
-    	SipcRequest request = this.getMessageFactory().createGroupAckRequest(this.group.getUri());
+    	SipcRequest request = this.getMessageFactory().createAckRequest(this.group.getUri());
     	this.helper.set(request);
     	this.process(request);
     }

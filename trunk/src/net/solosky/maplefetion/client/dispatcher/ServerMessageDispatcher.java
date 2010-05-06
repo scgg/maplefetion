@@ -97,6 +97,10 @@ public class ServerMessageDispatcher extends AbstractMessageDispatcher
 			clazz = "InviteBuddyNotifyHandler";						//被邀请进入对话
 		}else if(method.equals(SipcMethod.INFO)) {
 			clazz = "FetionShowNotifyHandler";							//飞信秀，可能会有其他的
+		}else if(method.equals(SipcMethod.ACK)) {
+			clazz = "AckNotifyHandler";
+		}else if(method.equals(SipcMethod.OPTION)) {
+			clazz = "OptionNotifyHandler";
 		}
 		// TODO ..其他通知。。。
 		

@@ -83,14 +83,14 @@ public class TcpTransfer extends AbstractTransfer
 	public TcpTransfer(Port port) throws TransferException
 	{
 		try {
-			logger.debug("Connecting to "+port.toString());
+			logger.debug("Connecting to "+port.toString()+"....");
 			socket = new Socket();
 			socket.connect(new InetSocketAddress(port.getAddress(), port.getPort()));
-			logger.debug("Connected to "+port.toString());
+			logger.debug("Connected to "+port.toString()+".");
 			reader = socket.getInputStream();
 	        writer = socket.getOutputStream();
         } catch (IOException e) {
-        	logger.warn("Cannot connect to "+port.toString());
+        	logger.warn("Cannot connect to "+port.toString()+"!!!!");
         	throw new TransferException(e);
         }
 		closeFlag = false;

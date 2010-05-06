@@ -32,7 +32,9 @@ package net.solosky.maplefetion.client.dialog;
  * @author solosky <solosky772@qq.com>
  */
 public enum DialogState {
+	CREATED,		//刚创建
 	OPENNING,		//对话框正在打开
+	FAILED,			//打开对话框失败
 	OPENED,			//对话框已经打开
 	CLOSED			//对话框已经关闭
 }
