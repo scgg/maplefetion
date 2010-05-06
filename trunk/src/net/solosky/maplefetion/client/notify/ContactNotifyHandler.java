@@ -61,9 +61,11 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     @Override
     public void handle(SipcNotify notify) throws FetionException
     {
+		if(notify.getBody()==null)	return;
     	Element root = XMLHelper.build(notify.getBody().toSendString());
     	Element event = root.getChild("event");
-    	 String eventType = event.getAttributeValue("type");
+    	String eventType = event.getAttributeValue("type");
+		if(eventType==null)	return;
     	if(eventType.equals("ServiceResult")) {
     		this.serviceResult(event);
     	}else if(eventType.equals("UpdateBuddy")) {
