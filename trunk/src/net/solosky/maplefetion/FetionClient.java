@@ -292,8 +292,35 @@ public class FetionClient implements FetionContext
     {
     	return notifyListener;
     }
+    
+    /**
+     * 设置登录监听器
+     * @param loginListener
+     */
+
+    public void setLoginListener(LoginListener loginListener) {
+		this.loginListener = loginListener;
+	}
 
     /**
+     * 设置通知监听器
+     * @param notifyListener
+     */
+	public void setNotifyListener(NotifyListener notifyListener) {
+		this.notifyListener = notifyListener;
+	}
+	
+	/**
+	 * 设置是否启用群
+	 * @param enabled
+	 */
+	public void enableGroup(boolean enabled)
+	{
+		FetionConfig.setBoolean("fetion.group.enabled", enabled);
+	}
+
+
+	/**
      * 初始化
      */
     private void init()
@@ -488,20 +515,19 @@ public class FetionClient implements FetionContext
 		ChatDialog dialog = this.dialogFactory.findChatDialog(toBuddy);
 		if(dialog==null) {
 			final ChatDialog fdialog = this.dialogFactory.createChatDialog(toBuddy);
-			synchronized (fdialog) {
-				fdialog.openDialog(new ActionListener() {
-					public void actionFinished(int status) {
-						if(status==ActionStatus.ACTION_OK) {
-							fdialog.sendChatMessage(message, listener);
-						}
+			dialog = fdialog;
+			fdialog.openDialog(new ActionListener() {
+				public void actionFinished(int status) {
+					if(status==ActionStatus.ACTION_OK) {
+						fdialog.sendChatMessage(message, listener);
 					}
-				});
-            }
+				}
+			});
+		}else{
+			synchronized (dialog) {
+				dialog.sendChatMessage(message, listener);
+			}
 		}
-		synchronized (dialog) {
-			dialog.sendChatMessage(message, listener);
-        }
-		
 	}
 	
 	

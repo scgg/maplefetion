@@ -62,6 +62,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     public void handle(SipcNotify notify) throws FetionException
     {
     	if(notify.getBody()==null)	return;
+    	Element root  = XMLHelper.build(notify.getBody().toSendString());
+    	Element event = XMLHelper.find(root, "/results/event"); 
     	if(event==null)		return;
     	String eventType = event.getAttributeValue("type");
     	if(eventType==null)	return;

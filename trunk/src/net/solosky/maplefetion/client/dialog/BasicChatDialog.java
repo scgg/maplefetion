@@ -57,7 +57,7 @@ public class BasicChatDialog extends ChatDialog
 	 * @throws TransferException
 	 */
 	@Override
-	public void process(SipcOutMessage out) throws TransferException
+	public synchronized void process(SipcOutMessage out) throws TransferException
 	{
 		this.context.getDialogFactory().getServerDialog().process(out);
 	}
@@ -76,7 +76,7 @@ public class BasicChatDialog extends ChatDialog
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionListener)
      */
     @Override
-    public void sendChatMessage(Message message, ActionListener listener)
+    public synchronized void sendChatMessage(Message message, ActionListener listener)
     {
 	    //给手机在线的人发送消息是通过服务器对话框发送的
     	this.ensureOpened();
@@ -89,7 +89,7 @@ public class BasicChatDialog extends ChatDialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
      */
     @Override
-    public void closeDialog()
+    public synchronized void closeDialog()
     {
     	//不做任何事情
     	this.setState(DialogState.CLOSED);
@@ -99,7 +99,7 @@ public class BasicChatDialog extends ChatDialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
      */
     @Override
-    public void openDialog() throws TransferException, DialogException
+    public synchronized void openDialog() throws TransferException, DialogException
     {
 	    //不做任何事情
     	this.setState(DialogState.OPENED);
