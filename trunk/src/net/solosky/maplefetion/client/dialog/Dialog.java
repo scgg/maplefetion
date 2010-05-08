@@ -119,7 +119,7 @@ public abstract class Dialog
 	 * 确保对话框是打开状态的，否则就跑出IllegalStateException
 	 * @throws IllegalStateException 如果对话框没有打开或者已经关闭，则抛出
 	 */
-	protected void ensureOpened()
+	protected synchronized void ensureOpened()
 	{
 		if(this.state == DialogState.CLOSED) {
 			throw new IllegalStateException("Dialog is closed.");
@@ -136,13 +136,8 @@ public abstract class Dialog
 	 * 异步模式打开对话框
 	 * @param listener
 	 */
-	public void openDialog(final ActionListener listener)
+	public synchronized void openDialog(final ActionListener listener)
 	{
-		if(this.getState()!=DialogState.CREATED) {
-			throw new IllegalStateException("cannot open dialog again. State="+this.getState().name());
-		}else {
-			this.setState(DialogState.OPENNING);
-		}
 		
 		Runnable r = new Runnable() {
 			public void run() {

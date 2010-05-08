@@ -151,6 +151,13 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     @Override
     public void openDialog() throws DialogException, TransferException
     {
+    	//检查对话状态，防止多次打开一个对话
+    	if(this.getState()==DialogState.CREATED) {
+			this.setState(DialogState.OPENNING);
+		}else {
+			return;
+		}
+    	
     	try {
         	//建立处理链
         	this.buildProcessorChain();

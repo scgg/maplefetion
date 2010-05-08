@@ -83,7 +83,7 @@ public class GroupDialog extends Dialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
      */
     @Override
-    public void closeDialog()
+    public synchronized void closeDialog()
     {
     	try {
     		if(!this.context.getDialogFactory().getServerDialog().getProcessorChain().isChainClosed())
@@ -99,7 +99,7 @@ public class GroupDialog extends Dialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
      */
     @Override
-    public void openDialog() throws TransferException, DialogException, RequestTimeoutException
+    public synchronized void openDialog() throws TransferException, DialogException, RequestTimeoutException
     {
     	try {
     		this.invite();

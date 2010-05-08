@@ -378,17 +378,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		ChatDialog dialog = this.client.getDialogFactory().findChatDialog(buddy);
-	    		if(dialog!=null) {
-	    			this.send(dialog, message);
-	    		}else {
-	    			try {
-	                    dialog = this.client.getDialogFactory().createChatDialog(buddy);
-	                    this.send(dialog, message);
-                    } catch (FetionException e) {
-	                    println("建立对话框失败~"+e.getMessage());
-                    }
-	    		}
+	    		this.send(buddy, message);
 	    	}else {
 	    		println("找不到这个好友，请检查你的输入！");
 	    	}
@@ -803,8 +793,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    public void leave()
 	    {
 	    	try {
-	    		this.activeChatDialog.closeDialog();
-	            this.activeChatDialog = null;
+	    		this.client.getChatDialogProxyFactory().close(activeChatDialog);
             } catch (Exception e) {
             	println("关闭对话框失败~"+e.getMessage());
             }
@@ -815,10 +804,16 @@ public class MapleFetion implements LoginListener, NotifyListener
 	     * @param dialog
 	     * @param message
 	     */
-	    private void send(ChatDialog dialog,final String message)
+	    private void send(final Buddy buddy,final String message)
 	    {
-	    	final Buddy buddy = dialog.getMainBuddy();
-	    	dialog.sendChatMessage( Message.wrap(message), new ActionListener(){
+	    	ChatDialogProxy proxy = null;
+            try {
+	            proxy = this.client.getChatDialogProxyFactory().create(buddy);
+            } catch (DialogException e) {
+	          println("建立对话失败！！");
+	          return;
+            }
+	    	proxy.sendChatMessage( Message.wrap(message), new ActionListener(){
 				public void actionFinished(int status){
 					if(status==ActionStatus.ACTION_OK){
 						println("提示："+buddy.getDisplayName()+" 在线，消息已经发送到飞信客户端。");

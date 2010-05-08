@@ -46,6 +46,8 @@ import net.solosky.maplefetion.client.dialog.ActionFuture;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.client.dialog.DialogSession;
@@ -144,6 +146,11 @@ public class FetionClient implements FetionContext
 	 */
 	private ObjectWaiter<LoginState> loginWaiter;
 	
+	/**
+	 * 聊天对话代理工厂
+	 */
+	private ChatDialogProxyFactory proxyFactory;
+	
 	 /**
 	 * 日志记录
 	 */
@@ -224,6 +231,7 @@ public class FetionClient implements FetionContext
     	this.loginListener   = loginListener;
 		this.notifyListener  = notifyListener;
 		this.loginWaiter     = new ObjectWaiter<LoginState>();
+		this.proxyFactory    = new ChatDialogProxyFactory(this);
 		
     }
 	
@@ -318,6 +326,16 @@ public class FetionClient implements FetionContext
 	{
 		FetionConfig.setBoolean("fetion.group.enabled", enabled);
 	}
+
+	
+
+	/**
+     * @return the proxyFactory
+     */
+    public ChatDialogProxyFactory getChatDialogProxyFactory()
+    {
+    	return proxyFactory;
+    }
 
 
 	/**
@@ -512,22 +530,8 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendChatMessage(final Buddy toBuddy, final Message message, final ActionListener listener) throws DialogException
 	{
-		ChatDialog dialog = this.dialogFactory.findChatDialog(toBuddy);
-		if(dialog==null) {
-			final ChatDialog fdialog = this.dialogFactory.createChatDialog(toBuddy);
-			dialog = fdialog;
-			fdialog.openDialog(new ActionListener() {
-				public void actionFinished(int status) {
-					if(status==ActionStatus.ACTION_OK) {
-						fdialog.sendChatMessage(message, listener);
-					}
-				}
-			});
-		}else{
-			synchronized (dialog) {
-				dialog.sendChatMessage(message, listener);
-			}
-		}
+		ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
+		proxy.sendChatMessage(message, listener);
 	}
 	
 	

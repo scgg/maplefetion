@@ -159,6 +159,13 @@ public class LiveV1ChatDialog extends ChatDialog
 	@Override
 	public void openDialog() throws TransferException, DialogException
 	{
+		//检查对话状态，防止多次打开一个对话
+		if(this.getState()==DialogState.CREATED) {
+			this.setState(DialogState.OPENNING);
+		}else {
+			return;
+		}
+		
 		try {
 			this.setState(DialogState.OPENNING);
 			//只有主动打开对话才会发出邀请请求，如果是被动邀请，什么也不需要做

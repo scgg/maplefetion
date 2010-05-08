@@ -239,11 +239,11 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
      * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
      */
     @Override
-    public void closeDialog()
+    public synchronized void closeDialog()
     {
     	try {
     		//TODO NOTE:如果发生了传输异常这里就不应该发送离开消息，否则会抛出第二个TransferException
-        	if(!this.processorChain.isChainClosed()) {
+        	if(this.processorChain!=null && !this.processorChain.isChainClosed()) {
         		this.bye();
         		this.processorChain.stopProcessorChain();
         	}
@@ -257,8 +257,15 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	 * 打开第二版聊天对话框，这个比较麻烦
 	 */
     @Override
-    public void openDialog() throws TransferException, DialogException, RequestTimeoutException
+    public synchronized void openDialog() throws TransferException, DialogException, RequestTimeoutException
     {
+    	//检查对话状态，防止多次打开一个对话
+    	if(this.getState()==DialogState.CREATED) {
+			this.setState(DialogState.OPENNING);
+		}else {
+			return;
+		}
+    	
     	try {
     		this.setState(DialogState.OPENNING);
     		//首先要获取进入聊天服务器的凭证

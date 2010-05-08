@@ -29,7 +29,7 @@ public class SimpleFetion {
 			FetionClient client = new FetionClient(Long.parseLong(args[0]), args[1]);
 			System.out.println("正在登录中，可能需要1分钟左右，请稍候...");
 			
-			//这里设置一个
+			//这里设置一个登录状态监听器，可以显示当前登录步骤，避免用户感到焦虑
 			client.setLoginListener(new LoginListener() {
 				public void loginStateChanged(LoginState state) {
 					System.out.println("登录状态："+state.name());

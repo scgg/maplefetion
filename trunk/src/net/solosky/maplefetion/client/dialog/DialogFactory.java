@@ -193,10 +193,10 @@ public class DialogFactory
 		while (it.hasNext()) {
 			dialog = it.next();
 			if (dialog.getMainBuddy().equals(buddy)) {
-				break;
+				return dialog;
 			}
 		}
-		return dialog;
+		return null;
 	}
 	
 	
@@ -265,6 +265,11 @@ public class DialogFactory
 		logger.debug("Dialog is closed by client."+dialog.toString());
 	}
 	
+	/**
+	 * 关闭所有的对话框
+	 * @throws TransferException
+	 * @throws DialogException
+	 */
 	public synchronized void closeAllDialog() throws TransferException, DialogException
 	{
 		Iterator<GroupDialog> git = this.groupDialogList.iterator();

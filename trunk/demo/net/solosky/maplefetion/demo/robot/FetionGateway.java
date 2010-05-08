@@ -25,8 +25,6 @@
  */
 package net.solosky.maplefetion.demo.robot;
 
-import java.util.concurrent.CountDownLatch;
-
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
@@ -40,9 +38,8 @@ import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
-import net.solosky.maplefetion.client.dialog.DialogState;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
 import net.solosky.maplefetion.store.SimpleFetionStore;
@@ -57,7 +54,6 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
 
 	private FetionClient client;
 	private SMSListener listener;
-	private CountDownLatch latch;
 	
 	public FetionGateway(long mobile, String pass)
 	{
@@ -69,12 +65,7 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
     @Override
     public void login()
     {
-    	latch = new CountDownLatch(1);
-	    this.client.login();
-	    try {
-	        latch.await();
-        } catch (InterruptedException e) {
-        }
+    	this.client.syncLogin();
     }
 
 	/* (non-Javadoc)
@@ -92,30 +83,13 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
     @Override
     public void sendSMS(String uri, final String msg)
     {
-    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
-    	ChatDialog dialog = this.client.getDialogFactory().findChatDialog(buddy);
-    	if(dialog!=null&& dialog.getState()==DialogState.OPENED) {
+    	try{
+        	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
+        	ChatDialogProxy dialog = this.client.getChatDialogProxyFactory().create(buddy);
     		dialog.sendChatMessage(new Message(msg), new DefaultActionListener("发送消息[ "+msg+" ]给"+buddy.getDisplayName()));
-    	}else {
-    		try {
-	            dialog = this.client.getDialogFactory().createChatDialog(buddy);
-	            final ChatDialog fd = dialog;
-	            dialog.openDialog(new ActionListener() {
-					@Override
-                    public void actionFinished(int status)
-                    {
-						if(status==ActionStatus.ACTION_OK) {
-							fd.sendChatMessage(new Message(msg), new DefaultActionListener("发送消息[ "+msg+" ]给"+buddy.getDisplayName()));
-						}else {
-							println("打开对话框时出错:"+status);
-						}
-                    }
-	            	
-	            });
-            } catch (FetionException e) {
-            	println("建立对话框时出错"+e.getMessage());
-            }
-    	}
+        } catch (FetionException e) {
+        	println("建立对话框时出错"+e.getMessage());
+        }
     }
 
 	/* (non-Javadoc)
@@ -183,9 +157,6 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
     public void loginStateChanged(LoginState state)
     {
     	println(state.name());
-    	if(state==LoginState.LOGIN_SUCCESS) {
-    		this.latch.countDown();
-    	}
     }
     
     public void println(String msg)
