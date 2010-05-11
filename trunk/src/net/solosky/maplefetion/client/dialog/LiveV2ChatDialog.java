@@ -35,6 +35,7 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.chain.ProcessorChain;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.LiveV2MessageDispatcher;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.net.Port;
@@ -50,6 +51,7 @@ import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BuddyEnterHelper;
+import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.MessageLogger;
 import net.solosky.maplefetion.util.ResponseFuture;
 import net.solosky.maplefetion.util.SipcParser;
@@ -146,7 +148,8 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 		
 		this.processorChain.startProcessorChain();
 		
-		this.context.getGlobalTimer().schedule(transferService.getTimeOutCheckTask(), 0, 60*1000);
+		this.context.getFetionTimer().scheduleTask("ChatDialogV2CheckTimeout-"+this.mainBuddy.getUri(),
+				transferService.getTimeOutCheckTask(), 0, 60*1000);
 	}
 	
 	/**
@@ -402,13 +405,18 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     public void handleException(FetionException e)
     {
     	//主要处理传输异常
-    	if(e instanceof TransferException) {
+    	if(e instanceof TransferException || e instanceof SystemException) {
     		try {
     			this.processorChain.stopProcessorChain();
 	            this.context.getDialogFactory().closeDialog(this);
             } catch (FetionException e1) {
             	logger.warn("close LiveV2ChatDialog failed.", e1);
             }
+    	}
+    	
+    	//如果是系统异常，报告这个错误
+    	if(e instanceof SystemException) {
+    		CrushBuilder.handleCrushReport(e, ((SystemException) e).getArgs());
     	}
     }
 

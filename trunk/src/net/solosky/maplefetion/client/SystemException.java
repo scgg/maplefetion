@@ -17,36 +17,41 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.net.maplefetion
- * File     : FetionClientException.java
+ * Package  : net.solosky.maplefetion.client
+ * File     : SystemException.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-6
+ * Created  : 2010-5-11
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion;
+package net.solosky.maplefetion.client;
+
+import net.solosky.maplefetion.FetionException;
 
 /**
- * 飞信异常，是所有飞信异常的基类
+ *
+ * 系统内部异常，抛出这个异常说明了不可恢复的错误，需结束整个客户端
  *
  * @author solosky <solosky772@qq.com>
  */
-public abstract class FetionException extends Exception
+public class SystemException extends FetionException
 {
-    private static final long serialVersionUID = -7066837853615016245L;
+    private static final long serialVersionUID = 1L;
     
-    public FetionException(Throwable e)
-    {
-    	super(e);
-    }
+    /**
+     * 参数数组，存放了发生这个异常的一些环境参数，可以交给CrushBuilder建立错误报告
+     */
+    private Object[] args;	
     
-    public FetionException(String msg)
-    {
-    	super(msg);
-    }
-    
-    public FetionException()
-    {
-    	
-    }
-
+	public SystemException(String s, Object ...args) {
+		super(s);
+		this.args = args;
+	}
+	public SystemException(Throwable t, Object ...args) {
+		super(t);
+		this.args = args;
+	}
+	public Object[] getArgs()
+	{
+		return this.args;
+	}
 }

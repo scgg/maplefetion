@@ -113,8 +113,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 	
 	public MapleFetion(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, new AutoTransferFactory(),
-				new SimpleFetionStore(), this, this);
+		this.client = new FetionClient(mobile, pass, this, this);
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		this.buddymap = new Hashtable<String, String>();

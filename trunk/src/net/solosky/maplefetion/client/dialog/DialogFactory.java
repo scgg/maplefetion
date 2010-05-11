@@ -90,7 +90,7 @@ public class DialogFactory
 		this.groupDialogList = new ArrayList<GroupDialog>();
 		this.idleTimeCheckTask = new IdleTimeCheckTask();
 
-		this.context.getGlobalTimer().schedule(
+		this.context.getFetionTimer().scheduleTask("ChatDialogCheckIdle",
 		                this.idleTimeCheckTask, 0,
 		                FetionConfig.getInteger("fetion.dialog.check-idle-interval") * 1000);
 	}

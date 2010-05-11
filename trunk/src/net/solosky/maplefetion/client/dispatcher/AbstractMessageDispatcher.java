@@ -33,6 +33,7 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
 import net.solosky.maplefetion.client.NotifyHandler;
 import net.solosky.maplefetion.client.ResponseHandler;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.sipc.SipcInMessage;
 import net.solosky.maplefetion.sipc.SipcNotify;
@@ -101,13 +102,17 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 	@Override
 	protected boolean doProcessIncoming(Object o) throws FetionException
 	{
-		SipcInMessage in = (SipcInMessage) o;
-		if (in instanceof SipcNotify) {
-			this.dispatch((SipcNotify) in);
-		} else if (in instanceof SipcResponse) {
-			this.dispatch((SipcResponse) in);
-		} else {
-			logger.warn("Unknown SipcMessage - message=" + in);
+		try {
+    		SipcInMessage in = (SipcInMessage) o;
+    		if (in instanceof SipcNotify) {
+    			this.dispatch((SipcNotify) in);
+    		} else if (in instanceof SipcResponse) {
+    			this.dispatch((SipcResponse) in);
+    		} else {
+    			throw new DispatcherException("Unkown SipMessage type.."+in.getClass().getName());
+    		}
+		}catch(FetionException e) {
+			this.exceptionHandler.handleException(e);
 		}
 
 		return true;
@@ -126,9 +131,10 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 	 * 分发回复 因为每一个回复都有一个对应的处理器，所以这里直接调用回复对应的处理器即可
 	 * 
 	 * @param response
+	 * @throws FetionException 
 	 * @throws FetionException
 	 */
-	public void dispatch(SipcResponse response)
+	public void dispatch(SipcResponse response) throws FetionException
 	{
 		SipcRequest request = response.getRequest();
 
@@ -140,6 +146,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 
 		// 检查请求设置的处理器
 		ResponseHandler handler = response.getRequest().getResponseHandler();
+		
 		if (handler == null) {
 			logger.warn("ResponseHandler not found in request - response=" + response);
 			return;
@@ -147,10 +154,12 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 
 		// 检查通过，处理这个回复
 		try {
-			handler.handle(response);
-		} catch (FetionException e) {
-			logger.warn("Exception caught when dispatch response.",e);
-		}
+	        handler.handle(response);
+        } catch (FetionException e) {
+        	throw e;
+        }catch(Throwable t) {
+        	throw new SystemException(t, response.getRequest(), response);
+        }
 	}
     
     /**
@@ -167,9 +176,16 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
     	}
     	//加载这个类
     	NotifyHandler handler = loadNotifyHandler(clazz);
+    	
     	//处理通知
     	if(handler!=null) {
-    		handler.handle(notify);
+    		try {
+    	        handler.handle(notify);
+            } catch (FetionException e) {
+            	throw e;
+            }catch(Throwable t) {
+            	throw new SystemException(t,notify);
+            }
     	}
     }
     

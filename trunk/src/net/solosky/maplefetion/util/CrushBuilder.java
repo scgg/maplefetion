@@ -28,11 +28,27 @@ package net.solosky.maplefetion.util;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.io.PrintWriter;
+import java.io.StringWriter;
+import java.net.HttpURLConnection;
+import java.net.MalformedURLException;
+import java.net.URL;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
+import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 
+import org.apache.log4j.Logger;
+
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
+import net.solosky.maplefetion.sipc.SipcHeader;
+import net.solosky.maplefetion.sipc.SipcInMessage;
+import net.solosky.maplefetion.sipc.SipcMessage;
+import net.solosky.maplefetion.sipc.SipcNotify;
+import net.solosky.maplefetion.sipc.SipcOutMessage;
+import net.solosky.maplefetion.sipc.SipcResponse;
 
 /**
  *
@@ -50,6 +66,11 @@ public class CrushBuilder
 	private StringBuffer buffer;
 	
 	/**
+	 * LOGGER
+	 */
+	private static Logger logger = Logger.getLogger(CrushBuilder.class);
+	
+	/**
 	 * 默认构造函数
 	 */
 	public CrushBuilder()
@@ -64,11 +85,39 @@ public class CrushBuilder
 	 */
 	public void dumpException(Throwable exception)
 	{
-		buffer.append("==========Exception=============\n");
-		buffer.append(exception.toString()+"\n");
-		StackTraceElement[] ts =  exception.getStackTrace();
-		for(int i=0; i<ts.length; i++) {
-			buffer.append("\tat "+ts[i]);
+		buffer.append("------------Exception-----------\n");
+		StringWriter writer = new StringWriter();
+		exception.printStackTrace(new PrintWriter(writer));
+		buffer.append(writer.toString());
+	}
+	
+	/**
+	 * 构建消息报告
+	 * @param message
+	 */
+	public void dumpSipcMessage(SipcMessage message)
+	{
+		buffer.append("----------SipcMessage-----------\n");
+		buffer.append("Class:"+message.getClass().getSimpleName()+"\n");
+		if(message instanceof SipcOutMessage) {
+			SipcOutMessage out = (SipcOutMessage) message;
+			buffer.append(out.toSendString());
+		}else {
+			SipcInMessage in = (SipcInMessage) message;
+			if(in instanceof SipcResponse) {
+				SipcResponse res = (SipcResponse) in;
+				buffer.append(SipcMessage.SIP_VERSION+" "+res.getStatusCode()+" "+res.getStatusMessage()+"\r\n");
+			}else {
+				SipcNotify no = (SipcNotify) in;
+				buffer.append(no.getMethod()+" "+no.getSid()+" "+SipcMessage.SIP_VERSION+"\r\n");
+			}
+			Iterator<SipcHeader> it = in.getHeaders().iterator();
+			while(it.hasNext()) {
+				buffer.append(it.next().toSendString());
+			}
+			buffer.append("\r\n");
+			if(in.getBody()!=null)
+				buffer.append(in.getBody().toSendString());
 		}
 	}
 	
@@ -87,7 +136,7 @@ public class CrushBuilder
 	 */
 	public void dumpVersion()
 	{
-		buffer.append("===========Version=============\n");
+		buffer.append("------------Version------------\n");
 		buffer.append("ClientVersion   : "+FetionClient.CLIENT_VERSION+"\n");
 		buffer.append("ProtocolVersion : "+FetionClient.PROTOCOL_VERSION+"\n");
 		buffer.append("\n");
@@ -98,7 +147,7 @@ public class CrushBuilder
 	 */
 	public void dumpConfig()
 	{
-		buffer.append("==========Config=============\n");
+		buffer.append("------------Config-------------\n");
 		
 		Properties prop = FetionConfig.getProperties();
 		Iterator<Object> it = prop.keySet().iterator();
@@ -124,16 +173,81 @@ public class CrushBuilder
 	 * @param f
 	 * @throws IOException 
 	 */
-	public static void buildAndSaveCrushReport(Throwable t, File f) throws IOException
+	private static void buildAndSaveCrushReport(Object ...args)
+	{
+		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
+		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
+		try {
+			FileWriter writer = new FileWriter(new File(name));
+            writer.append(CrushBuilder.buildCrushReport(args));
+            writer.close();
+        } catch (IOException e) {
+        	logger.warn("Save crush report failed.");
+        }
+	}
+	
+	/**
+	 * 把错误报告发送到指定的URL
+	 * @param args
+	 */
+	private static void buildAndSendCrushReport(Object ...args)
+	{
+		String url    = FetionConfig.getString("crush.send.url");
+		String report = buildCrushReport(args);
+		if(url!=null) {
+			url = url.replace("{report}", report);
+			try {
+	            URL trueURL = new URL(url);
+	            logger.info("Sending crush report...");
+	            HttpURLConnection conn = (HttpURLConnection) trueURL.openConnection();
+	            if(conn.getResponseCode()==200) {
+	            	logger.info("Send crush report OK.");
+	            }else {
+	            	logger.info("Send crush report Failed. status="+conn.getResponseCode()+" "+conn.getResponseMessage());
+	            }
+            } catch (MalformedURLException e) {
+            	logger.info("send crush report Failed",e);
+            } catch (IOException e) {
+            	logger.info("send crush report Failed",e);
+            }
+		}
+	}
+	
+	/**
+	 * 建立错误报告
+	 * @param args 变长参数，类型可以是Throwable和SipcMessage
+	 * @return
+	 */
+	private static String buildCrushReport(Object ...args)
 	{
 		CrushBuilder cb = new CrushBuilder();
 		cb.buildHeader();
 		cb.dumpVersion();
-		cb.dumpException(t);
-		
-		FileWriter writer = new FileWriter(f);
-		writer.append(cb.toString());
-		writer.close();
+		for(Object o:args) {
+			if(o instanceof SipcMessage) {
+				cb.dumpSipcMessage((SipcMessage) o);
+			}else if(o instanceof Throwable) {
+				cb.dumpException((Throwable) o);
+			}else {
+				logger.warn("Incorrect crush object.."+o.getClass().getSimpleName());
+			}
+		}
+		return cb.toString();
+	}
+	
+	/**
+	 * 处理错误报告
+	 * @param args
+	 */
+	public static void handleCrushReport(Object ...args)
+	{
+		if(FetionConfig.getBoolean("crush.send.enable")) {
+			buildAndSendCrushReport(args);
+		}else if(FetionConfig.getBoolean("crush.build.enable")) {
+			buildAndSaveCrushReport(args);
+		}else {
+			//do nothing...
+		}
 	}
 
 }

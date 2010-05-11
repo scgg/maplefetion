@@ -155,7 +155,7 @@ public abstract class Dialog
 	                }
 			}
 		};
-		this.context.getSingleExecutor().submit(r);
+		this.context.getFetionExecutor().submit(r);
 	}
 
 	/**

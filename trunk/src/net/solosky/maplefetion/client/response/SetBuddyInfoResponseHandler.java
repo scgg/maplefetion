@@ -73,7 +73,10 @@ public class SetBuddyInfoResponseHandler extends AbstractResponseHandler
 		   
 		   //Version control
 		   Element contacts = XMLHelper.find(root, "/results/contacts");
-		   int contactsVersion = Integer.parseInt(contacts.getAttributeValue("version"));
+		   if(contacts==null)	return;
+		   String version = contacts.getAttributeValue("version");
+		   if(version==null)	return;
+		   int contactsVersion = Integer.parseInt(version);
 		   this.context.getFetionStore().getStoreVersion().setContactVersion(contactsVersion);
 		   this.context.getFetionUser().getStoreVersion().setContactVersion(contactsVersion);
 	   }

@@ -25,14 +25,13 @@
  */
 package net.solosky.maplefetion;
 
-import java.util.Timer;
-
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.FetionExecutor;
+import net.solosky.maplefetion.util.FetionTimer;
 import net.solosky.maplefetion.util.ObjectWaiter;
-import net.solosky.maplefetion.util.SingleExecutor;
 
 /**
  *
@@ -59,13 +58,13 @@ public interface FetionContext
 	 * 返回单线程执行器
 	 * @return
 	 */
-	public abstract SingleExecutor getSingleExecutor();
+	public abstract FetionExecutor getFetionExecutor();
 
 	/**
 	 * 返回全局的定时器
 	 * @return
 	 */
-	public abstract Timer getGlobalTimer();
+	public abstract FetionTimer getFetionTimer();
 
 	/**
 	 * 返回飞信用户

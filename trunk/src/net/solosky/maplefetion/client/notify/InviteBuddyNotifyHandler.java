@@ -82,7 +82,7 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
                 }
 			}
 		};
-		this.context.getSingleExecutor().submit(r);
+		this.context.getFetionExecutor().submit(r);
     }
 
 }

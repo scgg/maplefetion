@@ -25,14 +25,8 @@
  */
 package net.solosky.maplefetion;
 
-import java.io.File;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Collection;
-import java.util.Date;
-import java.util.Timer;
 
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
@@ -42,10 +36,10 @@ import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.LoginWork;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dialog.ActionFuture;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ActionStatus;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
@@ -62,8 +56,11 @@ import net.solosky.maplefetion.sipc.SipcMessage;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.CrushBuilder;
+import net.solosky.maplefetion.util.FetionExecutor;
+import net.solosky.maplefetion.util.FetionTimer;
 import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.SingleExecutor;
+import net.solosky.maplefetion.util.ThreadTimer;
 import net.solosky.maplefetion.util.Validator;
 import net.solosky.maplefetion.util.VerifyImageFetcher;
 
@@ -104,7 +101,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 单线程执行器
 	 */
-	private SingleExecutor singleExecutor;
+	private FetionExecutor executor;
 	
 	/**
 	 * 飞信用户
@@ -119,7 +116,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 全局定时器
 	 */
-	private Timer globalTimer;
+	private FetionTimer timer;
 	
 	/**
 	 * 登录过程
@@ -167,17 +164,21 @@ public class FetionClient implements FetionContext
 	 * @param loginListener		登录监听器
 	 */
 	public FetionClient(long mobileNo,
-							String pass, 
-							TransferFactory transferFactory,
-							FetionStore fetionStore,
-							NotifyListener notifyListener,
-							LoginListener loginListener)
+						String pass, 
+						TransferFactory transferFactory,
+						FetionStore fetionStore,
+						NotifyListener notifyListener,
+						LoginListener loginListener,
+						FetionTimer timer,
+						FetionExecutor executor)
 	{
 		this(new User(mobileNo, pass, "fetion.com.cn"),
 				transferFactory,
 				fetionStore, 
 				notifyListener,
-				loginListener);
+				loginListener,
+				timer,
+				executor);
 	}
 	
 	
@@ -197,7 +198,9 @@ public class FetionClient implements FetionContext
 				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
 				notifyListener, 
-				loginListener);
+				loginListener,
+				new ThreadTimer(),
+				new SingleExecutor());
 	}
 	
 	/**
@@ -223,7 +226,9 @@ public class FetionClient implements FetionContext
     					TransferFactory transferFactory,
     					FetionStore fetionStore, 
     					NotifyListener notifyListener, 
-    					LoginListener loginListener)
+    					LoginListener loginListener,
+    					FetionTimer timer,
+						FetionExecutor executor)
     {
     	this.user            = user;
     	this.transferFactory = transferFactory;
@@ -232,6 +237,8 @@ public class FetionClient implements FetionContext
 		this.notifyListener  = notifyListener;
 		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		this.proxyFactory    = new ChatDialogProxyFactory(this);
+		this.timer           = timer;
+		this.executor        = executor;
 		
     }
 	
@@ -255,17 +262,17 @@ public class FetionClient implements FetionContext
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.FetionContext#getSingleExecutor()
      */
-	public SingleExecutor getSingleExecutor()
+	public FetionExecutor getFetionExecutor()
 	{
-		return this.singleExecutor;
+		return this.executor;
 	}
 	
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.FetionContext#getGlobalTimer()
      */
-	public Timer getGlobalTimer()
+	public FetionTimer getFetionTimer()
 	{
-		return this.globalTimer;
+		return this.timer;
 	}
 	
 	/* (non-Javadoc)
@@ -343,8 +350,8 @@ public class FetionClient implements FetionContext
      */
     private void init()
     {
-    	this.globalTimer     = new Timer(true);
-		this.singleExecutor  = new SingleExecutor();
+    	this.timer.startTimer();
+    	
     	this.dialogFactory   = new DialogFactory(this);
     	this.loginWork       = new LoginWork(this, Presence.ONLINE);
     	
@@ -359,8 +366,8 @@ public class FetionClient implements FetionContext
     private void dispose()
     {
          this.transferFactory.closeFactory();
-         this.singleExecutor.close();
-         this.globalTimer.cancel();
+         this.executor.close();
+         this.timer.stopTimer();
     }
 
     /* (non-Javadoc)
@@ -402,21 +409,15 @@ public class FetionClient implements FetionContext
         	logger.warn("Close All Dialog error.", e);
         }
     	this.dispose();
-    	//更新客户端状态
-    	if(exception instanceof TransferException) {
+    	
+    	if(exception instanceof TransferException) {		//网络错误
     		this.updateState(ClientState.CONNECTION_ERROR);
-    	}else {
+    	}else if(exception instanceof SystemException){	//系统错误
     		this.updateState(ClientState.SYSTEM_ERROR);
-    		//建立错误日志
-        	if(FetionConfig.getBoolean("crush.build")) {
-        		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
-        		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
-        		try {
-    	            CrushBuilder.buildAndSaveCrushReport(exception, new File(name));
-                } catch (IOException e) {
-                	logger.warn("build crush report failed.",e);
-                }
-        	}
+    		CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
+    	}else {
+    		this.updateState(ClientState.SYSTEM_ERROR);		//其他错误
+    		CrushBuilder.handleCrushReport(exception);
     	}
     }
 
@@ -450,15 +451,15 @@ public class FetionClient implements FetionContext
     				try {
                         dialogFactory.closeAllDialog();
                         transferFactory.closeFactory();
-                        globalTimer.cancel();
+                        timer.stopTimer();
                     	updateState(ClientState.LOGOUT);
                     } catch (FetionException e) {
                     	logger.warn("closeDialog error.", e);
                     }
     			}
     		};
-    		this.singleExecutor.submit(r);
-    		this.singleExecutor.close();
+    		this.executor.submit(r);
+    		this.executor.close();
     	}
     }
 
@@ -470,7 +471,7 @@ public class FetionClient implements FetionContext
     public void login(VerifyImage img)
     {
     	this.loginWork.setVerifyImage(img);
-		this.singleExecutor.submit(this.loginWork);
+		this.executor.submit(this.loginWork);
     }
 
 
@@ -484,7 +485,7 @@ public class FetionClient implements FetionContext
 		//为了便于掉线后可以重新登录，把初始化对象的工作放在登录函数做
 		this.init();
 		this.loginWork.setPresence(presence);
-		this.singleExecutor.submit(this.loginWork);
+		this.executor.submit(this.loginWork);
 	}
 	
 	/**
@@ -534,6 +535,19 @@ public class FetionClient implements FetionContext
 		proxy.sendChatMessage(message, listener);
 	}
 	
+	/**
+	 * 发送聊天消息，如果好友不在线将会发送到手机
+	 * @param toBuddy  发送聊天消息的好友
+	 * @param message  需发送的消息
+	 * @return 操作结果等待对象， 可以在这个对象上调用waitStatus()等待操作结果
+	 * @throws DialogException 如果对话框建立失败抛出
+	 */
+	public ActionFuture sendChatMessage(Buddy toBuddy, Message message) throws DialogException
+	{
+		ActionFuture future = new ActionFuture();
+		this.sendChatMessage(toBuddy, message, new FutureActionListener(future));
+		return future;
+	}
 	
 	/**
 	 * 发送短信消息 这个消息一定是发送到手机上
@@ -591,6 +605,7 @@ public class FetionClient implements FetionContext
 			return ActionStatus.INVALD_BUDDY;
 		}
 	}
+
 	
 	
 	/**

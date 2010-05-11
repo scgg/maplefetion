@@ -17,36 +17,47 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.net.maplefetion
- * File     : FetionClientException.java
+ * Package  : net.solosky.maplefetion.util
+ * File     : FetionTimer.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-6
+ * Created  : 2010-5-10
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion;
+package net.solosky.maplefetion.util;
+
+import java.util.TimerTask;
 
 /**
- * 飞信异常，是所有飞信异常的基类
+ *
+ * 飞信定时器接口
+ * 多个飞信客户端可以共享一个定时器来提高效率
  *
  * @author solosky <solosky772@qq.com>
  */
-public abstract class FetionException extends Exception
+public interface FetionTimer
 {
-    private static final long serialVersionUID = -7066837853615016245L;
-    
-    public FetionException(Throwable e)
-    {
-    	super(e);
-    }
-    
-    public FetionException(String msg)
-    {
-    	super(msg);
-    }
-    
-    public FetionException()
-    {
-    	
-    }
-
+	/**
+	 * 计划一个任务
+	 * @param name		任务名字，可以使用这个名字来取消任务
+	 * @param task		任务对象
+	 * @param delay		在多少时间后开始执行
+	 * @param period	执行的周期是多少
+	 */
+	public void scheduleTask(String name, TimerTask task, long delay, long period);
+	
+	/**
+	 * 取消一个任务的执行
+	 * @param name		任务的名字
+	 */
+	public void cancelTask(String name);
+	
+	/**
+	 * 启动计时器
+	 */
+	public void startTimer();
+	
+	/**
+	 * 停止计数器
+	 */
+	public void stopTimer();
 }

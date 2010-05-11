@@ -91,8 +91,7 @@ public class GroupDialog extends Dialog
         } catch (Exception e) {
         	Logger.getLogger(GroupDialog.class).warn("closeGroupDialog failed.",e);
         }
-        this.keepLiveTask.cancel();
-    	this.context.getGlobalTimer().purge();
+    	this.context.getFetionTimer().cancelTask("GroupDialogKeepAlive-"+group.getUri());
     }
     
 	/* (non-Javadoc)
@@ -106,7 +105,7 @@ public class GroupDialog extends Dialog
     		this.ack();
     		this.setPresence();
     		this.subscribeNotify();
-    		this.context.getGlobalTimer().schedule(this.keepLiveTask, 0, 3*60*1000);
+    		this.context.getFetionTimer().scheduleTask("GroupDialogKeepAlive-"+this.group.getUri(),this.keepLiveTask, 0, 3*60*1000);
         }catch (TransferException te) {        	//传输异常，直接抛出
         	throw te;
         }catch (DialogException de) {			//对话框异常，直接抛出

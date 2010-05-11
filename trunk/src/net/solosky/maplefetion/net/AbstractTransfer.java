@@ -27,6 +27,7 @@ package net.solosky.maplefetion.net;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.net.buffer.ByteArrayReader;
 import net.solosky.maplefetion.net.buffer.ByteWriter;
 
@@ -77,6 +78,8 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
 	        this.processIncoming(new ByteArrayReader(buff, len));
         } catch (FetionException e) {
 	       	this.raiseException(e);
+        }catch(Throwable t) {
+        	this.raiseException(new SystemException(t));
         }
     }
     

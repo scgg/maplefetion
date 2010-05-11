@@ -1,4 +1,4 @@
- /*
+/*
  * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
@@ -15,38 +15,35 @@
  * limitations under the License.
  */
 
- /**
+/**
  * Project  : MapleFetion2
- * Package  : net.solosky.net.maplefetion
- * File     : FetionClientException.java
+ * Package  : net.solosky.maplefetion.util
+ * File     : FetionExecutor.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-6
+ * Created  : 2010-5-10
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion;
+package net.solosky.maplefetion.util;
 
 /**
- * 飞信异常，是所有飞信异常的基类
+ *
+ * 抽象的执行池接口，飞信客户端使用这个执行池来提交操作给另外一个线程运行
+ * 多个飞信客户端可以共享一个多线程执行池，可以提高效率
  *
  * @author solosky <solosky772@qq.com>
  */
-public abstract class FetionException extends Exception
+public interface FetionExecutor
 {
-    private static final long serialVersionUID = -7066837853615016245L;
-    
-    public FetionException(Throwable e)
-    {
-    	super(e);
-    }
-    
-    public FetionException(String msg)
-    {
-    	super(msg);
-    }
-    
-    public FetionException()
-    {
-    	
-    }
+
+	/**
+	 * 提交任务
+	 * @param runnable
+	 */
+	public abstract void submit(Runnable task);
+
+	/**
+	 * 关闭执行器
+	 */
+	public abstract void close();
 
 }

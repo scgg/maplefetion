@@ -36,7 +36,7 @@ import java.util.concurrent.Executors;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class SingleExecutor
+public class SingleExecutor implements FetionExecutor
 {	
 	/**
 	 * 执行服务 
@@ -51,18 +51,17 @@ public class SingleExecutor
 		executorService = Executors.newSingleThreadExecutor();
 	}
 	
-	/**
-	 * 提交任务
-	 * @param runnable
-	 */
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.util.FetionExecutor#submit(java.lang.Runnable)
+     */
 	public void submit(Runnable task)
 	{
 		this.executorService.submit(task);
 	}
 	
-	/**
-	 * 关闭执行器
-	 */
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.util.FetionExecutor#close()
+     */
 	public void close()
 	{
 		this.executorService.shutdown();

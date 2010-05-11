@@ -26,11 +26,6 @@
 package net.solosky.maplefetion.client;
 
 
-import java.io.File;
-import java.io.IOException;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Date;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.ClientState;
@@ -141,16 +136,7 @@ public class LoginWork implements Runnable
     	}catch(Throwable e) {
     		logger.fatal("Unkown login error..",e);
     		this.updateLoginState(LoginState.OHTER_ERROR);
-    		//建立错误日志
-        	if(FetionConfig.getBoolean("crush.build")) {
-        		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
-        		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
-        		try {
-    	            CrushBuilder.buildAndSaveCrushReport(e, new File(name));
-                } catch (IOException ex) {
-                	logger.warn("build crush report failed.",ex);
-                }
-        	}
+    		CrushBuilder.handleCrushReport(e);
     	}
     }
     

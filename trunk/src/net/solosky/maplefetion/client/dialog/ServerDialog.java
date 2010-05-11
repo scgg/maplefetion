@@ -40,6 +40,7 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.chain.ProcessorChain;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.ServerMessageDispatcher;
 import net.solosky.maplefetion.client.response.AddBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
@@ -96,11 +97,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	private MessageFactory messageFactory;
 	
 	/**
-	 * 心跳包请求任务
-	 */
-	private TimerTask keepLiveTask;
-	
-	/**
 	 * 日志记录
 	 */
 	private static Logger logger = Logger.getLogger(ServerDialog.class);
@@ -113,7 +109,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		super(client);
 		this.messageFactory = new MessageFactory(client.getFetionUser());
-		this.keepLiveTask = new ServerKeepLiveTask();
 	}
 	
 	/**
@@ -132,8 +127,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     public void closeDialog()
     {
     	//不需要发送任何离开消息，直接关闭对话框即可
-    	this.keepLiveTask.cancel();
-    	this.context.getGlobalTimer().purge();
+    	this.context.getFetionTimer().cancelTask("ServerDialogKeepAlive");
     	
     	//停止处理链
     	try {
@@ -163,8 +157,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
         	this.buildProcessorChain();
     		
     		//注册定时任务
-        	int keepInterval = FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000;
-    		this.context.getGlobalTimer().schedule(this.keepLiveTask, keepInterval, keepInterval);
+        	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
+    		this.context.getFetionTimer().scheduleTask("ServerDialogKeepAlive", new ServerKeepLiveTask(), keepInterval, keepInterval);
     		
     		//设置对话框状态为打开状态
     		this.setState(DialogState.OPENED);
@@ -194,7 +188,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		
 		this.processorChain.startProcessorChain();
 		
-		this.context.getGlobalTimer().schedule(transferService.getTimeOutCheckTask(), 50*1000, 60*1000);
+		this.context.getFetionTimer().scheduleTask("ServerDialogCheckTimeout", transferService.getTimeOutCheckTask(), 50*1000, 60*1000);
     }
     
     /**
@@ -215,6 +209,9 @@ public class ServerDialog extends Dialog implements ExceptionHandler
             }
     	}else if(this.context.getState()==ClientState.LOGGING){
     		logger.fatal("ServerDialog login error, close the client...", e);
+    		this.context.handleException(e);
+    	}else if(e instanceof SystemException) {
+    		logger.fatal("ServerDialog system error", e);
     		this.context.handleException(e);
     	}else {
     		logger.warn("ServerDialog exception, it may not fatal error, ignore it.", e);
@@ -389,7 +386,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 				}
 			};
         	request.setResponseHandler(new DefaultResponseHandler(listener));
-	        logger.debug("Sending keeplive request. Request="+request);
 	        process(request);
         }
     }

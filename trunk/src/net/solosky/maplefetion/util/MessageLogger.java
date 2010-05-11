@@ -33,6 +33,7 @@ import java.util.Iterator;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
+import net.solosky.maplefetion.chain.ProcessorException;
 import net.solosky.maplefetion.sipc.SipcHeader;
 import net.solosky.maplefetion.sipc.SipcInMessage;
 import net.solosky.maplefetion.sipc.SipcMessage;
@@ -168,7 +169,7 @@ public class MessageLogger extends AbstractProcessor
 	    try {
 	        this.logMessage((SipcInMessage) o);
         } catch (IOException e) {
-	      throw new FetionException(e);
+	      throw new ProcessorException(e);
         }
         return true;
     }
@@ -182,7 +183,7 @@ public class MessageLogger extends AbstractProcessor
     	 try {
  	        this.logMessage((SipcOutMessage) o);
          } catch (IOException e) {
-        	 throw new FetionException(e);
+        	 throw new ProcessorException(e);
          }
          return true;
     }

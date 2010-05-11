@@ -41,8 +41,6 @@ import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
-import net.solosky.maplefetion.net.tcp.TcpTransferFactory;
-import net.solosky.maplefetion.store.SimpleFetionStore;
 
 /**
  *
@@ -57,7 +55,7 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
 	
 	public FetionGateway(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, new TcpTransferFactory(), new SimpleFetionStore(), this, this);
+		this.client = new FetionClient(mobile, pass, this, this);
 	}
 	/* (non-Javadoc)
      * @see net.solosky.maplesms.gateway.Gateway#login()
