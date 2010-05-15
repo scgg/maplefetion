@@ -54,7 +54,7 @@ public abstract class Buddy extends Person
 	 */
     public Buddy()
     {
-    	relation = new Relation(Relation.RELATION_BUDDY);
+    	relation =  Relation.BUDDY;
     }
 
 

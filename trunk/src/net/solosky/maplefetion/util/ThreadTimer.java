@@ -29,6 +29,8 @@ import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
+import org.apache.log4j.Logger;
+
 /**
  *
  * 线程定时器，
@@ -48,6 +50,11 @@ public class ThreadTimer implements FetionTimer
 	private Timer timer;
 	
 	/**
+	 * LOGGER
+	 */
+	private static Logger logger = Logger.getLogger(ThreadTimer.class); 
+	
+	/**
 	 * 构造函数
 	 */
 	public ThreadTimer()
@@ -64,6 +71,10 @@ public class ThreadTimer implements FetionTimer
     	if(task!=null) {
     		task.cancel();
     		taskTable.remove(name);
+    		timer.purge();
+    		logger.debug("Canceled timer task:"+name);
+    	}else {
+    		throw new IllegalArgumentException("Cannot find timer task named "+name);
     	}
     }
 
@@ -76,6 +87,7 @@ public class ThreadTimer implements FetionTimer
     {
     	this.timer.schedule(task, delay, period);
     	this.taskTable.put(name, task);
+    	logger.debug("Scheduled timer task:"+name);
     }
 
 	/* (non-Javadoc)

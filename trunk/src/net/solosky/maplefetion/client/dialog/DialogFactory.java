@@ -68,10 +68,6 @@ public class DialogFactory
 	 */
 	private ArrayList<GroupDialog> groupDialogList;
 
-	/**
-	 * 定时检查闲置的对话框任务
-	 */
-	private TimerTask idleTimeCheckTask;
 
 	/**
 	 * LOGGER
@@ -88,10 +84,9 @@ public class DialogFactory
 		this.context = client;
 		this.chatDialogList = new ArrayList<ChatDialog>();
 		this.groupDialogList = new ArrayList<GroupDialog>();
-		this.idleTimeCheckTask = new IdleTimeCheckTask();
 
-		this.context.getFetionTimer().scheduleTask("ChatDialogCheckIdle",
-		                this.idleTimeCheckTask, 0,
+		this.context.getFetionTimer().scheduleTask("IdleChatDialogCheckTask-"+this.context.getFetionUser().getUserId(),
+						new IdleDialogCheckTask() , 0,
 		                FetionConfig.getInteger("fetion.dialog.check-idle-interval") * 1000);
 	}
 
@@ -284,6 +279,16 @@ public class DialogFactory
 		
 		this.serverDialog.closeDialog();
 	}
+	
+	
+	/**
+	 * 关闭对话框工厂
+	 * 停止定时任务
+	 */
+	public void closeFactory()
+	{
+		this.context.getFetionTimer().cancelTask("IdleChatDialogCheckTask-"+this.context.getFetionUser().getUserId());
+	}
 
 	/**
 	 * 为了减少资源占用率，如果用户没有手动关闭对话框，就需要一个计划任务定时检查空闲的对话框， 
@@ -292,7 +297,7 @@ public class DialogFactory
 	 * 
 	 * @author solosky <solosky772@qq.com>
 	 */
-	private class IdleTimeCheckTask extends TimerTask
+	private class IdleDialogCheckTask extends TimerTask
 	{
 		@Override
 		public void run()

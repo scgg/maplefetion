@@ -102,9 +102,9 @@ public class MessageFactory
     	 SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
     	 String caps = null;
     	 if(isSupportedMutiConnection) {
-    		 caps = "simple-im;im-session;temp-group;personal-group;xeno-im;direct-sms;sms2fetion";
-    	 }else {
     		 caps = "simple-im;im-session;temp-group;personal-group;im-relay;xeno-im;direct-sms;sms2fetion";
+    	 }else {
+    		 caps = "simple-im;im-session;temp-group;personal-group;xeno-im;direct-sms;sms2fetion";
     	 }
     	 
     	 String body = MessageTemplate.TMPL_USER_AUTH;

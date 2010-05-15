@@ -121,18 +121,20 @@ public class SSISignV2 implements SSISign
 		try {
 	        HttpsURLConnection conn = (HttpsURLConnection) this.getConnection(url);
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
-	        if(conn.getResponseCode()==421) {	
+	        int status = conn.getResponseCode();
+	        switch(status) {
+	        case 421:
+	        case 422:
 	        	logger.debug("SSISignIn: need verify.");
 	        	state = LoginState.SSI_NEED_VERIFY;
-	        }else if(conn.getResponseCode()==420) {
+	        	break;
+	        
+	        case 420:
 	        	logger.debug("SSISignIn: invalid verify code.");
 	        	state = LoginState.SSI_VERIFY_FAIL;
+	        	break;
 	        	
-	        }else if(conn.getResponseCode()==401) {
-	        	logger.debug("SSISignIn: invalid user or password.");
-	        	state = LoginState.SSI_AUTH_FAIL;
-	        	
-	        }else if(conn.getResponseCode()==200) {
+	        case 200:
 	        	logger.debug("SSISignIn: sign in success.");
 	        	state = LoginState.SSI_SIGN_IN_SUCCESS;
 	        	
@@ -159,6 +161,8 @@ public class SSISignV2 implements SSISign
         	state = LoginState.OHTER_ERROR;
         } catch (IOException e) {
         	state = LoginState.SSI_CONNECT_FAIL;
+        }catch(Throwable e) {
+        	state = LoginState.OHTER_ERROR;
         }
 		return state;
 	}

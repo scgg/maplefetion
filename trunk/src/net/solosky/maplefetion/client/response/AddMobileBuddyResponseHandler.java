@@ -30,6 +30,7 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.MobileBuddy;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.dialog.ActionListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.sipc.SipcResponse;
@@ -71,8 +72,6 @@ public class AddMobileBuddyResponseHandler extends AbstractResponseHandler
     		Element element = XMLHelper.find(root, "/results/contacts/mobile-buddies/mobile-buddy");
     		
     		BeanHelper.toBean(MobileBuddy.class, buddy, element);
-    		buddy.getRelation().setValue(Integer.parseInt(element.getAttributeValue("relation-status")));
-    		
     		this.context.getFetionStore().addBuddy(buddy);
     	}
     }

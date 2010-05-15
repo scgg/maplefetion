@@ -341,7 +341,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 				}else {
 					impresa = "";
 				}
-				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation().getValue())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
+				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
 						+fomartPresence(buddy)
 						+"\t"+impresa);
 				startId++;
@@ -909,14 +909,14 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    /**
 	     * 格式化关系
 	     */
-	    public String formatRelation(int relation)
+	    public String formatRelation(Relation relation)
 	    {
 	    	switch(relation) {
-	    	case Relation.RELATION_BUDDY: return "B";
-	    	case Relation.RELATION_UNCONFIRMED: return "W";
-	    	case Relation.RELATION_DECLINED: return "X";
-	    	case Relation.RELATION_STRANGER: return "？";
-	    	case Relation.RELATION_BANNED: return "@";
+	    	case BUDDY: return "B";
+	    	case UNCONFIRMED: return "W";
+	    	case DECLINED: return "X";
+	    	case STRANGER: return "？";
+	    	case BANNED: return "@";
 	    	default: return "-";
 	    	}
 	    	
@@ -1196,7 +1196,7 @@ public class MapleFetion implements LoginListener, NotifyListener
     public void buddyMessageRecived(Buddy from, Message message,
             ChatDialog dialog)
     {
-    	if(from.getRelation().getValue()==Relation.RELATION_BUDDY)
+    	if(from.getRelation()==Relation.BUDDY)
     		println("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
     	else 
     		println("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());

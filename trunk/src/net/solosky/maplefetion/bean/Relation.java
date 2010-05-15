@@ -20,10 +20,12 @@
  * Package  : net.solosky.maplefetion.bean
  * File     : Relation.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-2-5
+ * Created  : 2010-5-15
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.bean;
+
+import net.solosky.maplefetion.util.ParseException;
 
 /**
  *
@@ -31,43 +33,36 @@ package net.solosky.maplefetion.bean;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class Relation
-{
-	public static final int RELATION_UNCONFIRMED = 000;
-	public static final int RELATION_BUDDY = 001;
-	public static final int RELATION_DECLINED = 002;
-	public static final int RELATION_STRANGER = 003;
-	public static final int RELATION_BANNED = 004;
+public enum Relation {
+	UNCONFIRMED(0),
+	BUDDY(1),
+	DECLINED(2),
+	STRANGER(3),
+	BANNED(4);
+	
 	
 	private int value;
 	
-	
-	/**
-	 * 构造函数，用户关系
-	 * @param value
-	 */
-	public Relation(int value)
+	Relation(int value)
 	{
 		this.value = value;
 	}
-
-
-	/**
-     * @return the value
-     */
-    public int getValue()
-    {
-    	return value;
-    }
-
-
-	/**
-     * @param value the value to set
-     */
-    public void setValue(int value)
-    {
-    	this.value = value;
-    }
 	
-	
+	public static Relation parseRelation(String s) throws ParseException
+	{
+		int v = 0;
+		try {
+	        v = Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+        	throw new ParseException("Cannot parse relation value:"+s+", expected 0,1,2,3,4.");
+        }
+		switch(v) {
+    		case 0: 	return UNCONFIRMED;
+    		case 1:		return BUDDY;
+    		case 2: 	return DECLINED;
+    		case 3:		return STRANGER;
+    		case 4:		return BANNED;
+    		default: throw new ParseException("Invalid relation value:"+s+", expected 0,1,2,3,4.");
+		}
+	}
 }

@@ -136,20 +136,15 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	private void buildProcessorChain(Transfer transfer) throws FetionException
 	{
 
-		TransferService transferService = new TransferService();
-		
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new LiveV2MessageDispatcher(context, this, this)); 				// 消息分发服务
 		if(FetionConfig.getBoolean("log.sipc.enable"))
 			this.processorChain.addLast(new MessageLogger("LiveV2ChatDialog-" + mainBuddy.getFetionId())); 								// 日志记录
-		this.processorChain.addLast(transferService); 													// 传输服务
+		this.processorChain.addLast(new TransferService(this.context)); 													// 传输服务
 		this.processorChain.addLast(new SipcParser());													//信令解析器
 		this.processorChain.addLast(transfer);															//传输对象
 		
 		this.processorChain.startProcessorChain();
-		
-		this.context.getFetionTimer().scheduleTask("ChatDialogV2CheckTimeout-"+this.mainBuddy.getUri(),
-				transferService.getTimeOutCheckTask(), 0, 60*1000);
 	}
 	
 	/**

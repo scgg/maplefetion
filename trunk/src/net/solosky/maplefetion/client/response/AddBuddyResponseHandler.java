@@ -71,7 +71,6 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
     		Element root = XMLHelper.build(response.getBody().toSendString());
     		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
     		BeanHelper.toBean(FetionBuddy.class, buddy, element);
-    		buddy.getRelation().setValue(Integer.parseInt(element.getAttributeValue("relation-status")));
     		
     		this.context.getFetionStore().addBuddy(buddy);
 		}else{

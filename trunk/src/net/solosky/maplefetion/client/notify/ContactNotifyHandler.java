@@ -40,7 +40,6 @@ import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
-import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.ParseHelper;
 import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -84,9 +83,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     
     /**
      * 好友信息更新
-     * @throws ParseException 
+     * @throws FetionException 
      */
-    private void serviceResult(Element event) throws ParseException
+    private void serviceResult(Element event) throws FetionException
     {
     	List list = XMLHelper.findAll(event, "/event/results/contacts/*contact");
     	Iterator it = list.iterator();
@@ -132,7 +131,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	//建立一个新好友，并把关系设置为陌生人
     	Buddy buddy = UriHelper.createBuddy(uri);
     	buddy.setUri(uri);
-    	buddy.getRelation().setValue(Relation.RELATION_STRANGER);
+    	BeanHelper.setValue(buddy, "relation", Relation.STRANGER);
     	context.getFetionStore().addBuddy(buddy);
     	//如果是飞信好友，获取陌生人的信息
     	if(buddy instanceof FetionBuddy) {
@@ -150,8 +149,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     /**
      * 手机好友同意或者拒绝添加手机好友
      * @param event
+     * @throws FetionException 
      */
-    private void updateMobileBuddy(Element event)
+    private void updateMobileBuddy(Element event) throws FetionException
     {
     	List list = XMLHelper.findAll(event, "/event/contacts/mobile-buddies/*mobile-buddy");
     	Iterator it = list.iterator();
@@ -161,17 +161,16 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		Buddy buddy = context.getFetionStore().getBuddyByUri(uri);
     		if(buddy!=null) {
     			//检查用户关系的变化
-    			int relation = Integer.parseInt(e.getAttributeValue("relation-status"));
+    			Relation relation = ParseHelper.parseRelation(e.getAttributeValue("relation-status"));
     			//如果当前好友关系是没有确认，而返回的好友是确认了，表明好友同意了你添加好友的请求
-    			if(relation==Relation.RELATION_BUDDY 
-    					&& buddy.getRelation().getValue()!=Relation.RELATION_STRANGER) {
+    			if(relation==Relation.BUDDY && buddy.getRelation()!=Relation.BUDDY) {
     				
     				//因为这里是手机好友，没有详细信息，故不再获取详细信息
     				logger.debug("Mobile buddy agreed your buddy request:"+buddy.getFetionId());
     				if(this.context.getNotifyListener()!=null)
     					context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
     				
-    			}else if(relation==Relation.RELATION_DECLINED) {	//对方拒绝了请求
+    			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
     				if(this.context.getNotifyListener()!=null)
@@ -180,7 +179,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     			}else {}
 
         		//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
-    			buddy.getRelation().setValue(relation);
+    			BeanHelper.setValue(buddy, "relation", relation);
 			}
     	}
     }
@@ -199,10 +198,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		final Buddy buddy = context.getFetionStore().getBuddyByUri(uri);
     		if(buddy!=null) {
     			//检查用户关系的变化
-    			int relation = Integer.parseInt(e.getAttributeValue("relation-status"));
+    			Relation relation = ParseHelper.parseRelation(e.getAttributeValue("relation-status"));
     			//如果当前好友关系是没有确认，而返回的好友是确认了，表明好友同意了你添加好友的请求
-    			if(relation==Relation.RELATION_BUDDY
-    					&& buddy.getRelation().getValue()!=Relation.RELATION_BUDDY) {
+    			if(relation==Relation.BUDDY && buddy.getRelation()!=Relation.BUDDY) {
     				
     				//这里还需要获取好友的详细信息
     				SipcRequest request = dialog.getMessageFactory().createGetContactDetailRequest(buddy.getUri());
@@ -242,14 +240,14 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     					request.setResponseHandler(handler);
     					//发出这个消息
     					dialog.process(request);
-    			}else if(relation==Relation.RELATION_DECLINED) {	//对方拒绝了请求
+    			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
     				if(this.context.getNotifyListener()!=null)
     					context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
     			}else {}
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
-    			buddy.getRelation().setValue(relation);
+    			BeanHelper.setValue(buddy, "relation", relation);
     		}
     	}
     }

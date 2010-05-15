@@ -34,6 +34,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.bean.User;
 
@@ -216,13 +217,13 @@ public class SimpleFetionStore implements FetionStore
      * @return
      */
 	@Override
-    public Collection<Buddy> getBuddyListByRelation(int relation)
+    public Collection<Buddy> getBuddyListByRelation(Relation relation)
     {
     	ArrayList<Buddy> list = new ArrayList<Buddy>();
  	   Iterator<Buddy> it = this.buddyList.values().iterator();
  	   while(it.hasNext()) {
  		   Buddy buddy = it.next();
- 		   if(buddy.getRelation().getValue()==relation)
+ 		   if(buddy.getRelation()==relation)
  			   list.add(buddy);
  	   }
  	   return list;

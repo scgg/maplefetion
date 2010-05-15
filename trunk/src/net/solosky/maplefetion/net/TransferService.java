@@ -29,8 +29,10 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import net.solosky.maplefetion.FetionConfig;
+import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
 import net.solosky.maplefetion.sipc.SipcHeader;
@@ -52,11 +54,16 @@ public class TransferService extends AbstractProcessor
 	 * 已发送请求队列
 	 */
 	private Queue<SipcRequest> requestQueue;
-
+	
 	/**
-	 * 定时检查超时任务，
+	 * 飞信上下文
 	 */
-	private TimerTask timeOutCheckTask;
+	private FetionContext context;
+	
+	/**
+	 * 主要用操作定时任务
+	 */
+	private String timerTaskName;
 	
 	/**
 	 * 日志记录
@@ -66,10 +73,13 @@ public class TransferService extends AbstractProcessor
 	/**
 	 * 默认构造函数
 	 */
-	public TransferService()
+	public TransferService(FetionContext context)
 	{
 		this.requestQueue = new LinkedList<SipcRequest>();
-		this.timeOutCheckTask = new TimeOutCheckTask();
+		this.context = context;
+		this.timerTaskName = "SipMessageTimeOutCheckTask-"+
+							this.context.getFetionUser().getUserId()
+							+"-"+UUID.randomUUID().toString();
 	}
 
 	/**
@@ -129,7 +139,7 @@ public class TransferService extends AbstractProcessor
     public void stopProcessor() throws FetionException
     {
     	//停止超时检查定时任务
-    	this.timeOutCheckTask.cancel();
+    	this.context.getFetionTimer().cancelTask(this.timerTaskName);
     	//通知当前发送队列中的请求都超时
     	Iterator<SipcRequest> it = this.requestQueue.iterator();
     	while(it.hasNext()) {
@@ -139,16 +149,19 @@ public class TransferService extends AbstractProcessor
     		}
     	}
     }
+    
+    
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.chain.AbstractProcessor#startProcessor()
+     */
+    @Override
+    public void startProcessor() throws FetionException
+    {
+	    this.context.getFetionTimer().scheduleTask(
+	    						this.timerTaskName,
+	    						new SipMessageTimeOutCheckTask(), 50*1000, 60*1000);
+    }
 
-	/**
-	 * 返回超时检查工作
-	 * 
-	 * @return
-	 */
-	public TimerTask getTimeOutCheckTask()
-	{
-		return this.timeOutCheckTask;
-	}
 
 	/**
 	 * 
@@ -156,7 +169,7 @@ public class TransferService extends AbstractProcessor
 	 * 
 	 * @author solosky <solosky772@qq.com>
 	 */
-	public class TimeOutCheckTask extends TimerTask
+	public class SipMessageTimeOutCheckTask extends TimerTask
 	{
 		@Override
 		public void run()

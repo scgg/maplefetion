@@ -31,6 +31,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.StoreVersion;
 
@@ -124,7 +125,7 @@ public interface FetionStore
 	 * 根据关系返回列表
 	 * @param relation		好友关系 定义在Relaction中
 	 */
-	public Collection<Buddy> getBuddyListByRelation(int relation);
+	public Collection<Buddy> getBuddyListByRelation(Relation relation);
     
     /**
      * 存储数据版本
@@ -208,5 +209,5 @@ public interface FetionStore
      * @return
      */
     public Member getGroupMember(Group group, String uri);
-    
+
 }

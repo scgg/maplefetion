@@ -87,7 +87,6 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     		Element e = (Element) it.next();
     		Buddy b = new FetionBuddy();
     		BeanHelper.toBean(FetionBuddy.class, b, e);
-    		b.getRelation().setValue(Integer.parseInt(e.getAttributeValue("relation-status")));
     		store.addBuddy(b);
     	}
     	
@@ -98,7 +97,6 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     		Element e = (Element) it.next();
     		Buddy b = new MobileBuddy();
     		BeanHelper.toBean(MobileBuddy.class, b, e);
-    		b.getRelation().setValue(Integer.parseInt(e.getAttributeValue("relation-status")));
     		store.addBuddy(b);
     	}
     	

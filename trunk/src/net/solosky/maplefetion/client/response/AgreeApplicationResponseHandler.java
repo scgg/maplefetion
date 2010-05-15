@@ -73,7 +73,7 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
     			if(element.getChild("personal")!=null && buddy instanceof FetionBuddy) {
     				BeanHelper.toBean(FetionBuddy.class, buddy, element.getChild("personal"));
     			}
-    			buddy.getRelation().setValue(Relation.RELATION_BUDDY);
+    			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
     		}
     	}
     }

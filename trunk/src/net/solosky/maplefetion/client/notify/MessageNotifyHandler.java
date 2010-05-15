@@ -45,6 +45,7 @@ import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.UriHelper;
 
@@ -110,7 +111,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    		from = new FetionBuddy();
 	    	
 	    	from.setUri(notify.getFrom());
-	    	from.getRelation().setValue(Relation.RELATION_STRANGER);
+	    	BeanHelper.setValue(from, "relation", Relation.STRANGER);
 	    	//添加至列表中
 	    	this.context.getFetionStore().addBuddy(from);
 	    	

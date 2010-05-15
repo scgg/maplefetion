@@ -25,6 +25,10 @@
  */
 package net.solosky.maplefetion.util;
 
+import org.apache.log4j.Logger;
+
+import net.solosky.maplefetion.bean.Relation;
+
 
 /**
  *
@@ -58,9 +62,19 @@ public class ParseHelper
 	{
 		return Integer.parseInt(s);
 	}
+	
 	public static String toInteger(Integer i)
 	{
 		return Integer.toString(i);
 	}
+
+	public static Relation parseRelation(String r) throws ParseException 
+	{
+		return Relation.parseRelation(r);
+	}
 	
+	public static String toRelation(Relation r)
+	{
+		return r.toString();
+	}
 }

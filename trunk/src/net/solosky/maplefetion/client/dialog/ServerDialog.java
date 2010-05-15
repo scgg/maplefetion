@@ -127,7 +127,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     public void closeDialog()
     {
     	//不需要发送任何离开消息，直接关闭对话框即可
-    	this.context.getFetionTimer().cancelTask("ServerDialogKeepAlive");
+    	this.context.getFetionTimer().cancelTask("ServerDialogKeepAlive-"+this.context.getFetionUser().getUserId());
     	
     	//停止处理链
     	try {
@@ -158,7 +158,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     		
     		//注册定时任务
         	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
-    		this.context.getFetionTimer().scheduleTask("ServerDialogKeepAlive", new ServerKeepLiveTask(), keepInterval, keepInterval);
+    		this.context.getFetionTimer().scheduleTask("ServerDialogKeepAlive-"+this.context.getFetionUser().getUserId(), new ServerKeepLiveTask(), keepInterval, keepInterval);
     		
     		//设置对话框状态为打开状态
     		this.setState(DialogState.OPENED);
@@ -176,19 +176,16 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     
     public void buildProcessorChain() throws FetionException
     {
-    	TransferService transferService = new TransferService();
-    	
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new ServerMessageDispatcher(context, this, this));						//消息分发服务
 		if(FetionConfig.getBoolean("log.sipc.enable"))
 			this.processorChain.addLast(new MessageLogger("ServerDialog"));									//日志记录
-		this.processorChain.addLast(transferService);															//传输服务
+		this.processorChain.addLast(new TransferService(this.context));															//传输服务
 		this.processorChain.addLast(new SipcParser());															//信令解析器
 		this.processorChain.addLast(this.context.getTransferFactory().createDefaultTransfer());				//信令传输对象
 		
 		this.processorChain.startProcessorChain();
 		
-		this.context.getFetionTimer().scheduleTask("ServerDialogCheckTimeout", transferService.getTimeOutCheckTask(), 50*1000, 60*1000);
     }
     
     /**

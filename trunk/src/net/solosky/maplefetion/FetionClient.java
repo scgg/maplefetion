@@ -366,6 +366,7 @@ public class FetionClient implements FetionContext
     private void dispose()
     {
          this.transferFactory.closeFactory();
+         this.dialogFactory.closeFactory();
          this.executor.close();
          this.timer.stopTimer();
     }
@@ -450,6 +451,7 @@ public class FetionClient implements FetionContext
     			public void run(){
     				try {
                         dialogFactory.closeAllDialog();
+                        dialogFactory.closeFactory();
                         transferFactory.closeFactory();
                         timer.stopTimer();
                     	updateState(ClientState.LOGOUT);
