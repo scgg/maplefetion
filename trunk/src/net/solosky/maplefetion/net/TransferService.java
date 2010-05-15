@@ -30,6 +30,7 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.TimerTask;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingQueue;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
@@ -98,7 +99,9 @@ public class TransferService extends AbstractProcessor
 			if(request!=null) {
 				request.incReplyTimes();
 				if(request.getNeedReplyTimes()==request.getReplyTimes()) {
-					requestQueue.remove(request);
+					synchronized(this.requestQueue) {
+						this.requestQueue.remove(request);
+					}
 				}
 			}
 		}
@@ -115,8 +118,11 @@ public class TransferService extends AbstractProcessor
 		if (o instanceof SipcRequest) {
 			SipcRequest request = (SipcRequest) o;
 			//判断需要回复次数大于0才放人队列中
-			if(request.getNeedReplyTimes()>0)
-				this.requestQueue.add(request);
+			if(request.getNeedReplyTimes()>0) {
+				synchronized(this.requestQueue) {
+					this.requestQueue.add(request);
+				}
+			}
 		}
 		return true;
 	}
@@ -141,12 +147,14 @@ public class TransferService extends AbstractProcessor
     	//停止超时检查定时任务
     	this.context.getFetionTimer().cancelTask(this.timerTaskName);
     	//通知当前发送队列中的请求都超时
-    	Iterator<SipcRequest> it = this.requestQueue.iterator();
-    	while(it.hasNext()) {
-    		SipcRequest request = it.next();
-    		if(request.getResponseHandler()!=null) {
-    			request.getResponseHandler().timeout(request);
-    		}
+    	synchronized (requestQueue) {
+    		Iterator<SipcRequest> it = this.requestQueue.iterator();
+        	while(it.hasNext()) {
+        		SipcRequest request = it.next();
+        		if(request.getResponseHandler()!=null) {
+        			request.getResponseHandler().timeout(request);
+        		}
+        	}
     	}
     }
     
@@ -188,24 +196,26 @@ public class TransferService extends AbstractProcessor
 	 * @param response
 	 * @return
 	 */
-	public synchronized SipcRequest findRequest(SipcResponse response)
+	public SipcRequest findRequest(SipcResponse response)
 	{
-		Iterator<SipcRequest> it = this.requestQueue.iterator();
-		SipcRequest request = null;
-		String resCallID = response.getHeader(SipcHeader.CALLID).getValue();
-		String resSequence = response.getHeader(SipcHeader.SEQUENCE).getValue();
-		String reqCallID = null;
-		String reqSequence = null;
-		while (it.hasNext()) {
-			request = it.next();
-			reqCallID = request.getHeader(SipcHeader.CALLID).getValue();
-			reqSequence = request.getHeader(SipcHeader.SEQUENCE).getValue();
-			//如果callID和sequence都相等的话就找到了指定的请求
-			if (resCallID.equals(reqCallID) && resSequence.equals(reqSequence)) {
-				return request;
-			}
+		synchronized(this.requestQueue) {
+    		Iterator<SipcRequest> it = this.requestQueue.iterator();
+    		SipcRequest request = null;
+    		String resCallID = response.getHeader(SipcHeader.CALLID).getValue();
+    		String resSequence = response.getHeader(SipcHeader.SEQUENCE).getValue();
+    		String reqCallID = null;
+    		String reqSequence = null;
+    		while (it.hasNext()) {
+    			request = it.next();
+    			reqCallID = request.getHeader(SipcHeader.CALLID).getValue();
+    			reqSequence = request.getHeader(SipcHeader.SEQUENCE).getValue();
+    			//如果callID和sequence都相等的话就找到了指定的请求
+    			if (resCallID.equals(reqCallID) && resSequence.equals(reqSequence)) {
+    				return request;
+    			}
+    		}
+    		return null;
 		}
-		return null;
 	}
 
 	/**
@@ -213,7 +223,7 @@ public class TransferService extends AbstractProcessor
 	 * 
 	 * @throws FetionException
 	 */
-	private synchronized void checkTimeOutRequest() throws FetionException
+	private void checkTimeOutRequest() throws FetionException
 	{
 		SipcRequest out = null;
 		int curtime = (int) System.currentTimeMillis() / 1000;
@@ -221,33 +231,36 @@ public class TransferService extends AbstractProcessor
 		        .getInteger("fetion.sip.default-retry-times");
 		int aliveTimes = FetionConfig
 		        .getInteger("fetion.sip.default-alive-time");
-		// 如果队列为空就不需要查找了
-		if (this.requestQueue.size() == 0)
-			return;
 
-		// 从队列的头部开始查找，如果查到一个包存活时间还没有超过当前时间，就不在查找，因为队列中包的时间是按时间先后顺序存放的
-		while (true) {
-			out = this.requestQueue.peek();
-			if (out.getAliveTime() > curtime) {
-				logger.debug("Request was not responsed but still in alive time. " +
-						"Request="+out+", AliveTime="+out.getAliveTime()+", RetryTimes="+out.getReplyTimes());
-				return; // 当前包还处于存活期内，退出查找
-			} else {
-				// 当前这个包是超时的包
-				if (out.getRetryTimes() < maxTryTimes) {
-					// 如果小于重发次数，就重发这个包
-					logger.debug("Request was timeout, now sending it again... Request="+out);
-					this.requestQueue.poll();
-					out.incRetryTimes();
-					out.setAliveTime(((int) System.currentTimeMillis() / 1000) + aliveTimes);
-					// 重新发送这个包
-					this.processOutcoming(out);
-				} else { // 这个包已经超过重发次数，通知对话对象，发生了超时异常
-					logger.warn("A request is resend three times, handle this timeout exception...");
-					this.handleRequestTimeout(out);
+		synchronized (this.requestQueue) {
+			
+			// 如果队列为空就不需要查找了
+			if (this.requestQueue.size() == 0)
+				return;
+			
+			// 从队列的头部开始查找，如果查到一个包存活时间还没有超过当前时间，就不在查找，因为队列中包的时间是按时间先后顺序存放的
+			while (true) {
+				out = this.requestQueue.peek();
+				if (out.getAliveTime() > curtime) {
+					return; // 当前包还处于存活期内，退出查找
+				} else {
+					// 当前这个包是超时的包
+					if (out.getRetryTimes() < maxTryTimes) {
+						// 如果小于重发次数，就重发这个包
+						logger.debug("Request was timeout, now sending it again... Request="+out);
+						this.requestQueue.poll();
+						out.incRetryTimes();
+						out.setAliveTime(((int) System.currentTimeMillis() / 1000) + aliveTimes);
+						// 重新发送这个包
+						this.processOutcoming(out);
+					} else { // 这个包已经超过重发次数，通知对话对象，发生了超时异常
+						logger.warn("A request was sended three times, handle this timeout exception...");
+						this.handleRequestTimeout(out);
+					}
 				}
 			}
-		}
+        }
+		
 	}
 
 	/**
@@ -262,7 +275,7 @@ public class TransferService extends AbstractProcessor
 		if (request.getResponseHandler() != null) {
 			request.getResponseHandler().timeout(request);
 		}else {
-			logger.warn("Request already time out, but there isn't a timeout handler, ignore it. Request="+request);
+			logger.warn("Request already was timeout, but there wasn't a timeout handler, ignore it. Request="+request);
 		}
 	}
 
