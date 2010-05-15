@@ -411,6 +411,7 @@ public class FetionClient implements FetionContext
         } catch (FetionException e) {
         	logger.warn("Close All Dialog error.", e);
         }
+        
     	this.dispose();
     	
     	if(exception instanceof TransferException) {		//网络错误

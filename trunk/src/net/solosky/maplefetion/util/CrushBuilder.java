@@ -30,9 +30,11 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.io.PrintWriter;
 import java.io.StringWriter;
+import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.net.URLEncoder;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -80,10 +82,11 @@ public class CrushBuilder
 	 */
 	public void dumpException(Throwable exception)
 	{
-		buffer.append("------------Exception-----------\n");
+		buffer.append("------------------------------Exception-----------------------------------\r\n");
 		StringWriter writer = new StringWriter();
 		exception.printStackTrace(new PrintWriter(writer));
 		buffer.append(writer.toString());
+		buffer.append("\r\n");
 	}
 	
 	/**
@@ -92,8 +95,8 @@ public class CrushBuilder
 	 */
 	public void dumpSipcMessage(SipcMessage message)
 	{
-		buffer.append("----------SipcMessage-----------\n");
-		buffer.append("Class:"+message.getClass().getSimpleName()+"\n");
+		buffer.append("-------------------------------SipcMessage----------------------------------\r\n");
+		buffer.append("Class:"+message.getClass().getSimpleName()+"\r\n");
 		buffer.append(message.toSendString());
 	}
 	
@@ -102,9 +105,19 @@ public class CrushBuilder
 	 */
 	public void buildHeader()
 	{
-		buffer.append("==========MapleFetion CrushReport=============\n");
-		buffer.append("if you saw this report, FetionClient maybe crushed by some exceptions.\n");
-		buffer.append("\n");
+		buffer.append("=============================MapleFetion CrushReport=================================\r\n");
+		buffer.append("if you saw this report, FetionClient maybe crushed by some exceptions.\r\n");
+		buffer.append("Date:"+(new Date()).toString());
+		buffer.append("\r\n");
+	}
+	
+	/**
+	 * 建立报告的尾部
+	 */
+	public void buildFooter()
+	{
+		  buffer.append("===================================================================================");
+          buffer.append("\r\n\r\n\r\n");
 	}
 	
 	/**
@@ -112,10 +125,10 @@ public class CrushBuilder
 	 */
 	public void dumpVersion()
 	{
-		buffer.append("------------Version------------\n");
-		buffer.append("ClientVersion   : "+FetionClient.CLIENT_VERSION+"\n");
-		buffer.append("ProtocolVersion : "+FetionClient.PROTOCOL_VERSION+"\n");
-		buffer.append("\n");
+		buffer.append("------------------------------------Version---------------------------------------\r\n");
+		buffer.append("ClientVersion   : "+FetionClient.CLIENT_VERSION+"\r\n");
+		buffer.append("ProtocolVersion : "+FetionClient.PROTOCOL_VERSION+"\r\n");
+		buffer.append("\r\n");
 	}
 	
 	/**
@@ -123,22 +136,23 @@ public class CrushBuilder
 	 */
 	public void dumpConfig()
 	{
-		buffer.append("------------Config-------------\n");
+		buffer.append("-------------------------------------Config--------------------------------------\r\n");
 		
 		Properties prop = FetionConfig.getProperties();
 		Iterator<Object> it = prop.keySet().iterator();
 		while(it.hasNext()) {
 			String key = (String)  it.next();
-			buffer.append(key+" = " + prop.getProperty(key)+"\n");
+			buffer.append(key+" = " + prop.getProperty(key)+"\r\n");
 		}
 		
-		buffer.append("\n");
+		buffer.append("\r\n");
 	}
 	
 	public void dumpObject(Object o)
 	{
-		buffer.append("------------"+o.getClass().getName()+"-------------\n");
+		buffer.append("------------------"+o.getClass().getName()+"-----------------------\r\n");
 		buffer.append(o.toString());
+		buffer.append("\r\n");
 	}
 	
 	/**
@@ -157,12 +171,23 @@ public class CrushBuilder
 	 */
 	private static void buildAndSaveCrushReport(Object ...args)
 	{
-		DateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
-		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
+		File dir = new File(FetionConfig.getString("crush.log.dir"));
+		if(dir.isDirectory()) {
+		}else if(dir.isFile()) {
+			logger.warn("Crush log directory is a file...");
+		}else {
+			if(!dir.mkdir()) {
+				logger.warn("Create crush log dir failed."+dir.getAbsolutePath());
+				return;
+			}
+		}
+		DateFormat df = new SimpleDateFormat("yyyy-M-d");
+		String name = dir.getAbsolutePath()+File.separator+"CrushReport_"+df.format(new Date())+".txt";
 		try {
-			FileWriter writer = new FileWriter(new File(name));
+			FileWriter writer = new FileWriter(new File(name), true);
             writer.append(CrushBuilder.buildCrushReport(args));
             writer.close();
+            logger.debug("Crush report saved to "+name);
         } catch (IOException e) {
         	logger.warn("Save crush report failed.");
         }
@@ -177,7 +202,12 @@ public class CrushBuilder
 		String url    = FetionConfig.getString("crush.send.url");
 		String report = buildCrushReport(args);
 		if(url!=null) {
-			url = url.replace("{report}", report);
+			try {
+	            url = url.replace("{report}", URLEncoder.encode(report, "utf8"));
+            } catch (UnsupportedEncodingException e1) {
+	           throw new RuntimeException(e1);
+            }
+			System.out.println(url);
 			try {
 	            URL trueURL = new URL(url);
 	            logger.info("Sending crush report...");
@@ -205,6 +235,7 @@ public class CrushBuilder
 		CrushBuilder cb = new CrushBuilder();
 		cb.buildHeader();
 		cb.dumpVersion();
+		cb.dumpConfig();
 		for(Object o:args) {
 			if(o instanceof SipcMessage) {
 				cb.dumpSipcMessage((SipcMessage) o);
@@ -214,6 +245,9 @@ public class CrushBuilder
 				cb.dumpObject(o);
 			}
 		}
+		
+		cb.buildFooter();
+		
 		return cb.toString();
 	}
 	
@@ -225,7 +259,7 @@ public class CrushBuilder
 	{
 		if(FetionConfig.getBoolean("crush.send.enable")) {
 			buildAndSendCrushReport(args);
-		}else if(FetionConfig.getBoolean("crush.build.enable")) {
+		}else if(FetionConfig.getBoolean("crush.log.enable")) {
 			buildAndSaveCrushReport(args);
 		}else {
 			//do nothing...
