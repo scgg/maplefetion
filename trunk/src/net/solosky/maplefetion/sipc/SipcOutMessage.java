@@ -82,10 +82,4 @@ public abstract class SipcOutMessage extends SipcMessage
 	{
 		this.getHeader(SipcHeader.LENGTH).setValue(Integer.toString(length));
 	}
-	
-	/**
-	 * 转化为可以发送的字符串序列
-	 * @return			可发送的字符串序列
-	 */
-	public abstract String toSendString();
 }

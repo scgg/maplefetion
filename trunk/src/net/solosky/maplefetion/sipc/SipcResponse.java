@@ -27,6 +27,7 @@ package net.solosky.maplefetion.sipc;
 
 
 
+
 /**
 *
 * SIP回复类
@@ -113,4 +114,14 @@ public class SipcResponse extends SipcInMessage
 	{
 		return "[SipcResponse: status="+this.getStatusCode()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getLength()+"]";
 	}
+
+	
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.sipc.SipcMessage#toHeadLine()
+     */
+    @Override
+    protected String toHeadLine()
+    {
+	    return SipcMessage.SIP_VERSION+" "+Integer.toString(this.status)+' '+this.statusMessage;
+    }
 }

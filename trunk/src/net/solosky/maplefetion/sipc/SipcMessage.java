@@ -27,6 +27,9 @@ package net.solosky.maplefetion.sipc;
 
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.List;
+
+import net.solosky.maplefetion.util.ConvertHelper;
 
 /**
 *
@@ -64,9 +67,9 @@ public abstract class SipcMessage
 	}
 	
 	/**
-	 * 返回消息头
+	 * 返回一个消息头
 	 * @param name	消息头值
-	 * @return		消息头
+	 * @return		消息头，如果有多个返回第一个符合的消息头
 	 */
 	public SipcHeader getHeader(String name)
 	{
@@ -78,6 +81,24 @@ public abstract class SipcMessage
 		}
 		return null;
 	}
+	
+	/**
+	 * 返回一个消息头
+	 * @param name	消息头值
+	 * @return		消息头，如果有多个返回第一个符合的消息头
+	 */
+	public List<SipcHeader> getHeaders(String name)
+	{
+		Iterator<SipcHeader> it = headers.iterator();
+		ArrayList<SipcHeader> list = new ArrayList<SipcHeader>();
+		while(it.hasNext()) {
+			SipcHeader header = it.next();
+			if(header.getName()!=null&&header.getName().equals(name)) {
+				list.add(header);
+			}
+		}
+		return list;
+	}	
 	
 	/**
 	 * 检查是否有给定名字的消息头
@@ -140,6 +161,48 @@ public abstract class SipcMessage
 	public SipcBody getBody()
 	{
 		return body;
-	}	
+	}
+	
+	/**
+	 * 转化为可以发送的字符串序列
+	 * @return			可发送的字符串序列
+	 */
+	public String toSendString()
+	{
+		StringBuffer buffer = new StringBuffer();
+		
+		//HeadLine
+		buffer.append(this.toHeadLine());
+		buffer.append("\r\n");
+		
+		//headers
+		Iterator<SipcHeader> it = this.getHeaders().iterator();
+		while(it.hasNext()) {
+			buffer.append(it.next().toSendString());
+			buffer.append("\r\n");
+		}
+		
+		if(this.body!=null && !this.hasHeader(SipcHeader.LENGTH)) {
+			int len =ConvertHelper.string2Byte(body.toSendString()).length;
+			if(len>0)
+				buffer.append("L: "+len+"\r\n");
+		}
+		
+		buffer.append("\r\n");
+		
+		
+		//body
+		if(this.body!=null)
+			buffer.append(body.toSendString());
+
+		
+		return buffer.toString();
+
+	}
+	
+	/**
+	 * 返回头部信息
+	 */
+	protected abstract String toHeadLine();
 	
 }

@@ -39,11 +39,16 @@ public interface FetionExecutor
 	 * 提交任务
 	 * @param runnable
 	 */
-	public abstract void submit(Runnable task);
+	public void submitTask(Runnable task);
+	
+	/**
+	 * 启动执行器
+	 */
+	public void startExecutor();
 
 	/**
 	 * 关闭执行器
 	 */
-	public abstract void close();
+	public void stopExecutor();
 
 }

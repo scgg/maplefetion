@@ -66,20 +66,24 @@ public class GetContactsInfoResponseHander extends AbstractResponseHandler
     @Override
     protected void doHandle(SipcResponse response) throws FetionException
     {
+    	if(response.getBody()==null)	return;
     	Element root = XMLHelper.build(response.getBody().toSendString());
- 	    List list = root.getChild("contacts").getChildren();
- 	    Iterator it = list.iterator();
- 	    while(it.hasNext()) {
- 	    	Element e = (Element) it.next();
- 	    	Element p = e.getChild("personal");
- 	    	
- 	    	String uri = e.getAttributeValue("uri");
- 	    	FetionStore store = context.getFetionStore();
- 	    	if(store.getBuddyByUri(uri)!=null&& p!=null) {
-     	    	Buddy b = store.getBuddyByUri(uri);
-     	    	BeanHelper.toBean(FetionBuddy.class, b, p);
- 	    	}
- 	    }
+    	Element contacts = root.getChild("contacts");
+    	if(contacts!=null) {
+     	    List list = contacts.getChildren();
+     	    Iterator it = list.iterator();
+     	    while(it.hasNext()) {
+     	    	Element e = (Element) it.next();
+     	    	Element p = e.getChild("personal");
+     	    	
+     	    	String uri = e.getAttributeValue("uri");
+     	    	FetionStore store = context.getFetionStore();
+     	    	if(store.getBuddyByUri(uri)!=null&& p!=null) {
+         	    	Buddy b = store.getBuddyByUri(uri);
+         	    	BeanHelper.toBean(FetionBuddy.class, b, p);
+     	    	}
+     	    }
+        }
     }
 
 }

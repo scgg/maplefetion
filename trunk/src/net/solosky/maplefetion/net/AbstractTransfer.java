@@ -79,7 +79,7 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
         } catch (FetionException e) {
 	       	this.raiseException(e);
         }catch(Throwable t) {
-        	this.raiseException(new SystemException(t));
+        	this.raiseException(new SystemException(t, new String(buff)));
         }
     }
     

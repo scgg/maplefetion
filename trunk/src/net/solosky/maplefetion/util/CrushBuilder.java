@@ -39,16 +39,11 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Properties;
 
-import org.apache.log4j.Logger;
-
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
-import net.solosky.maplefetion.sipc.SipcHeader;
-import net.solosky.maplefetion.sipc.SipcInMessage;
 import net.solosky.maplefetion.sipc.SipcMessage;
-import net.solosky.maplefetion.sipc.SipcNotify;
-import net.solosky.maplefetion.sipc.SipcOutMessage;
-import net.solosky.maplefetion.sipc.SipcResponse;
+
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -99,26 +94,7 @@ public class CrushBuilder
 	{
 		buffer.append("----------SipcMessage-----------\n");
 		buffer.append("Class:"+message.getClass().getSimpleName()+"\n");
-		if(message instanceof SipcOutMessage) {
-			SipcOutMessage out = (SipcOutMessage) message;
-			buffer.append(out.toSendString());
-		}else {
-			SipcInMessage in = (SipcInMessage) message;
-			if(in instanceof SipcResponse) {
-				SipcResponse res = (SipcResponse) in;
-				buffer.append(SipcMessage.SIP_VERSION+" "+res.getStatusCode()+" "+res.getStatusMessage()+"\r\n");
-			}else {
-				SipcNotify no = (SipcNotify) in;
-				buffer.append(no.getMethod()+" "+no.getSid()+" "+SipcMessage.SIP_VERSION+"\r\n");
-			}
-			Iterator<SipcHeader> it = in.getHeaders().iterator();
-			while(it.hasNext()) {
-				buffer.append(it.next().toSendString());
-			}
-			buffer.append("\r\n");
-			if(in.getBody()!=null)
-				buffer.append(in.getBody().toSendString());
-		}
+		buffer.append(message.toSendString());
 	}
 	
 	/**
@@ -159,6 +135,12 @@ public class CrushBuilder
 		buffer.append("\n");
 	}
 	
+	public void dumpObject(Object o)
+	{
+		buffer.append("------------"+o.getClass().getName()+"-------------\n");
+		buffer.append(o.toString());
+	}
+	
 	/**
 	 * 返回建立的错误报告
 	 */
@@ -175,7 +157,7 @@ public class CrushBuilder
 	 */
 	private static void buildAndSaveCrushReport(Object ...args)
 	{
-		DateFormat df = new SimpleDateFormat("y.M.d.H.m.s");
+		DateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
 		String name = "MapleFetion-CrushReport-["+df.format(new Date())+"].txt";
 		try {
 			FileWriter writer = new FileWriter(new File(name));
@@ -229,7 +211,7 @@ public class CrushBuilder
 			}else if(o instanceof Throwable) {
 				cb.dumpException((Throwable) o);
 			}else {
-				logger.warn("Incorrect crush object.."+o.getClass().getSimpleName());
+				cb.dumpObject(o);
 			}
 		}
 		return cb.toString();

@@ -28,6 +28,7 @@ package net.solosky.maplefetion.client.dialog;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TimerTask;
+import java.util.UUID;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
@@ -67,6 +68,11 @@ public class DialogFactory
 	 * 群对话框列表
 	 */
 	private ArrayList<GroupDialog> groupDialogList;
+	
+	/**
+	 * 检查超时的定时任务名字
+	 */
+	private String checkTaskName;
 
 
 	/**
@@ -84,8 +90,9 @@ public class DialogFactory
 		this.context = client;
 		this.chatDialogList = new ArrayList<ChatDialog>();
 		this.groupDialogList = new ArrayList<GroupDialog>();
+		this.checkTaskName = "IdleChatDialogCheckTask-"+UUID.randomUUID().toString();
 
-		this.context.getFetionTimer().scheduleTask("IdleChatDialogCheckTask-"+this.context.getFetionUser().getUserId(),
+		this.context.getFetionTimer().scheduleTask(this.checkTaskName,
 						new IdleDialogCheckTask() , 0,
 		                FetionConfig.getInteger("fetion.dialog.check-idle-interval") * 1000);
 	}
@@ -287,7 +294,7 @@ public class DialogFactory
 	 */
 	public void closeFactory()
 	{
-		this.context.getFetionTimer().cancelTask("IdleChatDialogCheckTask-"+this.context.getFetionUser().getUserId());
+		this.context.getFetionTimer().cancelTask(this.checkTaskName);
 	}
 
 	/**

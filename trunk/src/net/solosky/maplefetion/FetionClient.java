@@ -230,6 +230,8 @@ public class FetionClient implements FetionContext
     					FetionTimer timer,
 						FetionExecutor executor)
     {
+    	FetionConfig.init();
+    	
     	this.user            = user;
     	this.transferFactory = transferFactory;
     	this.store           = fetionStore;
@@ -351,7 +353,7 @@ public class FetionClient implements FetionContext
     private void init()
     {
     	this.timer.startTimer();
-    	
+    	this.executor.startExecutor();
     	this.dialogFactory   = new DialogFactory(this);
     	this.loginWork       = new LoginWork(this, Presence.ONLINE);
     	
@@ -367,7 +369,7 @@ public class FetionClient implements FetionContext
     {
          this.transferFactory.closeFactory();
          this.dialogFactory.closeFactory();
-         this.executor.close();
+         this.executor.stopExecutor();
          this.timer.stopTimer();
     }
 
@@ -377,10 +379,10 @@ public class FetionClient implements FetionContext
     public synchronized void updateState(ClientState state)
     {
     	this.state = state;
-    	if(this.state==ClientState.CONNECTION_ERROR ||
+    	if(this.state==ClientState.CONNECTION_ERROR  ||
     			this.state==ClientState.DISCONNECTED ||
-    			this.state==ClientState.OTHER_LOGIN||
-    			this.state==ClientState.LOGIN_ERROR||
+    			this.state==ClientState.OTHER_LOGIN  ||
+    			this.state==ClientState.LOGIN_ERROR  ||
     			this.state==ClientState.SYSTEM_ERROR ) {
     		//this.dialogFactory.closeAllDialog();
     		this.dispose();
@@ -456,12 +458,14 @@ public class FetionClient implements FetionContext
                         timer.stopTimer();
                     	updateState(ClientState.LOGOUT);
                     } catch (FetionException e) {
-                    	logger.warn("closeDialog error.", e);
+                    	logger.warn("logout error.", e);
+                    }catch(Throwable t) {
+                    	logger.warn("logout error ", t);
                     }
     			}
     		};
-    		this.executor.submit(r);
-    		this.executor.close();
+    		this.executor.submitTask(r);
+    		this.executor.stopExecutor();
     	}
     }
 
@@ -473,7 +477,7 @@ public class FetionClient implements FetionContext
     public void login(VerifyImage img)
     {
     	this.loginWork.setVerifyImage(img);
-		this.executor.submit(this.loginWork);
+		this.executor.submitTask(this.loginWork);
     }
 
 
@@ -487,7 +491,7 @@ public class FetionClient implements FetionContext
 		//为了便于掉线后可以重新登录，把初始化对象的工作放在登录函数做
 		this.init();
 		this.loginWork.setPresence(presence);
-		this.executor.submit(this.loginWork);
+		this.executor.submitTask(this.loginWork);
 	}
 	
 	/**

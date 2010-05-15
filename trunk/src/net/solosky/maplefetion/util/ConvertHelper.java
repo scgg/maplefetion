@@ -45,8 +45,6 @@ public class ConvertHelper
             '0', '1', '2', '3', '4', '5', '6', '7',
             '8', '9', 'A', 'B', 'C', 'D', 'E', 'F'
     };
-    // string buffer
-    private static StringBuilder sb = new StringBuilder();
 
 	/**
      * 把字节数组转换成16进制字符串
@@ -83,7 +81,8 @@ public class ConvertHelper
         if(end > b.length)
             end = b.length;
         
-        sb.delete(0, sb.length());
+        StringBuffer sb = new StringBuffer();
+        
         for(int i = offset; i < end; i++) {
             sb.append(hex[(b[i] & 0xF0) >>> 4])
             	.append(hex[b[i] & 0xF])
@@ -129,7 +128,8 @@ public class ConvertHelper
         if(end > b.length)
             end = b.length;
         
-        sb.delete(0, sb.length());
+        StringBuffer sb = new StringBuffer();
+        
         for(int i = offset; i < end; i++) {
             sb.append(hex[(b[i] & 0xF0) >>> 4])
             	.append(hex[b[i] & 0xF]);
@@ -207,7 +207,7 @@ public class ConvertHelper
     	try {
 	        ret = src.getBytes("UTF8");
         } catch (UnsupportedEncodingException e) {
-        	//nerver happened..
+        	throw new RuntimeException(e);
         }
         return ret;
     }
@@ -223,7 +223,7 @@ public class ConvertHelper
     	try {
 	        ret = new String(src, "UTF8");
         } catch (UnsupportedEncodingException e) {
-        	//nerver happened..
+        	throw new RuntimeException(e);
         }
         return ret;
     }

@@ -130,6 +130,6 @@ public class SipcHeader
 	 */
 	public String toSendString()
 	{
-		return this.name+": "+value+"\r\n";
+		return this.name+": "+value;
 	}
 }

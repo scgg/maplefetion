@@ -28,6 +28,7 @@ package net.solosky.maplefetion.util;
 import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Date;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.FetionConfig;
@@ -85,22 +86,10 @@ public class MessageLogger extends AbstractProcessor
 		if(!enableLogging || writer==null)
 			return;
 		
-		writer.append("接受信令:<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<\r\n");
-		if(in instanceof SipcResponse) {
-			SipcResponse res = (SipcResponse) in;
-			writer.append(SipcMessage.SIP_VERSION+" "+res.getStatusCode()+" "+res.getStatusMessage()+"\r\n");
-		}else {
-			SipcNotify no = (SipcNotify) in;
-			writer.append(no.getMethod()+" "+no.getSid()+" "+SipcMessage.SIP_VERSION+"\r\n");
-		}
-		Iterator<SipcHeader> it = in.getHeaders().iterator();
-		while(it.hasNext()) {
-			writer.append(it.next().toSendString());
-		}
-		writer.append("\r\n");
-		if(in.getBody()!=null)
-			writer.append(in.getBody().toSendString());
-		writer.append("\r\n-------------------------------------------\r\n");
+		writer.append("\r\n--------------------------------------------\r\n");
+		writer.append("接收信令         "+ (new Date()).toString()+"\r\n");
+		writer.append("--------------------------------------------\r\n");
+		writer.append(in.toSendString());
 		writer.flush();
 	}
 	
@@ -113,10 +102,10 @@ public class MessageLogger extends AbstractProcessor
 	{
 		if(!enableLogging || writer==null)
 			return;
-		
-		writer.append("发送信令:>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>\r\n");
-		writer.append(out.toSendString());
 		writer.append("\r\n--------------------------------------------\r\n");
+		writer.append("发送信令         "+ (new Date()).toString()+"\r\n");
+		writer.append("--------------------------------------------\r\n");
+		writer.append(out.toSendString());
 		writer.flush();
 	}
 	

@@ -17,10 +17,10 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.executor
- * File     : SingleExecutor.java
+ * Package  : net.solosky.maplefetion.util
+ * File     : SharedExecutor.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-14
+ * Created  : 2010-5-15
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.util;
@@ -32,14 +32,13 @@ import org.apache.log4j.Logger;
 
 /**
  *
- * 单线程执行器
- * 因为有些操作要实现异步操作就需要使用一个单独的线程操作，
- * 为了提高效率，这里可以使用一个单独的线程执行器完成操作
+ * 共享的执行池，
+ * 这个执行池使用一个固定数目的或者不固定数目的线程池来和多个飞信实例共享
  *
  * @author solosky <solosky772@qq.com>
  */
-public class SingleExecutor implements FetionExecutor
-{	
+public class SharedExecutor implements FetionExecutor
+{
 	/**
 	 * 执行服务 
 	 */
@@ -50,38 +49,58 @@ public class SingleExecutor implements FetionExecutor
 	 */
 	private static Logger logger = Logger.getLogger(SingleExecutor.class);
 	
-	/**
-	 * 构造函数
-	 */
-	public SingleExecutor()
-	{
-	}
-	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.util.FetionExecutor#submit(java.lang.Runnable)
-     */
-	public void submitTask(Runnable task)
-	{
-		this.executorService.submit(task);
-		logger.debug("Execute task submitted:"+task.getClass().getName());
-	}
-	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.util.FetionExecutor#close()
-     */
-	public void stopExecutor()
-	{
-		this.executorService.shutdown();
-		logger.debug("SingleExecutor closed...");
-	}
 
+	/**
+	 * 固定的线程池
+	 * @param size 线程最大数量
+	 */
+	public SharedExecutor(int size)
+	{
+		this.executorService = Executors.newFixedThreadPool(size);
+	}
+	
+	/**
+	 * 不限大小的线程池，但会自动回收
+	 */
+	public SharedExecutor()
+	{
+		this.executorService = Executors.newCachedThreadPool();
+	}
+	
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.util.FetionExecutor#start()
+     * @see net.solosky.maplefetion.util.FetionExecutor#startExecutor()
      */
     @Override
     public void startExecutor()
     {
-	    executorService = Executors.newSingleThreadExecutor();
-		logger.debug("SingleExecutor started...");
+    	//什么也不做
     }
+
+	/* (non-Javadoc)
+     * @see nnet.solosky.maplefetion.util.FetionExecutor#stopExecutor()
+     */
+    @Override
+    public void stopExecutor()
+    {
+    	//什么 也不做
+    }
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.util.FetionExecutor#submitTask(java.lang.Runnable)
+     */
+    @Override
+    public void submitTask(Runnable task)
+    {
+    	this.executorService.submit(task);
+    	logger.debug("Execute task submitted:"+task.getClass().getName());
+    }
+    
+    /**
+     * 这个方法才是真正的关闭执行池哦 
+     * 在所有客户端退出的时候一定要调用这个方法来释放线程资源
+     */
+    public void reallyStopExecutor()
+    {
+    	this.executorService.shutdown();
+    }
+
 }

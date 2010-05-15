@@ -43,16 +43,16 @@ public class ThreadTimer implements FetionTimer
 	/**
 	 * 任务列表
 	 */
-	private HashMap<String , TimerTask> taskTable;
+	protected HashMap<String , TimerTask> taskTable;
 	/**
 	 * 定时器
 	 */
-	private Timer timer;
+	protected Timer timer;
 	
 	/**
 	 * LOGGER
 	 */
-	private static Logger logger = Logger.getLogger(ThreadTimer.class); 
+	protected static Logger logger = Logger.getLogger(ThreadTimer.class); 
 	
 	/**
 	 * 构造函数
@@ -87,7 +87,7 @@ public class ThreadTimer implements FetionTimer
     {
     	this.timer.schedule(task, delay, period);
     	this.taskTable.put(name, task);
-    	logger.debug("Scheduled timer task:"+name);
+    	logger.debug("Scheduled timer task:"+name+"|"+task.getClass().getName());
     }
 
 	/* (non-Javadoc)
@@ -97,6 +97,7 @@ public class ThreadTimer implements FetionTimer
     public void startTimer()
     {
     	this.timer = new Timer();
+    	logger.debug("ThreadTimer started...");
     }
 
 	/* (non-Javadoc)
@@ -107,5 +108,6 @@ public class ThreadTimer implements FetionTimer
     {
     	this.timer.cancel();
     	this.taskTable.clear();
+    	logger.debug("ThreadTimer stopped...");
     }
 }

@@ -17,53 +17,51 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.sipc
- * File     : SipcRecipt.java
+ * Package  : net.solosky.maplefetion.util
+ * File     : SharedTimer.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-17
+ * Created  : 2010-5-15
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.sipc;
+package net.solosky.maplefetion.util;
 
+import java.util.Timer;
 
 /**
-*
-*	SIP收据
-*
-*  这个是对Notify的回复
-*
-* @author solosky <solosky772@qq.com> 
-*/
-public class SipcReceipt extends SipcOutMessage
+ *
+ * 共享的定时器，可以在多个飞信实例之间共享
+ *
+ * @author solosky <solosky772@qq.com>
+ */
+public class SharedTimer extends ThreadTimer
 {
-	/**
-	 * 回复状态代码
-	 */
-	private int statusCode;
-	
-	/**
-	 * 回复状态说明
-	 */
-	private String statusMessage;
-	
-	/**
-	 * SIP收据
-	 * @param statusCode		回复状态代码
-	 * @param statusMessage		回复状态说明
-	 */
-	public SipcReceipt(int statusCode, String statusMessage)
-	{
-		this.statusCode = statusCode;
-		this.statusMessage = statusMessage;
-	}
-	
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.sipc.SipcMessage#toHeadLine()
+     * @see net.solosky.maplefetion.util.ThreadTimer#startTimer()
      */
     @Override
-    protected String toHeadLine()
+    public synchronized void startTimer()
     {
-    	return SipcMessage.SIP_VERSION+" "+Integer.toString(this.statusCode)+' '+this.statusMessage;
+    	if(this.timer==null) {
+    		this.timer = new Timer();
+    	}
     }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.util.ThreadTimer#stopTimer()
+     */
+    @Override
+    public synchronized void stopTimer()
+    {
+	    //这里不停止这个计时器,什么也不做
+    }
+    
+    /**
+     * 这个才是真正的关闭定时器
+     */
+    public void reallyStopTimer()
+    {
+    	super.stopTimer();
+    }
+
 }

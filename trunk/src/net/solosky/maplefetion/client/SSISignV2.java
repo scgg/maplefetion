@@ -134,6 +134,16 @@ public class SSISignV2 implements SSISign
 	        	state = LoginState.SSI_VERIFY_FAIL;
 	        	break;
 	        	
+	        case 404:
+	        	logger.debug("SSISginIn: User not found..");
+	        	state = LoginState.SSI_ACCOUNT_NOT_FOUND;
+	        	break;
+	        	
+	        case 503:
+	        	logger.debug("SSIServer overload...");
+	        	state = LoginState.SSI_CONNECT_FAIL;
+	        	break;
+	        	
 	        case 200:
 	        	logger.debug("SSISignIn: sign in success.");
 	        	state = LoginState.SSI_SIGN_IN_SUCCESS;
@@ -154,6 +164,10 @@ public class SSISignV2 implements SSISign
 	        	
 	        	logger.debug("SSISignIn: ssic = "+ssic);
 	        	this.user.setSsic(ssic);
+	        	break;
+	        	
+	        	default:
+	        		state = LoginState.OHTER_ERROR;
 	        }
         } catch (NumberFormatException e) {
         	state = LoginState.OHTER_ERROR;

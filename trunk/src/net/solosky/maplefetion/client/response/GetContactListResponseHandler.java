@@ -73,33 +73,48 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     	Element contacts = result.getChild("contacts");
     	
     	//分组列表
-    	List list = contacts.getChild("buddy-lists").getChildren();
-    	Iterator it = list.iterator();
-    	while(it.hasNext()) {
-    		Element e = (Element) it.next();
-    		store.addCord(new Cord(Integer.parseInt(e.getAttributeValue("id")), e.getAttributeValue("name")));
+    	Element buddyLists = contacts.getChild("buddy-lists");
+    	if(buddyLists!=null) {
+        	List list = contacts.getChild("buddy-lists").getChildren();
+        	Iterator it = list.iterator();
+        	while(it.hasNext()) {
+        		Element e = (Element) it.next();
+        		store.addCord(new Cord(Integer.parseInt(e.getAttributeValue("id")), e.getAttributeValue("name")));
+        	}
+    	}else {
+    		logger.debug("No buddy-lists defined in the contact list.");
     	}
     	
+    	
     	//飞信好友列表
-    	list = contacts.getChild("buddies").getChildren();
-    	it = list.iterator();
-    	while(it.hasNext()) {
-    		Element e = (Element) it.next();
-    		Buddy b = new FetionBuddy();
-    		BeanHelper.toBean(FetionBuddy.class, b, e);
-    		store.addBuddy(b);
+    	Element buddies = contacts.getChild("buddies");
+    	if(buddies!=null) {
+    		List list = buddies.getChildren();
+    		Iterator it = list.iterator();
+        	while(it.hasNext()) {
+        		Element e = (Element) it.next();
+        		Buddy b = new FetionBuddy();
+        		BeanHelper.toBean(FetionBuddy.class, b, e);
+        		store.addBuddy(b);
+        	}
+    	}else {
+    		logger.debug("No fetion buddies defined in the contact list..");
     	}
     	
     	// 飞信手机好友列表
-    	list = contacts.getChild("mobile-buddies").getChildren();
-    	it = list.iterator();
-    	while(it.hasNext()) {
-    		Element e = (Element) it.next();
-    		Buddy b = new MobileBuddy();
-    		BeanHelper.toBean(MobileBuddy.class, b, e);
-    		store.addBuddy(b);
+    	Element mobileBuddies = contacts.getChild("mobile-buddies");
+    	if(mobileBuddies!=null) {
+        	List list = mobileBuddies.getChildren();
+        	Iterator it = list.iterator();
+        	while(it.hasNext()) {
+        		Element e = (Element) it.next();
+        		Buddy b = new MobileBuddy();
+        		BeanHelper.toBean(MobileBuddy.class, b, e);
+        		store.addBuddy(b);
+        	}
+    	}else {
+    		logger.debug("No mobile buddies defined in the contact list..");
     	}
-    	
     	//TODO 处理allowList...
     }
     

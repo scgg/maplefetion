@@ -39,7 +39,7 @@ import org.apache.log4j.ConsoleAppender;
 import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
-import org.apache.log4j.SimpleLayout;
+import org.apache.log4j.PatternLayout;
 import org.apache.log4j.xml.DOMConfigurator;
 
 /**
@@ -51,13 +51,20 @@ import org.apache.log4j.xml.DOMConfigurator;
 public class FetionConfig
 {
 	private static Properties prop;
+	private static boolean initialized;
 	
-	static {
-		loadDefaultConfig();
-		loadUserConfig();
-		configLog4j();
+	/**
+	 * 初始化，强制初始化
+	 */
+	public synchronized static void init()
+	{
+		if(!initialized) {
+			loadDefaultConfig();
+			loadUserConfig();
+			configLog4j();
+			initialized = true;
+		}
 	}
-	
 	
 	/**
 	 * 返回配置属性
@@ -244,7 +251,7 @@ public class FetionConfig
 	{
 		ConsoleAppender appender = new ConsoleAppender();
 		appender.setName("console");
-		appender.setLayout(new SimpleLayout());
+		appender.setLayout(new PatternLayout("[%d{HH:mm:ss}][%-5p]: %m%n"));
 		appender.setWriter(new OutputStreamWriter(System.out));
 		appender.activateOptions();
 		return appender;
@@ -259,7 +266,7 @@ public class FetionConfig
 		DailyRollingFileAppender appender = new DailyRollingFileAppender();
 		appender.setDatePattern("'.'yyyy-MM-dd");
 		appender.setAppend(true);
-		appender.setLayout(new SimpleLayout());
+		appender.setLayout(new PatternLayout("[%d{HH:mm:ss}][%-5p]: %m%n"));
 		appender.setFile(getString("log.system.dir")+getString("log.system.file"));
 		appender.setName("file");
 		appender.activateOptions();

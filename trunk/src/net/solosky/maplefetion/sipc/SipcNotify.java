@@ -44,7 +44,7 @@ public class SipcNotify extends SipcInMessage
 	 * 按RFC来说这里应该是一个标准的URI，形如sip:1234@fetion.com.cn 但服务返回的只有1234。
 	 */
 	private int sid;
-	
+
 	/**
 	 * 构造函数
 	 * @param method		请求方法
@@ -91,6 +91,15 @@ public class SipcNotify extends SipcInMessage
 	
 	public String toString()
 	{
-		return "[SIPNotify: m="+this.getMethod()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getLength()+"]";
+		return "[SIPNotify: M="+this.getMethod()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getLength()+"]";
 	}
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.sipc.SipcMessage#toHeadLine()
+     */
+    @Override
+    protected String toHeadLine()
+    {
+	    return this.method+" "+Integer.toString(this.sid)+" "+SipcMessage.SIP_VERSION;
+    }
 }

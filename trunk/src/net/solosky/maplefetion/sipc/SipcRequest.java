@@ -25,10 +25,7 @@
  */
 package net.solosky.maplefetion.sipc;
 
-import java.util.Iterator;
-
 import net.solosky.maplefetion.client.ResponseHandler;
-import net.solosky.maplefetion.util.ConvertHelper;
 
 /**
 *
@@ -104,33 +101,6 @@ public class SipcRequest extends SipcOutMessage
     {
     	this.responseHandler = responseHandler;
     }
-    
-    
-
-
-	/**
-	 * 转化为可以发送的字符串序列
-	 * @return			可发送的字符串序列
-	 */
-	public String toSendString()
-	{
-		StringBuffer buffer = new StringBuffer();
-		buffer.append(this.method+' '+this.domain+' '+SipcMessage.SIP_VERSION+"\r\n");
-		Iterator<SipcHeader> it = this.getHeaders().iterator();
-		while(it.hasNext()) {
-			buffer.append(it.next().toSendString());
-		}
-		if(this.body!=null) {
-			int len =ConvertHelper.string2Byte(body.toSendString()).length;
-			if(len>0)
-				buffer.append("L: "+len+"\r\n");
-		}
-		buffer.append("\r\n");
-		if(this.body!=null)
-			buffer.append(body.toSendString());
-		
-		return buffer.toString();
-	}
     
     /**
 	 * 设置存活时间
@@ -215,6 +185,15 @@ public class SipcRequest extends SipcOutMessage
 				", Q="+this.getHeader(SipcHeader.SEQUENCE).getValue()+
 				", L="+(this.getBody()!=null? this.getBody().getLength():0)+"]";
 	}
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.sipc.SipcMessage#toHeadLine()
+     */
+    @Override
+    protected String toHeadLine()
+    {
+	    return this.method+' '+this.domain+' '+SipcMessage.SIP_VERSION;
+    }
 
 	
 }
