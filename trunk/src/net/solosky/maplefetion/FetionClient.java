@@ -35,7 +35,9 @@ import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
+import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
+import net.solosky.maplefetion.client.RegistrationException;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dialog.ActionFuture;
 import net.solosky.maplefetion.client.dialog.ActionListener;
@@ -232,6 +234,7 @@ public class FetionClient implements FetionContext
     {
     	FetionConfig.init();
     	
+    	this.state           = ClientState.LOGOUT;
     	this.user            = user;
     	this.transferFactory = transferFactory;
     	this.store           = fetionStore;
@@ -241,6 +244,7 @@ public class FetionClient implements FetionContext
 		this.proxyFactory    = new ChatDialogProxyFactory(this);
 		this.timer           = timer;
 		this.executor        = executor;
+		
 		
     }
 	
@@ -310,6 +314,15 @@ public class FetionClient implements FetionContext
     	return notifyListener;
     }
     
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.FetionContext#getLoginWaiter()
+     */
+    @Override
+    public ObjectWaiter<LoginState> getLoginWaiter()
+    {
+	    return this.loginWaiter;
+    }
+    
     /**
      * 设置登录监听器
      * @param loginListener
@@ -333,7 +346,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void enableGroup(boolean enabled)
 	{
-		FetionConfig.setBoolean("fetion.group.enabled", enabled);
+		FetionConfig.setBoolean("fetion.group.enable", enabled);
 	}
 
 	
@@ -379,14 +392,6 @@ public class FetionClient implements FetionContext
     public synchronized void updateState(ClientState state)
     {
     	this.state = state;
-    	if(this.state==ClientState.CONNECTION_ERROR  ||
-    			this.state==ClientState.DISCONNECTED ||
-    			this.state==ClientState.OTHER_LOGIN  ||
-    			this.state==ClientState.LOGIN_ERROR  ||
-    			this.state==ClientState.SYSTEM_ERROR ) {
-    		//this.dialogFactory.closeAllDialog();
-    		this.dispose();
-    	}
     	if(this.notifyListener!=null)
     		this.notifyListener.clientStateChanged(state);
     }
@@ -404,25 +409,44 @@ public class FetionClient implements FetionContext
      */
     public void handleException(FetionException exception)
     {
-    	//记录错误信息
-    	logger.fatal("client internal error.", exception);
+    	
+    	//根据不同的异常进行不同的处理
+    	if(exception instanceof TransferException) {				//网络错误
+    		logger.fatal("Connection error. Please try to login again after several time.");
+    		this.updateState(ClientState.CONNECTION_ERROR);
+    	}else if(exception instanceof RegistrationException) {	//注册异常
+    		RegistrationException re = (RegistrationException) exception;
+    		if(re.getRegistrationType()==RegistrationException.DEREGISTERED) {
+    			logger.fatal("You have logined by other client.");
+    			this.updateState(ClientState.OTHER_LOGIN);		//用户其他地方登陆
+    		}else if(re.getRegistrationType()==RegistrationException.DISCONNECTED) {
+    			logger.fatal("Server closed connecction. Please try to login again after several time.");
+    			this.updateState(ClientState.DISCONNECTED);		//服务器关闭了连接
+    		}else {
+    			logger.fatal("Unkown registration exception", exception);
+    		}
+		}else if(exception instanceof SystemException){		//系统错误
+			logger.fatal("System error. Please email crush report or log to the author and wait for bug fix, thanks.", exception);
+			this.updateState(ClientState.SYSTEM_ERROR);
+			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
+    	}else if(exception instanceof LoginException){		//登录错误
+    		logger.fatal("Login error. state="+((LoginException)exception).getState().name());
+    		this.updateState(ClientState.LOGIN_ERROR);
+    	}else {
+    		logger.fatal("Unkown error. Please email crush report or log below to the author and wait for bug fix, thanks.", exception);
+    		this.updateState(ClientState.SYSTEM_ERROR);			//其他错误
+    		CrushBuilder.handleCrushReport(exception);
+    	}
+
+    	//尝试关闭所有的对话框，对话框应该判断当前客户端状态然后决定是否进行某些操作
     	try {
 	        this.dialogFactory.closeAllDialog();
         } catch (FetionException e) {
         	logger.warn("Close All Dialog error.", e);
         }
         
+        //最后才能释放系统资源，因为关闭对话可以使用到了系统资源
     	this.dispose();
-    	
-    	if(exception instanceof TransferException) {		//网络错误
-    		this.updateState(ClientState.CONNECTION_ERROR);
-    	}else if(exception instanceof SystemException){	//系统错误
-    		this.updateState(ClientState.SYSTEM_ERROR);
-    		CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
-    	}else {
-    		this.updateState(ClientState.SYSTEM_ERROR);		//其他错误
-    		CrushBuilder.handleCrushReport(exception);
-    	}
     }
 
     
@@ -768,6 +792,18 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
+	 * 批量获取获取好友的详细信息
+	 * 注意：如果一次请求的获取好友的详细信息过多，这个方法可能不能完全的返回好友的详细信息，其他结果则通过BN通知返回
+	 * 建议一次最多不要获取超过10个好友信息，如果超出10个，建议循环请求
+	 * @param buddy		飞信好友列表，只能是飞信好友
+	 * @param listener
+	 */
+	public void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionListener listener)
+	{
+		this.dialogFactory.getServerDialog().getContactsInfo(buddyList, listener);
+	}
+	
+	/**
 	 * 创建新的好友分组
 	 * @param title		分组名称
 	 * @param listener
@@ -797,14 +833,4 @@ public class FetionClient implements FetionContext
 	{
 		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
 	}
-
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#getLoginWaiter()
-     */
-    @Override
-    public ObjectWaiter<LoginState> getLoginWaiter()
-    {
-	    return this.loginWaiter;
-    }
 }

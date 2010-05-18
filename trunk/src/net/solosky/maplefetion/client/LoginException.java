@@ -17,45 +17,38 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.util
- * File     : FetionTimer.java
+ * Package  : net.solosky.maplefetion.client
+ * File     : LoginException.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-5-10
+ * Created  : 2010-5-17
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.util;
+package net.solosky.maplefetion.client;
 
-import java.util.TimerTask;
+import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.LoginState;
 
 /**
  *
- * 飞信定时器接口
- * 多个飞信客户端可以共享一个定时器来提高效率
+ * 登录异常，在登录失败时抛出
  *
  * @author solosky <solosky772@qq.com>
  */
-public interface FetionTimer
+public class LoginException extends FetionException
 {
-	/**
-	 * 计划一个任务
-	 * @param task		任务对象
-	 * @param delay		在多少时间后开始执行
-	 * @param period	执行的周期是多少
-	 */
-	public void scheduleTask(TimerTask task, long delay, long period);
+    private static final long serialVersionUID = 1L;
+    private LoginState state;
+    
+    public LoginException(LoginState state)
+    {
+    	this.state = state;
+    }
+    
+    public LoginState getState()
+    {
+    	return this.state;
+    }
+    
+    
 	
-	/**
-	 * 移除已经取消的任务
-	 */
-	public void clearCanceledTask();
-	
-	/**
-	 * 启动计时器
-	 */
-	public void startTimer();
-	
-	/**
-	 * 停止计数器
-	 */
-	public void stopTimer();
 }

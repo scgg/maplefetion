@@ -25,7 +25,6 @@
  */
 package net.solosky.maplefetion.util;
 
-import java.util.HashMap;
 import java.util.Timer;
 import java.util.TimerTask;
 
@@ -41,10 +40,6 @@ import org.apache.log4j.Logger;
 public class ThreadTimer implements FetionTimer
 {
 	/**
-	 * 任务列表
-	 */
-	protected HashMap<String , TimerTask> taskTable;
-	/**
 	 * 定时器
 	 */
 	protected Timer timer;
@@ -59,35 +54,16 @@ public class ThreadTimer implements FetionTimer
 	 */
 	public ThreadTimer()
 	{
-		this.taskTable = new HashMap<String, TimerTask>();
 	}
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.util.FetionTimer#cancelTask(java.lang.String)
-     */
-    @Override
-    public void cancelTask(String name)
-    {
-    	TimerTask task = this.taskTable.get(name);
-    	if(task!=null) {
-    		task.cancel();
-    		taskTable.remove(name);
-    		timer.purge();
-    		logger.debug("Canceled timer task:"+name);
-    	}else {
-    		throw new IllegalArgumentException("Cannot find timer task named "+name);
-    	}
-    }
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.util.FetionTimer#scheduleTask(java.lang.String, java.util.TimerTask, long, long)
      */
     @Override
-    public void scheduleTask(String name, TimerTask task, long delay,
-            long period)
+    public void scheduleTask(TimerTask task, long delay,long period)
     {
     	this.timer.schedule(task, delay, period);
-    	this.taskTable.put(name, task);
-    	logger.debug("Scheduled timer task:"+name+"|"+task.getClass().getName());
+    	logger.debug("Scheduled timer task: "+task.getClass().getName());
     }
 
 	/* (non-Javadoc)
@@ -96,7 +72,7 @@ public class ThreadTimer implements FetionTimer
     @Override
     public void startTimer()
     {
-    	this.timer = new Timer();
+    	this.timer = new Timer("MapleFetionTimer");
     	logger.debug("ThreadTimer started...");
     }
 
@@ -107,7 +83,16 @@ public class ThreadTimer implements FetionTimer
     public void stopTimer()
     {
     	this.timer.cancel();
-    	this.taskTable.clear();
     	logger.debug("ThreadTimer stopped...");
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.util.FetionTimer#clearCanceledTask()
+     */
+    @Override
+    public void clearCanceledTask()
+    {
+    	this.timer.purge();
+    	logger.debug("Clear canceledTask..");
     }
 }

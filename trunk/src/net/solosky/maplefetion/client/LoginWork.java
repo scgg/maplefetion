@@ -26,12 +26,15 @@
 package net.solosky.maplefetion.client;
 
 
+import java.util.ArrayList;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.LoginState;
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.StoreVersion;
@@ -114,7 +117,7 @@ public class LoginWork implements Runnable
 			this.SSISign()  &&  			//SSI登录
 			this.openServerDialog() && 		//服务器连接并验证
 			this.getContactsInfo()) {		//获取联系人列表和信息
-			boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enabled");
+			boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enable");
 			if(groupEnabled) {	//启用了群
 				if( this.getGroupsInfo() &&	 	//获取群信息
 					this.openGroupDialogs()) {	//建立群会话
@@ -134,7 +137,7 @@ public class LoginWork implements Runnable
     	try {
     		this.login();
     	}catch(Throwable e) {
-    		logger.fatal("Unkown login error..",e);
+    		logger.fatal("Unkown login error..", e);
     		this.updateLoginState(LoginState.OHTER_ERROR);
     		CrushBuilder.handleCrushReport(e);
     	}
@@ -241,7 +244,7 @@ public class LoginWork implements Runnable
     		logger.debug("PersonalVersion: server="+userVersion.getPersonalVersion()+
     				", local="+storeVersion.getPersonalVersion());
     		if(storeVersion.getPersonalVersion()!=userVersion.getPersonalVersion()) {
-    			logger.debug("PersonalVersions were not exactly match, now getting personal details...");
+    			logger.debug("PersonalVersions were not exactly matches, now getting personal details...");
     			
     			//清除存储对象
     			future.clear();
@@ -254,7 +257,7 @@ public class LoginWork implements Runnable
     		logger.debug("ContactVersion: server="+userVersion.getContactVersion()+
     				", local="+storeVersion.getContactVersion());
     		if(storeVersion.getContactVersion()!=userVersion.getContactVersion()) {
-    			logger.debug("ContactVersions were not exactly match, now getting contact details...");
+    			logger.debug("ContactVersions were not exactly matches, now getting contact details...");
     			
     	        //获取联系人列表
     	        future.clear();
@@ -263,9 +266,18 @@ public class LoginWork implements Runnable
     	        dialog.getContactList(listener);
     	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
     	        
-    	        //获取联系人详细信息
+    	        //获取联系人详细信息， 这里只有飞信好友才能获取消息信息
+    	        ArrayList<FetionBuddy> list = new ArrayList<FetionBuddy>();
+    	        Iterator<Buddy> it = this.context.getFetionStore().getBuddyList().iterator();
+    	        while(it.hasNext()) {
+    	        	Buddy b = it.next();
+    	        	if(b instanceof FetionBuddy) {
+    	        		list.add((FetionBuddy)b);
+    	        	}
+    	        }
+    	        
     	        future.clear();
-    	        dialog.getContactsInfo(listener);
+    	        dialog.getContactsInfo(list, listener);
     	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
     	        
        	        storeVersion.setContactVersion(userVersion.getContactVersion());
@@ -378,7 +390,7 @@ public class LoginWork implements Runnable
     		this.context.getLoginListener().loginStateChanged(state);
     	
     	if(state.getValue()>0x400) {	//大于400都是登录出错
-    		this.context.updateState(ClientState.LOGIN_ERROR);
+    		this.context.handleException(new LoginException(state));
     		this.context.getLoginWaiter().objectArrive(state);
     	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.context.updateState(ClientState.ONLINE);

@@ -97,6 +97,11 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	private MessageFactory messageFactory;
 	
 	/**
+	 * 保持在线的定时任务
+	 */
+	private TimerTask keepAliveTask;
+	
+	/**
 	 * 日志记录
 	 */
 	private static Logger logger = Logger.getLogger(ServerDialog.class);
@@ -127,7 +132,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     public void closeDialog()
     {
     	//不需要发送任何离开消息，直接关闭对话框即可
-    	this.context.getFetionTimer().cancelTask("ServerDialogKeepAlive-"+this.context.getFetionUser().getUserId());
+    	this.keepAliveTask.cancel();
+    	this.context.getFetionTimer().clearCanceledTask();
     	
     	//停止处理链
     	try {
@@ -157,8 +163,9 @@ public class ServerDialog extends Dialog implements ExceptionHandler
         	this.buildProcessorChain();
     		
     		//注册定时任务
+        	this.keepAliveTask = new ServerKeepLiveTask();
         	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
-    		this.context.getFetionTimer().scheduleTask("ServerDialogKeepAlive-"+this.context.getFetionUser().getUserId(), new ServerKeepLiveTask(), keepInterval, keepInterval);
+    		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
     		
     		//设置对话框状态为打开状态
     		this.setState(DialogState.OPENED);
@@ -179,7 +186,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new ServerMessageDispatcher(context, this, this));						//消息分发服务
 		if(FetionConfig.getBoolean("log.sipc.enable"))
-			this.processorChain.addLast(new MessageLogger("ServerDialog"));									//日志记录
+			this.processorChain.addLast(new MessageLogger("ServerDialog-"+this.context.getFetionUser().getUserId()));									//日志记录
 		this.processorChain.addLast(new TransferService(this.context));															//传输服务
 		this.processorChain.addLast(new SipcParser());															//信令解析器
 		this.processorChain.addLast(this.context.getTransferFactory().createDefaultTransfer());				//信令传输对象
@@ -201,14 +208,14 @@ public class ServerDialog extends Dialog implements ExceptionHandler
             	logger.warn("closeProcessorChain failed.", fe);
             }
             if( this.context.getState()==ClientState.ONLINE ) {
-                logger.fatal("ServerDialog fatal error, close the client, please try to login again.", e);
+                logger.fatal("ServerDialog fatal error, close the client, please try to login again.");
             	this.context.handleException(e);
             }
     	}else if(this.context.getState()==ClientState.LOGGING){
-    		logger.fatal("ServerDialog login error, close the client...", e);
+    		logger.fatal("ServerDialog login error, close the client...");
     		this.context.handleException(e);
     	}else if(e instanceof SystemException) {
-    		logger.fatal("ServerDialog system error", e);
+    		logger.fatal("ServerDialog system error");
     		this.context.handleException(e);
     	}else {
     		logger.warn("ServerDialog exception, it may not fatal error, ignore it.", e);
@@ -294,10 +301,10 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 获取联系人详细信息
 	 * @return
 	 */
-	public void getContactsInfo(ActionListener listener) throws TransferException, RequestTimeoutException, InterruptedException, IllegalResponseException, ParseException
+	public void getContactsInfo(Collection<FetionBuddy> buddyList, ActionListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.getMessageFactory().createGetContactsInfoRequest(context.getFetionStore().getBuddyList());
+		SipcRequest request = this.getMessageFactory().createGetContactsInfoRequest(buddyList);
 		request.setResponseHandler(new GetContactsInfoResponseHander(context, this, listener));
 		this.process(request);
 	}

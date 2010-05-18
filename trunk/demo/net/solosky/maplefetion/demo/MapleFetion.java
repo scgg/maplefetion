@@ -104,6 +104,11 @@ public class MapleFetion implements LoginListener, NotifyListener
 	 * 群序号到群地址的映射
 	 */
 	private Hashtable<String, String> groupmap;
+	
+	/**
+	 * 是否启动了读取命令线程的标志
+	 */
+	private boolean isConsoleReadTheadStarted;
 	 
 	 /**
 	  * 默认构造函数
@@ -118,6 +123,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		this.buddymap = new Hashtable<String, String>();
 		this.groupmap = new Hashtable<String, String>();
+		this.isConsoleReadTheadStarted = false;
 	}
 	
 	
@@ -927,6 +933,9 @@ public class MapleFetion implements LoginListener, NotifyListener
 	     */
 	    public void loginSuccess()
 	    {
+	    	if(this.isConsoleReadTheadStarted)
+	    		return;
+
 	    	Runnable r = new Runnable() {
 	    		public void run()
 	    		{
@@ -945,7 +954,10 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    		}
 	    	};
 	    	
-	    	new Thread(r).start();
+	    	Thread t = new Thread(r);
+	    	t.setName("MapleFetionConsoleReaderThead");
+	    	t.start();
+	    	this.isConsoleReadTheadStarted = true;
 	    }
 	 
     /**
@@ -1244,12 +1256,17 @@ public class MapleFetion implements LoginListener, NotifyListener
         case OTHER_LOGIN:
         	println("你已经从其他客户端登录。");
         	println("30秒之后重新登录..");
-        	try {
-	            Thread.sleep(30000);
-	            println("重新登录...");
-	            client.login();
-            } catch (InterruptedException e) {
-            }
+        	//新建一个线程等待登录，不能在这个回调函数里做同步操作
+        	new Thread(new Runnable() {
+        		public void run() {
+        			try {
+	                    Thread.sleep(30000);
+                    } catch (InterruptedException e) {
+                    	System.out.println("重新登录等待过程被中断");
+                    }
+                    client.login();
+        		}
+        	}).start();
 	        break;
         case CONNECTION_ERROR:
         	println("客户端连接异常");

@@ -25,8 +25,6 @@
  */
 package net.solosky.maplefetion.util;
 
-import org.apache.log4j.Logger;
-
 import net.solosky.maplefetion.bean.Relation;
 
 

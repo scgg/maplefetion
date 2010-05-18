@@ -28,7 +28,6 @@ package net.solosky.maplefetion.client.dialog;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TimerTask;
-import java.util.UUID;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
@@ -70,11 +69,10 @@ public class DialogFactory
 	private ArrayList<GroupDialog> groupDialogList;
 	
 	/**
-	 * 检查超时的定时任务名字
+	 * 定时空闲对话框检查任务
 	 */
-	private String checkTaskName;
-
-
+	private TimerTask idleDialogCheckTask;
+	
 	/**
 	 * LOGGER
 	 */
@@ -90,10 +88,9 @@ public class DialogFactory
 		this.context = client;
 		this.chatDialogList = new ArrayList<ChatDialog>();
 		this.groupDialogList = new ArrayList<GroupDialog>();
-		this.checkTaskName = "IdleChatDialogCheckTask-"+UUID.randomUUID().toString();
+		this.idleDialogCheckTask = new IdleDialogCheckTask();
 
-		this.context.getFetionTimer().scheduleTask(this.checkTaskName,
-						new IdleDialogCheckTask() , 0,
+		this.context.getFetionTimer().scheduleTask(this.idleDialogCheckTask, 0 ,
 		                FetionConfig.getInteger("fetion.dialog.check-idle-interval") * 1000);
 	}
 
@@ -284,7 +281,8 @@ public class DialogFactory
 			cit.next().closeDialog();
 		}
 		
-		this.serverDialog.closeDialog();
+		if(this.serverDialog!=null)
+			this.serverDialog.closeDialog();
 	}
 	
 	
@@ -294,7 +292,8 @@ public class DialogFactory
 	 */
 	public void closeFactory()
 	{
-		this.context.getFetionTimer().cancelTask(this.checkTaskName);
+		this.idleDialogCheckTask.cancel();
+		this.context.getFetionTimer().clearCanceledTask();
 	}
 
 	/**

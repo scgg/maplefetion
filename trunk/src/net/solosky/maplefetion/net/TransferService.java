@@ -29,8 +29,6 @@ import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.TimerTask;
-import java.util.UUID;
-import java.util.concurrent.LinkedBlockingQueue;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
@@ -64,7 +62,7 @@ public class TransferService extends AbstractProcessor
 	/**
 	 * 主要用操作定时任务
 	 */
-	private String timerTaskName;
+	private TimerTask sipcTimeoutCheckTask;
 	
 	/**
 	 * 日志记录
@@ -78,9 +76,6 @@ public class TransferService extends AbstractProcessor
 	{
 		this.requestQueue = new LinkedList<SipcRequest>();
 		this.context = context;
-		this.timerTaskName = "SipMessageTimeOutCheckTask-"+
-							this.context.getFetionUser().getUserId()
-							+"-"+UUID.randomUUID().toString();
 	}
 
 	/**
@@ -145,7 +140,8 @@ public class TransferService extends AbstractProcessor
     public void stopProcessor() throws FetionException
     {
     	//停止超时检查定时任务
-    	this.context.getFetionTimer().cancelTask(this.timerTaskName);
+    	this.sipcTimeoutCheckTask.cancel();
+    	this.context.getFetionTimer().clearCanceledTask();
     	//通知当前发送队列中的请求都超时
     	synchronized (requestQueue) {
     		Iterator<SipcRequest> it = this.requestQueue.iterator();
@@ -165,9 +161,9 @@ public class TransferService extends AbstractProcessor
     @Override
     public void startProcessor() throws FetionException
     {
+    	this.sipcTimeoutCheckTask = new SipMessageTimeOutCheckTask();
 	    this.context.getFetionTimer().scheduleTask(
-	    						this.timerTaskName,
-	    						new SipMessageTimeOutCheckTask(), 50*1000, 60*1000);
+	    						this.sipcTimeoutCheckTask, 50*1000, 60*1000);
     }
 
 

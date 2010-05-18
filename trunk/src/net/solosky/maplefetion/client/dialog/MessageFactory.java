@@ -202,17 +202,16 @@ public class MessageFactory
      * @param buddyList
      * @return
      */
-    public SipcRequest createGetContactsInfoRequest(Collection<Buddy> buddyList)
+    public SipcRequest createGetContactsInfoRequest(Collection<FetionBuddy> buddyList)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	
     	StringBuffer buffer = new StringBuffer();
-    	Iterator<Buddy> it = buddyList.iterator();
+    	Iterator<FetionBuddy> it = buddyList.iterator();
     	String contactTemplate = "<contact uri=\"{uri}\" />";
     	while(it.hasNext()){
-    		Buddy b = it.next();
-    		if(b instanceof FetionBuddy)
-    			buffer.append(contactTemplate.replace("{uri}", b.getUri()));
+    		FetionBuddy b = it.next();
+    		buffer.append(contactTemplate.replace("{uri}", b.getUri()));
     	}
     	String body = MessageTemplate.TMPL_GET_CONTACTS_INFO;
     	body = body.replace("{contactList}", buffer.toString());
