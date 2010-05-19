@@ -37,9 +37,11 @@ import java.util.Collection;
 import java.util.Hashtable;
 import java.util.Iterator;
 
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.LoginListener;
+import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyListener;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.BuddyExtend;
@@ -60,13 +62,9 @@ import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogState;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
-import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
-import net.solosky.maplefetion.store.SimpleFetionStore;
-import net.solosky.maplefetion.LoginState;
-import net.solosky.maplefetion.ClientState;
 
 /**
  * 这个是MapleFetion的演示程序，也提供了一个完整的命令行下的飞信

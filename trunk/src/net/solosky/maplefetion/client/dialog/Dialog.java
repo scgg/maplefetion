@@ -60,7 +60,7 @@ public abstract class Dialog
 	/**
 	 * 对话框状态
 	 */
-	protected volatile DialogState state;
+	private DialogState state;
 	
 	/**
 	 * 对话框监听器
@@ -136,16 +136,14 @@ public abstract class Dialog
 	 * 异步模式打开对话框
 	 * @param listener
 	 */
-	public synchronized void openDialog(final ActionListener listener)
+	public void openDialog(final ActionListener listener)
 	{
 		
 		Runnable r = new Runnable() {
 			public void run() {
 				try {
-					synchronized (this) {
-						  openDialog();
-			              listener.actionFinished(ActionStatus.ACTION_OK);
-						}
+					  openDialog();
+		              listener.actionFinished(ActionStatus.ACTION_OK);
 	                } catch (TransferException e) {
 	                	listener.actionFinished(ActionStatus.IO_ERROR);
 	                } catch (RequestTimeoutException e) {
@@ -153,6 +151,21 @@ public abstract class Dialog
 	                } catch (DialogException e) {
 		                listener.actionFinished(ActionStatus.OTHER_ERROR);
 	                }
+			}
+		};
+		this.context.getFetionExecutor().submitTask(r);
+	}
+	
+	
+	/**
+	 * 异步模式关闭对话框
+	 */
+	public void closeDialog(final ActionListener listener)
+	{
+		Runnable r = new Runnable() {
+			public void run() {
+				closeDialog();
+				listener.actionFinished(ActionStatus.ACTION_OK);
 			}
 		};
 		this.context.getFetionExecutor().submitTask(r);
@@ -169,7 +182,7 @@ public abstract class Dialog
      * 返回对话框状态
      * @return
      */
-    public synchronized DialogState getState()
+    public DialogState getState()
     {
     	return this.state;
     }

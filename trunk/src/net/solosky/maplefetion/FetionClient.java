@@ -348,8 +348,25 @@ public class FetionClient implements FetionContext
 	{
 		FetionConfig.setBoolean("fetion.group.enable", enabled);
 	}
-
 	
+	/**
+	 * 设置飞信执行池
+     * @param executor the executor to set
+     */
+    public void setFetionExecutor(FetionExecutor executor)
+    {
+    	this.executor = executor;
+    }
+
+	/**
+	 * 设置飞信定时器
+     * @param timer the timer to set
+     */
+    public void setFetionTimer(FetionTimer timer)
+    {
+    	this.timer = timer;
+    }
+
 
 	/**
      * @return the proxyFactory
@@ -399,7 +416,7 @@ public class FetionClient implements FetionContext
     /* (non-Javadoc)
      * @see net.solosky.maplefetion.FetionContext#getStatus()
      */
-    public synchronized ClientState getState()
+    public ClientState getState()
     {
     	return this.state;
     }
@@ -474,23 +491,18 @@ public class FetionClient implements FetionContext
     public void logout()
     {
     	if(this.state==ClientState.ONLINE) {
-        	Runnable r = new Runnable(){
-    			public void run(){
-    				try {
-                        dialogFactory.closeAllDialog();
-                        dialogFactory.closeFactory();
-                        transferFactory.closeFactory();
-                        timer.stopTimer();
-                    	updateState(ClientState.LOGOUT);
-                    } catch (FetionException e) {
-                    	logger.warn("logout error.", e);
-                    }catch(Throwable t) {
-                    	logger.warn("logout error ", t);
-                    }
-    			}
-    		};
-    		this.executor.submitTask(r);
-    		this.executor.stopExecutor();
+    		try {
+                dialogFactory.closeAllDialog();
+                dialogFactory.closeFactory();
+                transferFactory.closeFactory();
+                timer.stopTimer();
+                this.executor.stopExecutor();
+            	updateState(ClientState.LOGOUT);
+            } catch (FetionException e) {
+            	logger.warn("logout error.", e);
+            }catch(Throwable t) {
+            	logger.warn("logout error ", t);
+            }
     	}
     }
 

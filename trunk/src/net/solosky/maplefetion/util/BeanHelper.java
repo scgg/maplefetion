@@ -61,7 +61,7 @@ public class BeanHelper
 	{
 		BeanXMLMapper mapper = MAPPER_CACHE.get(beanClass.getName());
 		if(mapper==null) {
-			InputStream in = ClassLoader.getSystemResourceAsStream("resources/"+beanClass.getSimpleName()+".map.xml");
+			InputStream in = BeanHelper.class.getResourceAsStream("/resources/"+beanClass.getSimpleName()+".map.xml");
     		try {
     			mapper = new BeanXMLMapper(beanClass);
     	        mapper.loadMapXML(in);

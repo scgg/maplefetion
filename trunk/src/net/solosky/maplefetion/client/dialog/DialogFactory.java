@@ -100,10 +100,14 @@ public class DialogFactory
 	 * @param user
 	 *            登录用户对象
 	 */
-	public synchronized ServerDialog createServerDialog()
+	public ServerDialog createServerDialog()
 	{
-		this.serverDialog = new ServerDialog(context);
-		return this.serverDialog;
+		if(this.serverDialog==null) {
+			this.serverDialog = new ServerDialog(context);
+			return this.serverDialog;
+		}else {
+			throw new IllegalStateException("ServerDialog arealy created...");
+		}
 	}
 
 	/**
@@ -206,7 +210,7 @@ public class DialogFactory
 	 * @return			聊天对话
 	 * @throws DialogException
 	 */
-	public ChatDialog getChatDialog(Buddy buddy) throws DialogException
+	public synchronized ChatDialog getChatDialog(Buddy buddy) throws DialogException
 	{
 		ChatDialog dialog = this.findChatDialog(buddy);
 		if(dialog!=null && dialog.getState()!=DialogState.CLOSED) {
@@ -243,7 +247,7 @@ public class DialogFactory
 	 * 
 	 * @return
 	 */
-	public synchronized ServerDialog getServerDialog()
+	public ServerDialog getServerDialog()
 	{
 		return this.serverDialog;
 	}
@@ -274,15 +278,19 @@ public class DialogFactory
 		Iterator<GroupDialog> git = this.groupDialogList.iterator();
 		while(git.hasNext()) {
 			git.next().closeDialog();
+			git.remove();
 		}
 		
 		Iterator<ChatDialog> cit = this.chatDialogList.iterator();
 		while(cit.hasNext()) {
 			cit.next().closeDialog();
+			cit.remove();
 		}
 		
-		if(this.serverDialog!=null)
+		if(this.serverDialog!=null) {
 			this.serverDialog.closeDialog();
+			this.serverDialog = null;
+		}
 	}
 	
 	
@@ -295,11 +303,33 @@ public class DialogFactory
 		this.idleDialogCheckTask.cancel();
 		this.context.getFetionTimer().clearCanceledTask();
 	}
-
+	
+	
 	/**
 	 * 为了减少资源占用率，如果用户没有手动关闭对话框，就需要一个计划任务定时检查空闲的对话框， 
 	 * 如果对话框在指定的时间没有收到消息，就关闭这个对话框
-	 * 
+	 */
+	public synchronized void checkIdleDialog()
+	{
+		int maxIdleTime = FetionConfig
+        .getInteger("fetion.dialog.max-idle-time"); // 最大空闲时间,单位秒，用户可以设置
+        Iterator<ChatDialog> it = chatDialogList.iterator();
+        while (it.hasNext()) {
+        	ChatDialog dialog = it.next();
+        	if (dialog.getState()==DialogState.CLOSED) {
+        		it.remove();
+        	}else if (dialog.getActiveTime() + maxIdleTime < (int) (System.currentTimeMillis() / 1000)) {
+        		//异步关闭，如果在这里关闭，因为有了一把DialogFactory的锁，在关闭对话框的过程中会去获得
+        		//相应对话框的锁，这就可能出现死锁，因此这里把关闭操作放在另外一个线程里，就不会出现死锁
+        		dialog.closeDialog(null);		
+                it.remove();
+        	} else {
+        	}
+        }
+	}
+
+	/**
+	 * 定时检查空闲对话框任务，只是对checkIdleDialog()的一个封装
 	 * 
 	 * @author solosky <solosky772@qq.com>
 	 */
@@ -308,19 +338,7 @@ public class DialogFactory
 		@Override
 		public void run()
 		{
-			int maxIdleTime = FetionConfig
-			        .getInteger("fetion.dialog.max-idle-time"); // 最大空闲时间,单位秒，用户可以设置
-			Iterator<ChatDialog> it = chatDialogList.iterator();
-			while (it.hasNext()) {
-				ChatDialog dialog = it.next();
-				if (dialog.getState()==DialogState.CLOSED)
-					it.remove();
-				else if (dialog.getActiveTime() + maxIdleTime < (int) (System.currentTimeMillis() / 1000)) {
-					dialog.closeDialog();
-                    it.remove();
-				} else {
-				}
-			}
+			checkIdleDialog();
 		}
 
 	}

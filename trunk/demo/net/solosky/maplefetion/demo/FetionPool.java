@@ -201,6 +201,8 @@ public class FetionPool
     	FetionPoolListener listener = new FetionPoolListener(client);
     	client.setLoginListener(listener);
     	client.setNotifyListener(listener);
+    	client.setFetionExecutor(this.shareExecutor);
+    	client.setFetionTimer(this.sharedTimer);
     	this.clientList.add(client);
     	println("已经添加 "+mobile +"..");
     }
