@@ -18,7 +18,7 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.net.maplefetion.util
- * File     : MessageLogger.java
+ * File     : SipcLogger.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-1-8
  * License  : Apache License 2.0 
@@ -45,18 +45,18 @@ import org.apache.log4j.Logger;
 *
 * @author solosky <solosky772@qq.com> 
 */
-public class MessageLogger extends AbstractProcessor
+public class SipcLogger extends AbstractProcessor
 {
 	private String name;
 	private BufferedWriter writer;
 	private boolean enableLogging;
 	private boolean isClosed;
-	private static Logger logger = Logger.getLogger(MessageLogger.class);
+	private static Logger logger = Logger.getLogger(SipcLogger.class);
 	/**
 	 * 构造函数
 	 * @param fileName
 	 */
-	public MessageLogger(String name)
+	public SipcLogger(String name)
 	{
 		this.name = name;
 		enableLogging = FetionConfig.getBoolean("log.sipc.enable");
@@ -82,7 +82,7 @@ public class MessageLogger extends AbstractProcessor
 			return;
 		
 		writer.append("\r\n--------------------------------------------\r\n");
-		writer.append("接收信令         "+ (new Date()).toString()+"\r\n");
+		writer.append("Received<<<<<<<<"+ (new Date()).toString()+"\r\n");
 		writer.append("--------------------------------------------\r\n");
 		writer.append(in.toSendString());
 		writer.flush();
@@ -98,7 +98,7 @@ public class MessageLogger extends AbstractProcessor
 		if(!enableLogging || writer==null)
 			return;
 		writer.append("\r\n--------------------------------------------\r\n");
-		writer.append("发送信令         "+ (new Date()).toString()+"\r\n");
+		writer.append("Send>>>>>>>>>>>>"+ (new Date()).toString()+"\r\n");
 		writer.append("--------------------------------------------\r\n");
 		writer.append(out.toSendString());
 		writer.flush();
@@ -131,9 +131,9 @@ public class MessageLogger extends AbstractProcessor
 	 * @param name
 	 * @return
 	 */
-	public static MessageLogger create(String name)
+	public static SipcLogger create(String name)
 	{
-		return new MessageLogger(name);
+		return new SipcLogger(name);
 	}
 	/* (non-Javadoc)
      * @see net.solosky.net.maplefetion.chain.Processor#getProcessorName()
@@ -141,7 +141,7 @@ public class MessageLogger extends AbstractProcessor
     @Override
     public String getProcessorName()
     {
-	    return "MessageLogger";
+	    return "SipcLogger";
     }
 
 	/* (non-Javadoc)

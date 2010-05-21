@@ -43,7 +43,7 @@ public class SharedTimer extends ThreadTimer
     public synchronized void startTimer()
     {
     	if(this.timer==null) {
-    		this.timer = new Timer();
+    		this.timer = new Timer("MapleFetionSharedTimer");
     	}
     }
 

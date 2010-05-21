@@ -68,7 +68,7 @@ public class ParseHelper
 
 	public static Relation parseRelation(String r) throws ParseException 
 	{
-		return Relation.parseRelation(r);
+		return Relation.valueOf(Integer.parseInt(r));
 	}
 	
 	public static String toRelation(Relation r)

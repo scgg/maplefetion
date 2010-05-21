@@ -74,7 +74,7 @@ public class TcpTransfer extends AbstractTransfer
 	/**
 	 * 关闭标志
 	 */
-	private volatile boolean closeFlag;
+	private volatile boolean userCloseFlag;
 
 	/**
 	 * 构造函数
@@ -83,17 +83,20 @@ public class TcpTransfer extends AbstractTransfer
 	public TcpTransfer(Port port) throws TransferException
 	{
 		try {
-			logger.debug("Connecting to "+port.toString()+"....");
+			
 			socket = new Socket();
+			
+			logger.debug("Connecting to "+port.toString()+"....");
 			socket.connect(new InetSocketAddress(port.getAddress(), port.getPort()));
 			logger.debug("Connected to "+port.toString()+".");
+			
 			reader = socket.getInputStream();
 	        writer = socket.getOutputStream();
         } catch (IOException e) {
         	logger.warn("Cannot connect to "+port.toString()+"!!!!");
         	throw new TransferException(e);
         }
-		closeFlag = false;
+		userCloseFlag = false;
 	}
 
 	@Override
@@ -104,36 +107,50 @@ public class TcpTransfer extends AbstractTransfer
 			public void run()
 			{
 				try {
-					logger.debug("Socket ready for read: "+ socket);
+					logger.debug("Socket ready for read.. "+ socket);
 					logger.debug("Local port:"+socket.getLocalSocketAddress().toString());
+					
+					//初始化缓冲区和一些变量
 					byte[] buff = new byte[1024];
 					int len   = 0; 
-					while(!closeFlag) {
+					
+					//循环读取数据，直到遇到流的末尾，或者用户主动关闭连接
+					//注意这里不能在stopTransfer里只改变关闭标志而不关闭流，否则会在reader.read()方法阻塞掉，即是中断线程也没用
+					//线程在阻塞读取数据时是不能中断的，只能强制关闭流，阻塞的reader.read()方法就会立即抛出IO异常，就可以结束读线程
+					while(true) {
 						len = reader.read(buff, 0, buff.length);
-						bytesRecived(buff, 0, len);
+						//这里还需要判断是否读取到流的末尾，否则会进入死循环，通常返回-1表示流的结尾
+						//如果读取到结尾，表明是服务器主动关闭了连接，抛出这个异常，通知上层做资源清理工作
+						if(len==-1)	{
+							logger.debug("Connection closed by server.."+socket);
+							raiseException(new TransferException("Connection closed by server. "+socket));
+							break;
+						}else {
+							bytesRecived(buff, 0, len);
+						}
 					}
 				} catch (IOException e) {
-					if(!closeFlag) {
+					//当发生IO异常时可能是网络出现问题，也可能是用户关闭了连接，这里需要判断下
+					if(!userCloseFlag) {
+						logger.warn("Connection error.. "+socket);
 						raiseException(new TransferException(e));
 					}else {
-						logger.debug("Connection closed by user:"+socket);
+						logger.debug("Connection closed by user.."+socket);
 					}
-					
-					return;
 				}
 				
 				
-				//程序执行到这里，表明流已经读取完毕，可能是服务器主动关闭了连接，
-				//在关闭连接之前，服务器会发送一个Registration通知
-				//所以在这里，也把流关闭，并设置关闭标志
-				try {
-	                stopTransfer();
-	                logger.debug("Connection closed by server:"+socket);
-                } catch (TransferException e) {
-                	logger.warn("Close connection error.", e);
-                }
-                
-                raiseException(new TransferException("Connection Closed by Server."));
+				//程序执行到这里，表明流已经读取完毕，可能是服务器主动关闭了连接，或者用户关闭了连接
+				//如果是服务器关闭了连接，这里就需要关闭流，如果是用户关闭了流，就什么也不做，因为在stopTranfer方法中就已经关闭了
+				if(!userCloseFlag) {
+					userCloseFlag = true;
+    				try {
+	                    writer.close();
+	                    reader.close();
+                    } catch (IOException e) {
+                    	logger.warn("Close socket stream failed.. "+socket, e);
+                    }
+				}
 			}
 		};
 
@@ -147,13 +164,14 @@ public class TcpTransfer extends AbstractTransfer
 	@Override
 	public void stopTransfer() throws TransferException
 	{
-		if(!this.closeFlag) {
-    		this.closeFlag = true;
+		//这里设置一个关闭标志，并关闭流，读线程就会抛出IO异常，然后判断关闭标志结束线程
+		if(!this.userCloseFlag) {
+    		this.userCloseFlag = true;
     		try {
-    			this.reader.close();
-    			this.writer.close();
+	            this.writer.close();
+	            this.reader.close();
             } catch (IOException e) {
-            	throw new TransferException(e);
+            	logger.warn("Close socket stream failed.."+socket , e);
             }
 		}
 	}
@@ -161,7 +179,7 @@ public class TcpTransfer extends AbstractTransfer
 	@Override
 	public String getTransferName()
 	{
-		return "TCPTransfer-" + socket.getInetAddress().getHostAddress();
+		return "TCPTransfer-" + socket;
 	}
 	
 	

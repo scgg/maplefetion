@@ -71,10 +71,9 @@ import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.store.FetionStore;
-import net.solosky.maplefetion.util.MessageLogger;
-import net.solosky.maplefetion.util.SipcParser;
-import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.ResponseFuture;
+import net.solosky.maplefetion.util.SipcLogger;
+import net.solosky.maplefetion.util.SipcParser;
 
 import org.apache.log4j.Logger;
 
@@ -186,7 +185,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new ServerMessageDispatcher(context, this, this));						//消息分发服务
 		if(FetionConfig.getBoolean("log.sipc.enable"))
-			this.processorChain.addLast(new MessageLogger("ServerDialog-"+this.context.getFetionUser().getUserId()));									//日志记录
+			this.processorChain.addLast(new SipcLogger("ServerDialog-"+this.context.getFetionUser().getUserId()));									//日志记录
 		this.processorChain.addLast(new TransferService(this.context));															//传输服务
 		this.processorChain.addLast(new SipcParser());															//信令解析器
 		this.processorChain.addLast(this.context.getTransferFactory().createDefaultTransfer());				//信令传输对象

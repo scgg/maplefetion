@@ -27,6 +27,7 @@ package net.solosky.maplefetion.client.dialog;
 
 import java.util.TimerTask;
 
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
@@ -83,11 +84,12 @@ public class GroupDialog extends Dialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
      */
     @Override
-    public synchronized void closeDialog()
+    public void closeDialog()
     {
     	try {
-    		if(!this.context.getDialogFactory().getServerDialog().getProcessorChain().isChainClosed())
+    		if(this.context.getState()==ClientState.ONLINE) {
     			this.bye();
+    		}
         } catch (Exception e) {
         	Logger.getLogger(GroupDialog.class).warn("closeGroupDialog failed.",e);
         }
@@ -99,14 +101,21 @@ public class GroupDialog extends Dialog
      * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
      */
     @Override
-    public synchronized void openDialog() throws TransferException, DialogException, RequestTimeoutException
+    public void openDialog() throws TransferException, DialogException, RequestTimeoutException
     {
+    	
+    	if(this.getState()!=DialogState.CREATED) {
+    		return;
+    	}
+    	
     	try {
+    		this.setState(DialogState.OPENNING);
     		this.invite();
     		this.ack();
     		this.setPresence();
     		this.subscribeNotify();
     		this.context.getFetionTimer().scheduleTask(this.keepLiveTask, 0, 3*60*1000);
+    		this.setState(DialogState.OPENED);
         }catch (TransferException te) {        	//传输异常，直接抛出
         	throw te;
         }catch (DialogException de) {			//对话框异常，直接抛出
@@ -209,7 +218,10 @@ public class GroupDialog extends Dialog
     {
     	SipcRequest request = this.getMessageFactory().createLogoutRequest(this.group.getUri());
     	this.helper.set(request);
+    	ResponseFuture future = ResponseFuture.wrap(request);
     	this.process(request);
+    	SipcResponse response = future.waitResponse();
+    	assertStatus(response.getStatusCode(), SipcStatus.ACTION_OK);
     }
     
 	/**
@@ -264,6 +276,7 @@ public class GroupDialog extends Dialog
      */
     public void sendChatMessage(Message message, ActionListener listener)
     {
+    	this.ensureOpened();
     	SipcRequest request = this.getMessageFactory().createSendGroupChatMessageRequest(this.group.getUri(), message.toString());
     	request = this.helper.set(request);
     	request.setResponseHandler(new DefaultResponseHandler(listener));

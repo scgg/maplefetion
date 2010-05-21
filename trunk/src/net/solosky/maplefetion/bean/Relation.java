@@ -40,23 +40,38 @@ public enum Relation {
 	STRANGER(3),
 	BANNED(4);
 	
-	
+	/**
+	 * 好友关系对应的值
+	 */
 	private int value;
 	
+	/**
+	 * 以关系构造枚举
+	 * @param value
+	 */
 	Relation(int value)
 	{
 		this.value = value;
 	}
 	
-	public static Relation parseRelation(String s) throws ParseException
+	/**
+	 * 返回关系值
+	 * @return
+	 */
+	public int getValue()
 	{
-		int v = 0;
-		try {
-	        v = Integer.parseInt(s);
-        } catch (NumberFormatException e) {
-        	throw new ParseException("Cannot parse relation value:"+s+", expected 0,1,2,3,4.");
-        }
-		switch(v) {
+		return this.value;
+	}
+	
+	/**
+	 * 从关系值中返回关系枚举
+	 * @param s		关系代表的值
+	 * @return		关系枚举
+	 * @throws ParseException
+	 */
+	public static Relation valueOf(int s) throws ParseException
+	{
+		switch(s) {
     		case 0: 	return UNCONFIRMED;
     		case 1:		return BUDDY;
     		case 2: 	return DECLINED;
