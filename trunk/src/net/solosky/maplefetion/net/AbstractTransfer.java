@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.net;
 
+import java.util.Arrays;
+
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
 import net.solosky.maplefetion.client.SystemException;
@@ -79,18 +81,18 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
         } catch (FetionException e) {
 	       	this.raiseException(e);
         }catch(Throwable t) {
-        	this.raiseException(new SystemException(t, new String(buff)));
+        	this.raiseException(new SystemException(t, new String(Arrays.copyOfRange(buff, offset, offset+len))));
         }
     }
     
     /**
      * 发送数据包
      * @param buff
-     * @param offfet
+     * @param offset
      * @param len
      * @throws TransferException
      */
-    protected abstract void sendBytes(byte[] buff, int offfet, int len) throws TransferException;
+    protected abstract void sendBytes(byte[] buff, int offset, int len) throws TransferException;
     
     /**
      * 发送消息，直接交给子类发送

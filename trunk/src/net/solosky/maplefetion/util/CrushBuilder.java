@@ -148,11 +148,26 @@ public class CrushBuilder
 		buffer.append("\r\n");
 	}
 	
+	/**
+	 * 打印一个对象
+	 * @param o
+	 */
 	public void dumpObject(Object o)
 	{
 		buffer.append("------------------"+o.getClass().getName()+"-----------------------\r\n");
 		buffer.append(o.toString());
 		buffer.append("\r\n");
+	}
+	
+	/**
+	 * 打印一行字符
+	 */
+	public void dumpString(String s)
+	{
+		buffer.append("------------------String Message-----------------------\r\n");
+		buffer.append(s);
+		buffer.append("\r\n");
+	}
 	}
 	
 	/**
@@ -241,6 +256,8 @@ public class CrushBuilder
 				cb.dumpSipcMessage((SipcMessage) o);
 			}else if(o instanceof Throwable) {
 				cb.dumpException((Throwable) o);
+			}else if(o instanceof String) {
+				cb.dumpString((String) o);
 			}else {
 				cb.dumpObject(o);
 			}
