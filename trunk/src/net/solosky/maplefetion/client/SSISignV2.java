@@ -123,6 +123,11 @@ public class SSISignV2 implements SSISign
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
 	        int status = conn.getResponseCode();
 	        switch(status) {
+	        case 401:
+	        	logger.debug("Invalid password...");
+	        	state = LoginState.SSI_AUTH_FAIL;
+	        	break;
+	        	
 	        case 421:
 	        case 422:
 	        	logger.debug("SSISignIn: need verify.");

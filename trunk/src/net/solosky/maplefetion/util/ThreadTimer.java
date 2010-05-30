@@ -72,7 +72,8 @@ public class ThreadTimer implements FetionTimer
     @Override
     public void startTimer()
     {
-    	this.timer = new Timer("MapleFetionTimer");
+    	//防止系统退出时Timer没有退出，把timer设置为Deamon线程
+    	this.timer = new Timer("MapleFetionTimer", true);
     	logger.debug("ThreadTimer started...");
     }
 

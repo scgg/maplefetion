@@ -203,18 +203,23 @@ public class MapleFetion implements LoginListener, NotifyListener
         case SSI_NEED_VERIFY:
         case SSI_VERIFY_FAIL:
         	if(state==LoginState.SSI_NEED_VERIFY)
-        		println("需要验证, 请输入目录下的v.png里面的验证码:");
+        		println("需要验证, 请输入目录下的[verify.png]里面的验证码:");
         	else
         		println("验证码验证失败，刷新验证码中...");
         	
-        	VerifyImage img = client.fetchVerifyImage();
-        	if(img!=null) {
-        		saveImage(img.getImageData());
-        		img.setVerifyCode(readLine());
-        		client.login(img);
-        	}else {
-        		println("刷新验证码失败");
-        	}
+        	//启动一个新线程完成重新登录的操作，让回调函数马上返回，详细信息请参见NotifyListener里面的注释
+        	new Thread(new Runnable() {
+    			public void run() {
+    				VerifyImage img = client.fetchVerifyImage();
+    	        	if(img!=null) {
+    	        		saveImage(img.getImageData());
+    	        		img.setVerifyCode(readLine());
+    	        		client.login(img);
+    	        	}else {
+    	        		println("刷新验证图片失败···");
+    	        	}
+    			}
+    		}).start();
 	        break;
 
         case SSI_CONNECT_FAIL:

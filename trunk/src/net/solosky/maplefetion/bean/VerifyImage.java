@@ -59,6 +59,13 @@ public class VerifyImage
 		this.imageData  = imageData;
 		this.verifyCode = null;
 	}
+	
+	/**
+	 * 默认的构造函数
+	 */
+	public VerifyImage() 
+	{
+	}
 
 	/**
      * @return the verifyCode
@@ -74,6 +81,22 @@ public class VerifyImage
     public void setVerifyCode(String verifyCode)
     {
     	this.verifyCode = verifyCode;
+    }
+
+	/**
+     * @param imageId the imageId to set
+     */
+    public void setImageId(String imageId)
+    {
+    	this.imageId = imageId;
+    }
+
+	/**
+     * @param imageData the imageData to set
+     */
+    public void setImageData(byte[] imageData)
+    {
+    	this.imageData = imageData;
     }
 
 	/**

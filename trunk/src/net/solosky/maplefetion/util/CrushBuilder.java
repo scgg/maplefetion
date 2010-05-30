@@ -168,7 +168,6 @@ public class CrushBuilder
 		buffer.append(s);
 		buffer.append("\r\n");
 	}
-	}
 	
 	/**
 	 * 返回建立的错误报告
