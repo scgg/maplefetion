@@ -31,6 +31,8 @@ import java.util.Iterator;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.event.action.SystemErrorEvent;
+import net.solosky.maplefetion.event.action.TimeoutEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 
@@ -172,9 +174,9 @@ public class ChatDialogProxy implements DialogListener
 
 	/**
      * @param listener
-     * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog(net.solosky.maplefetion.client.dialog.ActionListener)
+     * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog(net.solosky.maplefetion.client.dialog.ActionEventListener)
      */
-    public void openDialog(ActionListener listener)
+    public void openDialog(ActionEventListener listener)
     {
     	if(this.proxyChatDialog.getState()==DialogState.CREATED)
     		this.proxyChatDialog.openDialog(listener);
@@ -186,7 +188,7 @@ public class ChatDialogProxy implements DialogListener
 	 * @param listener		操作监听器
 	 * @throws TransferException
 	 */
-	public void sendChatMessage(Message message, ActionListener listener)
+	public void sendChatMessage(Message message, ActionEventListener listener)
 	{
 		//在判断对话框状态并且决定消息处理过程中，必须要进行同步，因为在判断的过程中对话框状态可能发生了改变
 		//比如在下面的判断中，对话框从正在打开状态变成了打开状态，而刚刚好判断过打开状态，导致了消息放入队列不会发送出去
@@ -201,7 +203,7 @@ public class ChatDialogProxy implements DialogListener
 		                this.proxyChatDialog = this.fetionContext.getDialogFactory().createChatDialog(this.mainBuddy);
 	                } catch (DialogException e) {
 	                	logger.warn("Create ChatDialog failed.", e);
-		                listener.actionFinished(ActionStatus.OTHER_ERROR);
+		               listener.fireEevent(new SystemErrorEvent(e));
 	                }
 		    	}
 			DialogState state = this.proxyChatDialog.getState();
@@ -229,19 +231,19 @@ public class ChatDialogProxy implements DialogListener
      * @return
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(net.solosky.maplefetion.bean.Message)
      */
-    public ActionFuture sendChatMessage(Message message)
+    public ActionEventFuture sendChatMessage(Message message)
     {
-    	ActionFuture future = new ActionFuture();
-	    this.sendChatMessage(message, new FutureActionListener(future));
+    	ActionEventFuture future = new ActionEventFuture();
+	    this.sendChatMessage(message, new FutureActionEventListener(future));
 	    return future;
     }
 
 	/**
      * @param message
      * @param listener
-     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendSMSMessage(net.solosky.maplefetion.bean.Message, net.solosky.maplefetion.client.dialog.ActionListener)
+     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendSMSMessage(net.solosky.maplefetion.bean.Message, net.solosky.maplefetion.client.dialog.ActionEventListener)
      */
-    public void sendSMSMessage(Message message, ActionListener listener)
+    public void sendSMSMessage(Message message, ActionEventListener listener)
     {
 	    proxyChatDialog.sendSMSMessage(message, listener);
     }
@@ -251,7 +253,7 @@ public class ChatDialogProxy implements DialogListener
      * @return
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendSMSMessage(net.solosky.maplefetion.bean.Message)
      */
-    public ActionFuture sendSMSMessage(Message message)
+    public ActionEventFuture sendSMSMessage(Message message)
     {
 	    return proxyChatDialog.sendSMSMessage(message);
     }
@@ -282,9 +284,9 @@ public class ChatDialogProxy implements DialogListener
         while(it.hasNext()) {
         	MessageEntry entry = it.next();
         	if(isSuccess) {
-        		this.proxyChatDialog.sendChatMessage(entry.getMessage(), entry.getActionListener());
+        		this.proxyChatDialog.sendChatMessage(entry.getMessage(), entry.getActionEventListener());
         	}else {
-        		entry.getActionListener().actionFinished(ActionStatus.TIME_OUT);
+        		entry.getActionEventListener().fireEevent(new TimeoutEvent());
         	}
         }
         this.readyMessageList.clear();
@@ -297,9 +299,9 @@ public class ChatDialogProxy implements DialogListener
     private class MessageEntry{
     	
     	private Message message;
-    	private ActionListener listener;
+    	private ActionEventListener listener;
     	
-    	public MessageEntry(Message message, ActionListener listener)
+    	public MessageEntry(Message message, ActionEventListener listener)
     	{
     		this.message  = message;
     		this.listener = listener; 
@@ -309,7 +311,7 @@ public class ChatDialogProxy implements DialogListener
     	{
     		return this.message;
     	}
-    	public ActionListener getActionListener()
+    	public ActionEventListener getActionEventListener()
     	{
     		return this.listener;
     	}

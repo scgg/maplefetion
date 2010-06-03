@@ -28,7 +28,7 @@ package net.solosky.maplefetion.client.dialog;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.client.response.DefaultResponseHandler;
+import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcNotify;
@@ -117,14 +117,14 @@ public class LiveV1ChatDialog extends ChatDialog
 	 * 
 	 * @see
 	 * net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java
-	 * .lang.String, net.solosky.maplefetion.client.dialog.ActionListener)
+	 * .lang.String, net.solosky.maplefetion.client.dialog.ActionEventListener)
 	 */
 	@Override
-	public void sendChatMessage(Message message, ActionListener listener)
+	public void sendChatMessage(Message message, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest req = this.getMessageFactory().createSendChatMessageRequest(this.mainBuddy.getUri(), message);
-		req.setResponseHandler(new DefaultResponseHandler(listener));
+		req.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
 		
 		this.process(req);
 	}

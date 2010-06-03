@@ -25,17 +25,17 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Cord;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -51,34 +51,35 @@ public class SetCordTitleResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public SetCordTitleResponseHandler(FetionContext context, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(context, dialog, listener);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
-    		Element root = XMLHelper.build(response.getBody().toSendString());
-    		Element node = XMLHelper.find(root, "/results/contacts/buddy-lists/buddy-list");
-    		if(node!=null) {
-    			Cord cord = this.context.getFetionStore().getCord(Integer.parseInt(node.getAttributeValue("id")));
-    			if(cord!=null)
-    				BeanHelper.setValue(cord, "title", node.getAttributeValue("name"));
-    		}
-    		
-    		node = XMLHelper.find(root, "/results/contacts");
-    		if(node!=null) {
-    			int version = Integer.parseInt(node.getAttributeValue("version"));
-    			this.context.getFetionStore().getStoreVersion().setContactVersion(version);
-    			this.context.getFetionUser().getStoreVersion().setContactVersion(version);
-    		}
-    		this.context.getFetionStore().flush();
-    	}
-    }
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		Element root = XMLHelper.build(response.getBody().toSendString());
+		Element node = XMLHelper.find(root, "/results/contacts/buddy-lists/buddy-list");
+		if(node!=null) {
+			Cord cord = this.context.getFetionStore().getCord(Integer.parseInt(node.getAttributeValue("id")));
+			if(cord!=null)
+				BeanHelper.setValue(cord, "title", node.getAttributeValue("name"));
+		}
+		
+		node = XMLHelper.find(root, "/results/contacts");
+		if(node!=null) {
+			int version = Integer.parseInt(node.getAttributeValue("version"));
+			this.context.getFetionStore().getStoreVersion().setContactVersion(version);
+			this.context.getFetionUser().getStoreVersion().setContactVersion(version);
+		}
+		this.context.getFetionStore().flush();
+		
+		return super.doActionOK(response);
+	}
 
 }

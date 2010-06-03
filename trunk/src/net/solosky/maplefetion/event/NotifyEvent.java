@@ -17,26 +17,35 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionListener.java
+ * Package  : net.solosky.maplefetion.event
+ * File     : NotifyEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-15
+ * Created  : 2010-5-11
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event;
+
 
 /**
- *	操作监听器,用于异步完成请求
- *  着重于操作的完成
+ *
+ * 通知事件，通常是飞信客户端内部产生的事件
+ * 来通知调用者一些事件，比如好友消息，好友申请等
  *
  * @author solosky <solosky772@qq.com>
  */
-public interface ActionListener
+public abstract class NotifyEvent extends FetionEvent
 {
+	
+	/**
+	 * 默认构造函数
+	 */
+	public NotifyEvent()
+	{
+	}
 
 	/**
-	 * 操作已经完成
-	 * @param status	操作状态
+	 * 返回通知事件类型
+	 * @return
 	 */
-	public void actionFinished(int status);
+	public abstract NotifyEventType getEventType();
 }

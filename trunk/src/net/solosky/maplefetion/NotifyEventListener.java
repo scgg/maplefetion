@@ -16,26 +16,20 @@
  */
 
  /**
- * Project  : MapleFetion
+ * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion
- * File     : NotifyListener.java
+ * File     : NotifyEventListener.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2009-11-23
+ * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion;
 
-import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.Group;
-import net.solosky.maplefetion.bean.Member;
-import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
-import net.solosky.maplefetion.client.dialog.GroupDialog;
+import net.solosky.maplefetion.event.NotifyEvent;
 
 /**
  *
- *	通知监听接口
+ *	通知事件监听接口
  *
  *	收到服务器发回的相关通知便会调用
  *
@@ -51,56 +45,14 @@ import net.solosky.maplefetion.client.dialog.GroupDialog;
  *     传递到客户端对象，之后客户端就会自动退出，并报告NotifyListener客户端状态改变为SYSTEM_ERROR。
  *     所以，请务必保证回调方法捕获所有的异常，防止传递到客户端使客户端退出
  *
- * @author solosky <solosky772@qq.com> 
+ * @author solosky <solosky772@qq.com>
+ *
  */
-public interface NotifyListener
+public interface NotifyEventListener
 {
 	/**
-	 * 收到用户消息
-	 * @param from 		来自好友
-	 * @param message	用户消息字符串
+	 * 触发通知事件
+	 * @param event	通知事件，定义在net.solosky.maplefetion.event.notify.* 中
 	 */
-	public void buddyMessageRecived(Buddy from, Message message, ChatDialog dialog);
-	
-	/**
-	 * 接收到了群消息
-	 * @param group		来自群
-	 * @param from		来自群成员
-	 * @param message	消息内容
-	 * @param dialog	群对话框
-	 */
-	public void groupMessageRecived(Group group, Member from, Message message, GroupDialog dialog);
-	
-	/**
-	 * 收到系统消息
-	 * @param m			系统消息字符串
-	 */
-	public void systemMessageRecived(String m);
-	
-	/**
-	 * 收到添加好友请求
-	 * @param b			待添加的好友
-	 * @param desc		请求者
-	 */
-	public void buddyApplication(Buddy buddy, String desc);
-	
-	/**
-	 * 回复添加对方为好友请求
-	 * @param buddy		好友对象
-	 * @param isAgreed 	对方是否同意添加
-	 */
-	public void buddyConfirmed(Buddy buddy, boolean isAgreed);
-	
-	/**
-	 *  用户状态改变了
-	 * @param 状态改变的好友
-	 */
-	public void presenceChanged(FetionBuddy buddy);
-	
-	
-	/**
-	 * 客户端状态发生了改变
-	 * @param state
-	 */
-	public void clientStateChanged(ClientState state);
+	public void fireEvent(NotifyEvent event);
 }

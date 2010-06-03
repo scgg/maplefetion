@@ -25,15 +25,16 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.User;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -49,22 +50,25 @@ public class GetPersonalInfoResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public GetPersonalInfoResponseHandler(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	Element personal = XMLHelper.build(response.getBody().toSendString()).getChild("personal");
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		Element personal = XMLHelper.build(response.getBody().toSendString()).getChild("personal");
     	User user = this.context.getFetionUser();
     	
     	user.setNickName(personal.getAttributeValue("nickname"));
     	user.setImpresa(personal.getAttributeValue("impresa"));
-    }
+		return super.doActionOK(response);
+	}
+    
 
 }

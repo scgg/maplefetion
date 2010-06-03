@@ -40,9 +40,8 @@ import java.util.Iterator;
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.LoginListener;
 import net.solosky.maplefetion.LoginState;
-import net.solosky.maplefetion.NotifyListener;
+import net.solosky.maplefetion.NotifyEventAdapter;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.Cord;
@@ -55,15 +54,15 @@ import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogState;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
-import net.solosky.maplefetion.net.RequestTimeoutException;
-import net.solosky.maplefetion.net.TransferException;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.store.FetionStore;
 
 /**
@@ -71,7 +70,7 @@ import net.solosky.maplefetion.store.FetionStore;
  * 
  * @author solosky <solosky772@qq.com>
  */
-public class MapleFetion implements LoginListener, NotifyListener
+public class MapleFetion extends NotifyEventAdapter
 {
 	/**
 	 * 飞信客户端
@@ -116,7 +115,7 @@ public class MapleFetion implements LoginListener, NotifyListener
 	
 	public MapleFetion(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, this, this);
+		this.client = new FetionClient(mobile, pass, this);
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		this.buddymap = new Hashtable<String, String>();
@@ -395,27 +394,50 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    public void tel(final String tel, String msg)
 	    {
 	    	long mobile = Long.parseLong(tel);
-	    	int status;
-            try {
-	            status = this.client.sendChatMessage(mobile, Message.wrap(msg));
-	            if(status==ActionStatus.ACTION_OK||status==ActionStatus.SEND_SMS_OK) {
-	        		println("发送消息给用户"+tel+"成功！");
-	        	}else if(status==ActionStatus.INVALD_BUDDY){
-	        		println("发送消息给用户"+tel+"失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
-	        	}else if(status==ActionStatus.NOT_FOUND) {
-	        		println("发送消息给用户"+tel+"失败, 该用户不是移动用户。");
-	        	}else {
-	        		println("发送消息给用户"+tel+"失败, 其他错误，代码"+status);
-	        	}
-            } catch (RequestTimeoutException e) {
-            	println("发送消息给用户"+tel+"失败, 超时");
-            } catch (TransferException e) {
-            	println("发送消息给用户"+tel+"失败, 网络异常");
-            } catch (InterruptedException e) {
-            	println("发送消息给用户"+tel+"失败, 发送被中断");
-            } catch (DialogException e) {
-            	println("发送消息给用户"+tel+"失败, 建立会话失败");
-            }
+	    	this.client.sendChatMessage(mobile, new Message(msg), new ActionEventListener() {
+				public void fireEevent(ActionEvent event)
+				{
+					switch(event.getEventType()){
+						
+						case SUCCESS:
+							SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
+							if(evt.isSendToMobile()){
+								System.out.println("发送成功，消息已通过短信发送到对方手机！");
+							}else if(evt.isSendToClient()){
+								System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+							}
+							break;
+							
+						case FAILURE:
+							FailureEvent evt2 = (FailureEvent) event;
+							switch(evt2.getFailureType()){
+								case BUDDY_NOT_FOUND:
+									System.out.println("发送失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+									break;
+								case USER_NOT_FOUND:
+									System.out.println("发送失败, 该用户不是移动用户。");
+									break;
+								case SIPC_FAIL:
+									System.out.println("发送失败, 服务器返回了错误的信息。");
+									break;
+								case UNKNOWN_FAIL:
+									System.out.println("发送失败, 不知道错在哪里。");
+									default:;
+							}
+							break;
+						 
+						case SYSTEM_ERROR:
+							System.out.println("发送失败, 客户端内部错误。");
+							break;
+						case TIMEOUT:
+							System.out.println("发送失败, 超时");
+							break;
+						case TRANSFER_ERROR:
+							System.out.println("发送失败, 超时");
+							
+					}
+				}
+			});
 	    	
 	    }
 	    
@@ -426,9 +448,10 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		this.client.sendSMSMessage(buddy, Message.wrap(message), new ActionListener(){
-					public void actionFinished(int status){
-						if(status==ActionStatus.SEND_SMS_OK){
+	    		this.client.sendSMSMessage(buddy, Message.wrap(message), new ActionEventListener(){
+					public void fireEevent(ActionEvent event)
+					{
+						if(event.getEventType()==ActionEventType.SUCCESS){
 							println("提示：发送给"+buddy.getDisplayName()+" 的短信发送成功！");
 						}else{
 							println("[系统消息]:你发给 "+buddy.getDisplayName()+" 的短信  "+message+" 发送失败！");
@@ -445,14 +468,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	     */
 	    public void self(String message)
 	    {
-	    	this.client.sendSMSMessage(this.client.getFetionUser(), Message.wrap(message), new ActionListener(){
-                public void actionFinished(int status){
-	                if(status==ActionStatus.SEND_SMS_OK) {
-	                	println("给自己发送短信成功！");
-	                }else {
-	                	println("给自己发送短信失败！");
-	                }
-                }
+	    	this.client.sendSMSMessage(this.client.getFetionUser(), Message.wrap(message), new ActionEventListener(){
+            	public void fireEevent(ActionEvent event)
+				{
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						println("给自己发送短信成功！");
+					}else{
+						println("给自己发送短信失败！");
+					}
+				}
 	    	});
 	    }
 	    
@@ -465,15 +489,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    	if(group!=null) {
 	    		GroupDialog dialog = this.client.getDialogFactory().findGroupDialog(group);
 	    		if(dialog!=null) {
-	    			dialog.sendChatMessage(Message.wrap(message), new ActionListener() {
-	    				public void actionFinished(int status) {
-	    					if(status==ActionStatus.ACTION_OK) {
-	    						println("提示：发送给群 "+group.getName()+" 的消息发送成功！");
-	    	                }else {
-	    	            		println("提示：发送给群 "+group.getName()+" 的消息发送失败！");
-	    					}
-	    				}
-	    			});
+	    			dialog.sendChatMessage(Message.wrap(message), new ActionEventListener() {
+	    				public void fireEevent(ActionEvent event)
+	    				{
+		    				if(event.getEventType()==ActionEventType.SUCCESS){
+		    					println("提示：发送给群 "+group.getName()+" 的消息发送成功！");
+							}else{
+								println("提示：发送给群 "+group.getName()+" 的消息发送失败！");
+							}
+	    			}});
 	    		}
 	    	}
 	    }
@@ -489,14 +513,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    	}else if(buddy instanceof MobileBuddy) {
 	    		printBuddyInfo(buddy);
 	    	}else if(buddy instanceof FetionBuddy) {
-	    		this.client.getBuddyDetail((FetionBuddy)buddy, new ActionListener() {
-	    			public void actionFinished(int status) {
-	    				if(status==ActionStatus.ACTION_OK) {
-	    					printBuddyInfo(buddy);
-	    				}else {
-	    					println("获取好友信息失败~");
-	    				}
-	    			}
+	    		this.client.getBuddyDetail((FetionBuddy)buddy, new ActionEventListener() {
+					public void fireEevent(ActionEvent event)
+					{
+						if(event.getEventType()==ActionEventType.SUCCESS){
+							printBuddyInfo(buddy);
+						}else{
+							println("获取好友信息失败~");
+						}
+					}
 	    		});
 	    	}
 	    }
@@ -536,15 +561,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	User user = this.client.getFetionUser();
 	    	user.setNickName(nickName);
-	    	this.client.setPersonalInfo(new ActionListener() {
-                public void actionFinished(int status)
-                {
-                	if(status==ActionStatus.ACTION_OK) {
-        	    		println("更改昵称成功！");
-        	    	}else {
-        	    		println("更改昵称失败！");
-        	    	}
-                }
+	    	this.client.setPersonalInfo(new ActionEventListener() {
+                public void fireEevent(ActionEvent event)
+				{
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						println("更改昵称成功！");
+					}else{
+						println("更改昵称失败！");
+					}
+				}
 	    	});
 	    }
 	    
@@ -556,14 +581,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	User user = this.client.getFetionUser();
 	    	user.setImpresa(impresa);
-	    	this.client.setPersonalInfo(new ActionListener() {
-                public void actionFinished(int status){
-                	if(status==ActionStatus.ACTION_OK) {
-                		println("更改个性签名成功！");
-        	    	}else {
-        	    		println("更改个性签名失败！");
-        	    	}
-                }
+	    	this.client.setPersonalInfo(new ActionEventListener() {
+                public void fireEevent(ActionEvent event)
+				{
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						println("更改个性签名成功！");
+					}else{
+						println("更改个性签名失败！");
+					}
+				}
 	    	});
 	    }
 	    
@@ -576,14 +602,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		this.client.setBuddyLocalName(buddy, localName, new ActionListener() {
-	    			public void actionFinished(int status){
-	    				if(status==ActionStatus.ACTION_OK) {
-	    					println("更改好友显示姓名成功！");
-	    		    	}else {
-	    		    		println("更改好友显示姓名失败！");
-	    				}
-	    			}
+	    		this.client.setBuddyLocalName(buddy, localName, new ActionEventListener() {
+	    			 public void fireEevent(ActionEvent event)
+	 				{
+	 					if(event.getEventType()==ActionEventType.SUCCESS){
+	 						println("更改好友显示姓名成功！");
+	 					}else{
+	 						println("更改好友显示姓名失败！");
+	 					}
+	 				}
 	    		});
 	    	}else {
 	    		println("找不到这个好友，请检查你的输入！");
@@ -617,14 +644,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    	}
 	    	
 	    	if(buddy!=null) {
-	    		this.client.setBuddyCord(buddy, cordList,  new ActionListener() {
-	    			public void actionFinished(int status){
-	    				if(status==ActionStatus.ACTION_OK) {
-	    					println("更改好友分组成功！");
-	    		    	}else {
-	    		    		println("更改好友分组失败！");
-	    				}
-	    			}
+	    		this.client.setBuddyCord(buddy, cordList,  new ActionEventListener() {
+	    			 public void fireEevent(ActionEvent event)
+		 				{
+		 					if(event.getEventType()==ActionEventType.SUCCESS){
+		 						println("更改好友分组成功！");
+		 					}else{
+		 						println("更改好友分组失败！");
+		 					}
+		 				}
 	    		});
 	    	}else {
 	    		println("找不到这个好友，请检查你的输入！");
@@ -637,17 +665,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	     */
 	    public void newcord(String title)
 	    {
-	    	client.createCord(title, new ActionListener() {
-
-				@Override
-                public void actionFinished(int status)
-                {
-					if(status==ActionStatus.ACTION_OK) {
-                		println("创建新的分组成功！");
-        	    	}else {
-        	    		println("创建新的分组失败！");
-        	    	}
-                }
+	    	client.createCord(title, new ActionEventListener() {
+				public void fireEevent(ActionEvent event)
+ 				{
+ 					if(event.getEventType()==ActionEventType.SUCCESS){
+ 						println("创建新的分组成功！");
+ 					}else{
+ 						println("创建新的分组失败！");
+ 					}
+ 				}
 	    		
 	    	});
 	    }
@@ -661,15 +687,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	Cord cord = this.getCord(cordId);
 	    	if(cord!=null) {
-	    		this.client.setCordTitle(cord, title, new ActionListener() {
-                    public void actionFinished(int status)
-                    {
-                    	if(status==ActionStatus.ACTION_OK) {
-                    		println("设置分组标题成功！");
-            	    	}else {
-            	    		println("设置分组标题失败！");
-            	    	}
-                    }
+	    		this.client.setCordTitle(cord, title, new ActionEventListener() {
+                    public void fireEevent(ActionEvent event)
+     				{
+     					if(event.getEventType()==ActionEventType.SUCCESS){
+     						println("设置分组标题成功！");
+     					}else{
+     						println("设置分组标题失败！");
+     					}
+     				}
 	    		});
 	    	}
 	    }
@@ -687,15 +713,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    			println("分组编号 "+cordId+" 中好友不为空，请移除该组的好友后再尝试删除。");
 	    			return;
 	    		}
-	    		this.client.deleteCord(cord, new ActionListener() {
-                    public void actionFinished(int status)
-                    {
-                    	if(status==ActionStatus.ACTION_OK) {
-                    		println("删除分组成功！");
-            	    	}else {
-            	    		println("删除分组失败！");
-            	    	}
-                    }
+	    		this.client.deleteCord(cord, new ActionEventListener() {
+                    public void fireEevent(ActionEvent event)
+     				{
+     					if(event.getEventType()==ActionEventType.SUCCESS){
+     						println("删除分组成功！");
+     					}else{
+     						println("删除分组失败！");
+     					}
+     				}
 	    		});
 	    	}
 	    }
@@ -706,14 +732,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	     */
 	    public void add(String mobile)
 	    {
-	    	client.addBuddy(Long.parseLong(mobile), new ActionListener() {
-                public void actionFinished(int status){
-                	if(status==ActionStatus.ACTION_OK) {
-                		println("发出添加好友请求成功！请耐性地等待用户回复。");
-        	    	}else {
-        	    		println("发出添加好友请求失败！");
-        	    	}
-                }
+	    	client.addBuddy(Long.parseLong(mobile), new ActionEventListener() {
+                public void fireEevent(ActionEvent event)
+ 				{
+ 					if(event.getEventType()==ActionEventType.SUCCESS){
+ 						println("发出添加好友请求成功！请耐性地等待用户回复。");
+ 					}else{
+ 						println("发出添加好友请求失败！");
+ 					}
+ 				}
 	    		
 	    	});
 	    }
@@ -725,14 +752,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		client.deleteBuddy(buddy, new ActionListener() {
-	    			public void actionFinished(int status) {
-	    				if(status==ActionStatus.ACTION_OK) {
+	    		client.deleteBuddy(buddy, new ActionEventListener() {
+	    			public void fireEevent(ActionEvent event)
+	 				{
+	 					if(event.getEventType()==ActionEventType.SUCCESS){
 	    					println("删除好友成功！");
-	    		    	}else {
-	    		    		println("删除好友失败！");
-	        	    	}
-	    			}
+	 					}else{
+	 						println("删除好友失败！");
+	 					}
+	 				}
 	    		});
 	    	}else {
 	    		println("对不起，好友"+uri+"不存在！");
@@ -746,14 +774,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		this.client.agreedApplication(buddy,  new ActionListener() {
-	    			public void actionFinished(int status) {
-	    				if(status==ActionStatus.ACTION_OK) {
-	    					println("你已经同意"+buddy.getDisplayName()+"的添加你为好友的请求。");
-	        	    	}else {
-	        	    		println("同意对方请求失败！");
-	        	    	}
-	    			}
+	    		this.client.agreedApplication(buddy,  new ActionEventListener() {
+	    			public void fireEevent(ActionEvent event)
+	 				{
+	 					if(event.getEventType()==ActionEventType.SUCCESS){
+	 						println("你已经同意"+buddy.getDisplayName()+"的添加你为好友的请求。");
+	 					}else{
+	 						println("同意对方请求失败！");
+	 					}
+	 				}
 	    		});
 	    	}
 	    }
@@ -767,14 +796,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    {
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy!=null) {
-	    		this.client.declinedApplication(buddy,  new ActionListener() {
-	    			public void actionFinished(int status) {
-	    				if(status==ActionStatus.ACTION_OK) {
-	    		    		println("你已经拒绝"+buddy.getDisplayName()+"的添加你为好友的请求。");
-	        	    	}else {
-	        	    		println("拒绝对方请求失败！");
-	        	    	}
-	    			}
+	    		this.client.declinedApplication(buddy,  new ActionEventListener() {
+	    			public void fireEevent(ActionEvent event)
+	 				{
+	 					if(event.getEventType()==ActionEventType.SUCCESS){
+	 						println("你已经拒绝"+buddy.getDisplayName()+"的添加你为好友的请求。");
+	 					}else{
+	 						println("拒绝对方请求失败！");
+	 					}
+	 				}
 	    		});
 	    	}
 	    }
@@ -821,16 +851,20 @@ public class MapleFetion implements LoginListener, NotifyListener
 	          println("建立对话失败！！");
 	          return;
             }
-	    	proxy.sendChatMessage( Message.wrap(message), new ActionListener(){
-				public void actionFinished(int status){
-					if(status==ActionStatus.ACTION_OK){
-						println("提示："+buddy.getDisplayName()+" 在线，消息已经发送到飞信客户端。");
-					}else if(status==ActionStatus.SEND_SMS_OK){
-						println("提示："+buddy.getDisplayName()+" 不在线，消息已以长短信的方式发送到好友手机。");
-					}else{
-						println("[系统消息]:你发给 "+buddy.getDisplayName()+" 的短信  "+message+" 发送失败！");
-					}
-				}
+	    	proxy.sendChatMessage( Message.wrap(message), new ActionEventListener(){
+				public void fireEevent(ActionEvent event)
+ 				{
+ 					if(event.getEventType()==ActionEventType.SUCCESS){
+						SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
+						if(evt.isSendToMobile()){
+							System.out.println("发送成功，消息已通过短信发送到对方手机！");
+						}else if(evt.isSendToClient()){
+							System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+						}
+ 					}else{
+ 						println("拒绝对方请求失败！");
+ 					}
+ 				}
 			});
 	    }
 	    
@@ -854,14 +888,15 @@ public class MapleFetion implements LoginListener, NotifyListener
 	    		println("未知状态:"+presence);
 	    	}
 	    	if(to!=-1) {
-	    			this.client.setPresence(to, new ActionListener() {
-	    			public void actionFinished(int status) {
-	    				if(status==ActionStatus.ACTION_OK) {
-	    					println("改变状态成功！");
-	    	    		}else {
-	    	    			println("改变状态失败！");
-	    				}
-	    			}
+	    			this.client.setPresence(to, new ActionEventListener() {
+	    			public void fireEevent(ActionEvent event)
+	 				{
+	 					if(event.getEventType()==ActionEventType.SUCCESS){
+	 						println("改变状态成功！");
+	 					}else{
+	 						println("改变状态失败！");
+	 					}
+	 				}
 	    		});
 	    	}
 	    }
@@ -1065,16 +1100,20 @@ public class MapleFetion implements LoginListener, NotifyListener
 			if( line!=null && line.length()>0 ){
 				if(this.activeChatDialog!=null) {
 					final Buddy buddy = this.activeChatDialog.getMainBuddy(); 
-					this.activeChatDialog.sendChatMessage(Message.wrap(line),new ActionListener(){
-						public void actionFinished(int status){
-							if(status==ActionStatus.ACTION_OK){
-								println("提示："+buddy.getDisplayName()+" 在线，消息已经发送到飞信客户端。");
-							}else if(status==ActionStatus.SEND_SMS_OK){
-								println("提示："+buddy.getDisplayName()+" 不在线，消息已以长短信的方式发送到好友手机。");
-							}else{
-								println("[系统消息]:你发给 "+buddy.getDisplayName()+" 的短信  "+line+" 发送失败！");
-							}
-						}
+					this.activeChatDialog.sendChatMessage(Message.wrap(line),new ActionEventListener(){
+						public void fireEevent(ActionEvent event)
+		 				{
+		 					if(event.getEventType()==ActionEventType.SUCCESS){
+								SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
+								if(evt.isSendToMobile()){
+									System.out.println("发送成功，消息已通过短信发送到对方手机！");
+								}else if(evt.isSendToClient()){
+									System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+								}
+		 					}else{
+		 						println("拒绝对方请求失败！");
+		 					}
+		 				}
 					});
 				}else{
 					println("未知命令："+cmd[0]+"，请检查后再输入。如需帮助请输入help。");
@@ -1209,7 +1248,7 @@ public class MapleFetion implements LoginListener, NotifyListener
      */
     @Override
     public void buddyMessageRecived(Buddy from, Message message,
-            ChatDialog dialog)
+            ChatDialogProxy dialog)
     {
     	if(from.getRelation()==Relation.BUDDY)
     		println("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
@@ -1224,7 +1263,7 @@ public class MapleFetion implements LoginListener, NotifyListener
      * @see net.solosky.maplefetion.NotifyListener#presenceChanged(net.solosky.maplefetion.bean.Buddy)
      */
     @Override
-    public void presenceChanged(FetionBuddy b)
+    public void buddyPresenceChanged(FetionBuddy b)
     {
     	if(b.getPresence().getValue()==Presence.ONLINE) {
     		println("[系统通知]:"+b.getDisplayName()+" 上线了。");

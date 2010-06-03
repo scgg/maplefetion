@@ -48,11 +48,18 @@ public interface MutipartyDialog
 	 * 邀请好友
 	 * @param buddy		好友对象
 	 * @param listener 操作监听器
-	 * @throws TransferException 
 	 */
-	public void inviteBuddy(Buddy buddy, ActionListener listener) throws TransferException;
+	public void inviteBuddy(Buddy buddy, ActionEventListener listener);
 	
+	/**
+	 * 用户进入了对话
+	 * @param buddy
+	 */
+	public void buddyEntered(Buddy buddy);
 	
-	public void buddyEntered(String uri);
-	public void buddyLeft(String uri);
+	/**
+	 * 用户离开了对话
+	 * @param buddy
+	 */
+	public void buddyLeft(Buddy buddy);
 }

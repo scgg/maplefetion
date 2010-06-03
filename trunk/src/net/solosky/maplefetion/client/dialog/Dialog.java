@@ -27,6 +27,12 @@ package net.solosky.maplefetion.client.dialog;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.SuccessEvent;
+import net.solosky.maplefetion.event.action.SystemErrorEvent;
+import net.solosky.maplefetion.event.action.TimeoutEvent;
+import net.solosky.maplefetion.event.action.TransferErrorEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
@@ -103,7 +109,7 @@ public abstract class Dialog
 	}
 	
 	/**
-	 * 断言回复状态，如果状态不同就抛出对话框异常
+	 * 断言回复状态，如果状态不同就抛出无效回复异常
 	 * @throws IllegalResponseException 
 	 */
 	public static void assertStatus(int currentStatus, int expectedStatus) throws IllegalResponseException
@@ -112,6 +118,21 @@ public abstract class Dialog
 			throw new IllegalResponseException("Unexpected response status - " +
 					"current = "+Integer.toString(currentStatus)+
 					", expected = "+Integer.toString(expectedStatus));
+		}
+	}
+	
+	/**
+	 * 断言回复事件，如果事件不是指定的事件就抛出无效回复异常
+	 * @param event
+	 * @param type
+	 * @throws IllegalResponseException
+	 */
+	public static void assertActionEvent(ActionEvent event, ActionEventType type) throws IllegalResponseException
+	{
+		if(event.getEventType()!=type) {
+			throw new IllegalResponseException("Unexpected response event - " +
+					"current = "+event+
+					", expected = "+type.name());
 		}
 	}
 	
@@ -136,20 +157,20 @@ public abstract class Dialog
 	 * 异步模式打开对话框
 	 * @param listener
 	 */
-	public void openDialog(final ActionListener listener)
+	public void openDialog(final ActionEventListener listener)
 	{
 		
 		Runnable r = new Runnable() {
 			public void run() {
 				try {
 					  openDialog();
-		              listener.actionFinished(ActionStatus.ACTION_OK);
+		              listener.fireEevent(new SuccessEvent());
 	                } catch (TransferException e) {
-	                	listener.actionFinished(ActionStatus.IO_ERROR);
+	                	 listener.fireEevent(new TransferErrorEvent());
 	                } catch (RequestTimeoutException e) {
-		               listener.actionFinished(ActionStatus.TIME_OUT);
+	                	listener.fireEevent(new TimeoutEvent());
 	                } catch (DialogException e) {
-		                listener.actionFinished(ActionStatus.OTHER_ERROR);
+	                	listener.fireEevent(new SystemErrorEvent(e));
 	                }
 			}
 		};
@@ -160,12 +181,12 @@ public abstract class Dialog
 	/**
 	 * 异步模式关闭对话框
 	 */
-	public void closeDialog(final ActionListener listener)
+	public void closeDialog(final ActionEventListener listener)
 	{
 		Runnable r = new Runnable() {
 			public void run() {
 				closeDialog();
-				listener.actionFinished(ActionStatus.ACTION_OK);
+				listener.fireEevent(new SuccessEvent());
 			}
 		};
 		this.context.getFetionExecutor().submitTask(r);

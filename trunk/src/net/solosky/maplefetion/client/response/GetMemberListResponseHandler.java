@@ -28,17 +28,18 @@ package net.solosky.maplefetion.client.response;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -54,18 +55,19 @@ public class GetMemberListResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public GetMemberListResponseHandler(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	//解析群成员信息
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		//解析群成员信息
     	FetionStore store = this.context.getFetionStore();
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		List groupList = XMLHelper.findAll(root, "/results/groups/*group");
@@ -89,6 +91,7 @@ public class GetMemberListResponseHandler extends AbstractResponseHandler
 				store.addGroupMember(group, member);
 			}
 		}
-    }
+		return super.doActionOK(response);
+	}
 
 }

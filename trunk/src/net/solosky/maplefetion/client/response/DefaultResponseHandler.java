@@ -25,12 +25,9 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.client.ResponseHandler;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
-import net.solosky.maplefetion.sipc.SipcRequest;
-import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.FetionContext;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
+import net.solosky.maplefetion.client.dialog.Dialog;
 
 /**
  * 
@@ -38,51 +35,22 @@ import net.solosky.maplefetion.sipc.SipcResponse;
  * 
  * @author solosky <solosky772@qq.com>
  */
-public class DefaultResponseHandler implements ResponseHandler
+public class DefaultResponseHandler extends AbstractResponseHandler
 {
-	private ActionListener actionListener;
 
-	public DefaultResponseHandler(ActionListener actionListener)
-	{
-		if(actionListener!=null)
-			this.actionListener = actionListener;
-	}
-
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see
-	 * net.solosky.maplefetion.client.ResponseHandler#handle(net.solosky.maplefetion
-	 * .sipc.SipcResponse)
+	/**
+	 * @param context
+	 * @param dialog
+	 * @param listener
 	 */
-	@Override
-	public void handle(SipcResponse response) throws FetionException
+	public DefaultResponseHandler(FetionContext context, Dialog dialog,
+			ActionEventListener listener)
 	{
-		if(actionListener!=null)
-			this.actionListener.actionFinished(response.getStatusCode());
+		super(context, dialog, listener);
 	}
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.ResponseHandler#timeout(net.solosky.maplefetion.sipc.SipcRequest)
-     */
-    @Override
-    public void timeout(SipcRequest request)
-    {
-	    if(this.actionListener!=null)
-	    	this.actionListener.actionFinished(ActionStatus.TIME_OUT);
-	    
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.ResponseHandler#error(net.solosky.maplefetion.sipc.SipcRequest)
-     */
-    @Override
-    public void ioerror(SipcRequest request)
-    {
-    	  if(this.actionListener!=null)
-  	    	this.actionListener.actionFinished(ActionStatus.IO_ERROR);
-    }
-    
-    
-    
+	
+	public DefaultResponseHandler(ActionEventListener listener)
+	{
+		super(null, null, listener);
+	}
 }

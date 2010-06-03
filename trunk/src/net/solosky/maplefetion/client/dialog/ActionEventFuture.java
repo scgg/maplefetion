@@ -18,13 +18,17 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionFuture.java
+ * File     : ActionEventFuture.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-1-11
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.client.dialog;
 
+import net.solosky.maplefetion.client.SystemException;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 
@@ -36,23 +40,19 @@ import net.solosky.maplefetion.net.TransferException;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class ActionFuture
+public class ActionEventFuture
 {
 	//锁
 	private Object lock;
-	//结果
-	private int status;
+	//事件结果
+	private ActionEvent event;
 	//是否已经通知
 	private boolean isNotifyed;
-	//是否超时
-	private boolean isTimeout;
-	//是否有传输异常
-	private boolean isIoError;
 	
 	/**
 	 * 构造函数
 	 */
-	public ActionFuture()
+	public ActionEventFuture()
 	{
 		this.lock = new Object();
 		this.clear();
@@ -65,39 +65,57 @@ public class ActionFuture
 	 * 
 	 * 建议使用这个方法等待操作结果
 	 * 
-	 * @throws InterruptedException 如果等待过程被中断就抛出中断异常
- * @throws TransferException    如果等待过程中出现网络异常就抛出
-	 * @throws ReqeustTimeoutExcetion 如果请求超时会跑出请求超时异常
+	 * @throws InterruptedException 	如果等待过程被中断就抛出中断异常
+	 * @throws TransferException    	如果等待过程中出现网络异常就抛出
+	 * @throws SystemException			如果处理结果的过程中出现未知的异常抛出
+	 * @throws ReqeustTimeoutExcetion 	如果请求超时会跑出请求超时异常
 	 */
-	public int waitStatus() throws RequestTimeoutException, InterruptedException, TransferException
+	public ActionEvent waitActionEvent() throws RequestTimeoutException, InterruptedException, TransferException, SystemException
 	{
-		return this.waitStatus(0);
+		return this.waitActionEvent(0);
 	}
 	/**
 	 * 在指定的时间内等待操作结果，
 	 * 如果在指定的时间操作仍没有完成 或者操作已经发生了超时操作，就抛出RequestTimeoutException
 	 * 
-	 * @throws InterruptedException 如果等待过程被中断就抛出中断异常
-	 * @throws TransferException    如果等待过程中出现网络异常就抛出
-	 * @throws ReqeustTimeoutExcetion 如果请求超时会跑出请求超时异常
+	 * @throws InterruptedException 	如果等待过程被中断就抛出中断异常
+	 * @throws TransferException    	如果等待过程中出现网络异常就抛出
+	 * @throws SystemException 			如果处理结果的过程中出现未知的异常抛出
+	 * @throws ReqeustTimeoutExcetion 	如果请求超时会抛出请求超时异常
 	 */
-	public int waitStatus(long timeout) throws RequestTimeoutException, InterruptedException, TransferException
+	public ActionEvent waitActionEvent(long timeout) throws RequestTimeoutException, InterruptedException, TransferException, SystemException
 	{
 		synchronized (lock) {
 	        //判断是否已经提前通知过了
 			if(this.isNotifyed)
-				return this.status;
+				return this.event;
 			
 			//尝试等待
 	        lock.wait(timeout);
 	        
-             //如果超时或者在等待的时间没有通知，就跑出请求超时异常
-             if(this.isTimeout || !this.isNotifyed) {
+             //如果在等待的时间内没有通知，就抛出请求超时异常
+             if(!this.isNotifyed || this.event==null ) {
             	 throw new RequestTimeoutException();
-             }else if(this.isIoError) {
+             }
+             
+             //如果当前的事件是超时事件，也抛出超时异常
+             if(this.event.getEventType()==ActionEventType.TIMEOUT){
+            	 throw new RequestTimeoutException();
+             }
+             
+             //如果当前事件是传输错误事件，抛出传输异常
+             if(this.event.getEventType()==ActionEventType.TRANSFER_ERROR){
             	 throw new TransferException();
-             }else {}
-            return this.status;
+             }
+             
+             //如果当前事件是系统错误事件，抛出系统错误异常
+             if(this.event.getEventType()==ActionEventType.SYSTEM_ERROR){
+            	 SystemErrorEvent evt = (SystemErrorEvent) this.event;
+            	 throw new SystemException(evt.getCause());
+             }
+             
+             //如果不是上面的任何一种，就直接返回事件
+             return this.event;
         }
 	}
 	
@@ -106,48 +124,23 @@ public class ActionFuture
 	 * 设置操作结果
 	 * @param status
 	 */
-	public void setStatus(int status)
+	public void setActionEvent(ActionEvent event)
 	{
 		synchronized (lock) {
 	        this.isNotifyed = true;
-	        this.status = status;
+	        this.event = event;
 	        this.lock.notifyAll();
         }
 	}
 	
-	/**
-	 * 设置请求超时
-	 */
-	public void setTimeout()
-	{
-		synchronized (lock) {
-	        this.isNotifyed = true;
-	        this.isTimeout = true;
-	        this.lock.notifyAll();
-        }
-	}
-	
-	/**
-	 * 设置传输异常
-	 */
-	public void setIoError()
-	{
-		synchronized (lock) {
-	        this.isNotifyed = true;
-	        this.isIoError = true;
-	        this.lock.notifyAll();
-        }
-	}
 	/**
 	 * 清除等待结果，便于下一次等待
 	 */
 	public void clear()
 	{
 		synchronized (lock) {
-			this.status = 0;
+			this.event      = null;
 	        this.isNotifyed = false;
-	        this.isTimeout  = false;
-	        this.isIoError = false;
         }
 	}
 	

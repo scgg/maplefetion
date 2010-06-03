@@ -35,11 +35,12 @@ import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
+import net.solosky.maplefetion.event.notify.BuddyMessageEvent;
+import net.solosky.maplefetion.event.notify.GroupMessageEvent;
+import net.solosky.maplefetion.event.notify.SystemMessageEvent;
 import net.solosky.maplefetion.sipc.SipcHeader;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcReceipt;
@@ -124,24 +125,10 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    }
 	   
 	    //通知消息监听器
-	    ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(from);
-	    if(chatDialog==null) {
-	    	final ChatDialog dialog = this.context.getDialogFactory().createChatDialog(from);
-	    	final Buddy ffrom = from;
-	    	final Message fmsg = msg;
-	    	dialog.openDialog(new ActionListener() {
-	    		public void actionFinished(int status) {
-	    			if(status==ActionStatus.ACTION_OK) {
-    	    			 dialog.updateActiveTime();
-    	    			 if(context.getNotifyListener()!=null)
-    	    				 context.getNotifyListener().buddyMessageRecived(ffrom, fmsg, dialog);
-    	    		}
-	    		}
-	    	});
-	    }else {
-	    	chatDialog.updateActiveTime();
-	    	if(this.context.getNotifyListener()!=null)
-	    		this.context.getNotifyListener().buddyMessageRecived(from, msg, chatDialog);
+	    ChatDialogProxy chatDialogProxy = this.context.getChatDialogProxyFactoy().create(from);
+	    if(chatDialogProxy!=null && this.context.getNotifyEventListener()!=null) {
+	    	this.context.getNotifyEventListener().fireEvent(new BuddyMessageEvent(from, chatDialogProxy, msg));
+	    	
 	    }
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
     }
@@ -152,8 +139,8 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     private void systemMessageReceived(SipcNotify notify)
     {
     	logger.debug("Recived a system message:"+notify.getBody().toSendString());
-    	if(this.context.getNotifyListener()!=null)
-    		this.context.getNotifyListener().systemMessageRecived(notify.getBody().toSendString());
+    	if(this.context.getNotifyEventListener()!=null)
+    		this.context.getNotifyEventListener().fireEvent(new SystemMessageEvent(notify.getBody().toSendString()));
     }
     
     /**
@@ -172,8 +159,10 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    String body   = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
 	    GroupDialog groupDialog = this.context.getDialogFactory().findGroupDialog(group);
 	    
-	    if(group!=null && member!=null && groupDialog!=null&&this.context.getNotifyListener()!=null) {
-	    	this.context.getNotifyListener().groupMessageRecived(group, member, Message.parse(body), groupDialog);
+	    if(group!=null && member!=null && groupDialog!=null&&this.context.getNotifyEventListener()!=null) {
+	    	this.context.getNotifyEventListener()
+	    	.fireEvent(new GroupMessageEvent(group, member, Message.parse(body), groupDialog));
+	    	
 	    	logger.debug("Received a group message:[ Group="+group.getName()+", from="+member.getDisplayName()+", msg="+body );
 	    }
     }

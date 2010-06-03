@@ -97,7 +97,7 @@ public abstract class ChatDialog extends Dialog
 	 * @param listener		操作监听器
 	 * @throws TransferException
 	 */
-	public abstract void sendChatMessage(Message message, ActionListener listener);
+	public abstract void sendChatMessage(Message message, ActionEventListener listener);
 	
 	
 	/**
@@ -106,10 +106,10 @@ public abstract class ChatDialog extends Dialog
 	 * @return				操作等待对象
 	 * @throws TransferException
 	 */
-	public ActionFuture sendChatMessage(Message message)
+	public ActionEventFuture sendChatMessage(Message message)
 	{
-		ActionFuture future = new ActionFuture();
-		this.sendChatMessage(message, new FutureActionListener(future));
+		ActionEventFuture future = new ActionEventFuture();
+		this.sendChatMessage(message, new FutureActionEventListener(future));
 		return future;
 	}
 
@@ -120,10 +120,10 @@ public abstract class ChatDialog extends Dialog
 	 *            消息正文
 	 * @return 操作等待对象
 	 */
-	public ActionFuture sendSMSMessage(Message message)
+	public ActionEventFuture sendSMSMessage(Message message)
 	{
-		ActionFuture future = new ActionFuture();
-		this.sendSMSMessage(message, new FutureActionListener(future));
+		ActionEventFuture future = new ActionEventFuture();
+		this.sendSMSMessage(message, new FutureActionEventListener(future));
 		return future;
 	}
 
@@ -135,7 +135,7 @@ public abstract class ChatDialog extends Dialog
 	 * @param listener
 	 *            操作监听器
 	 */
-	public void sendSMSMessage(Message message, ActionListener listener)
+	public void sendSMSMessage(Message message, ActionEventListener listener)
 	{
 		this.context.getDialogFactory().getServerDialog().sendSMSMessage(
 		        this.mainBuddy, message, listener);

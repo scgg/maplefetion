@@ -76,7 +76,7 @@ public class BasicChatDialog extends ChatDialog
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionListener)
      */
     @Override
-    public void sendChatMessage(Message message, ActionListener listener)
+    public void sendChatMessage(Message message, ActionEventListener listener)
     {
 	    //给手机在线的人发送消息是通过服务器对话框发送的
     	this.ensureOpened();

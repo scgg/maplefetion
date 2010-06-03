@@ -38,6 +38,8 @@ import net.solosky.maplefetion.chain.ProcessorChain;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.LiveV2MessageDispatcher;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
+import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
+import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.net.Port;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.Transfer;
@@ -221,14 +223,14 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionListener)
+     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionEventListener)
      */
     @Override
-    public void sendChatMessage(Message message, ActionListener listener)
+    public void sendChatMessage(Message message, ActionEventListener listener)
     {
     	 this.ensureOpened();
     	 SipcRequest request = this.messageFactory.createSendChatMessageRequest(this.mainBuddy.getUri(), message);
-  	   	 request.setResponseHandler(new DefaultResponseHandler(listener));
+  	   	 request.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
   	   	 this.process(request);
   	   	 this.updateActiveTime();
     }
@@ -338,13 +340,13 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
      * @throws RequestTimeoutException
      * @throws InterruptedException
      * @throws TransferException 
+     * @throws SystemException 
      */
-    private void invite() throws IllegalResponseException, RequestTimeoutException, InterruptedException, TransferException
+    private void invite() throws IllegalResponseException, RequestTimeoutException, InterruptedException, TransferException, SystemException
     {
-    	ActionFuture future = new ActionFuture();
-    	this.inviteBuddy(this.mainBuddy, new FutureActionListener(future));
-    	int status = future.waitStatus();
-    	assertStatus(status, SipcStatus.ACTION_OK);
+    	ActionEventFuture future = new ActionEventFuture();
+    	this.inviteBuddy(this.mainBuddy, new FutureActionEventListener(future));
+    	assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
     }
     
     /**
@@ -367,10 +369,10 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#inviteBuddy(net.solosky.maplefetion.bean.FetionBuddy, net.solosky.maplefetion.client.dialog.ActionListener)
+     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#inviteBuddy(net.solosky.maplefetion.bean.FetionBuddy, net.solosky.maplefetion.client.dialog.ActionEventListener)
      */
     @Override
-    public void inviteBuddy(Buddy buddy, ActionListener listener) throws TransferException
+    public void inviteBuddy(Buddy buddy, ActionEventListener listener)
     {
 	   SipcRequest request = this.messageFactory.createInvateBuddyRequest(this.mainBuddy.getUri());
 	   request.setResponseHandler(new DefaultResponseHandler(listener));
@@ -388,7 +390,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	 * 		Buddy buddy = client.getFetionStore().getBuddyByUri(uri);
 	 *  	ChatDialog dialog = client.getDialogFactory().createChatDialog(buddy);
 	 *      dialog.openDialog();
-	 *   	dialog.sendChatMessage(msg, actionListener);
+	 *   	dialog.sendChatMessage(msg, ActionEventListener);
 	 *   	//其他操作
 	 *   }catch(TransferException e){
 	 *   	//发生了传输异常
@@ -425,26 +427,23 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#buddyEntered(java.lang.String)
+     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#buddyEntered(net.solosky.maplefetion.bean.Buddy)
      */
     @Override
-    public void buddyEntered(String uri)
+    public void buddyEntered(Buddy buddy)
     {
-    	Buddy buddy = this.context.getFetionStore().getBuddyByUri(uri);
-    	if(buddy!=null) {
-    		this.buddyEnterHelper.buddyEntered(buddy);
-    		this.buddyList.add(buddy);
-    	}
+		this.buddyEnterHelper.buddyEntered(buddy);
+		this.buddyList.add(buddy);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#buddyLeft(java.lang.String)
+     * @see net.solosky.maplefetion.client.dialog.MutipartyDialog#buddyLeft(net.solosky.maplefetion.bean.Buddy)
      */
     @Override
-    public void buddyLeft(String uri)
+    public void buddyLeft(Buddy buddy)
     {
     	//如果是当前对话框的所有者离开，关闭这个对话框
-    	if(uri.equals(this.mainBuddy.getUri())) {
+    	if(buddy.getUri().equals(this.mainBuddy.getUri())) {
     		try {
 	            this.context.getDialogFactory().closeDialog(this);
             } catch (TransferException e) {
@@ -456,7 +455,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     		Iterator<Buddy> it = this.buddyList.iterator();
 	    	while(it.hasNext()) {
 	    		Buddy b = it.next();
-	    		if(b.getUri().endsWith(uri)) {
+	    		if(b.getUri().equals(buddy.getUri())) {
 	    			it.remove();
 	    			break;
 	    		}

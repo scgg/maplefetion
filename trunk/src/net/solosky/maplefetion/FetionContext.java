@@ -26,6 +26,7 @@
 package net.solosky.maplefetion;
 
 import net.solosky.maplefetion.bean.User;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
@@ -47,6 +48,12 @@ public interface FetionContext
 	 * @return
 	 */
 	public abstract DialogFactory getDialogFactory();
+	
+	/**
+	 * 返回聊天对话代理工厂
+	 * @return
+	 */
+	public ChatDialogProxyFactory getChatDialogProxyFactoy();
 
 	/**
 	 * 返回传输工厂
@@ -78,16 +85,10 @@ public interface FetionContext
 	public abstract FetionStore getFetionStore();
 
 	/**
-	 * 返回登录监听器
-	 * @return the loginListener
-	 */
-	public abstract LoginListener getLoginListener();
-
-	/**
 	 * 返回通知监听器
 	 * @return the notifyListener
 	 */
-	public abstract NotifyListener getNotifyListener();
+	public abstract NotifyEventListener getNotifyEventListener();
 
 	/**
 	 * 设置客户端状态

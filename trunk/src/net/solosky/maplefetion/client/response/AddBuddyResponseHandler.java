@@ -25,17 +25,19 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -51,33 +53,40 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
      * @param dialog
      * @param listener
      */
-    public AddBuddyResponseHandler(FetionContext client, Dialog dialog, ActionListener listener)
+    public AddBuddyResponseHandler(FetionContext client, Dialog dialog, ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getStatusCode()==SipcStatus.NO_SUBSCRIPTION) {	//如果返回的是522，表明用户没开通飞信，那就添加手机好友
-			//client.getDialogFactory().getServerDialog().addMobileBuddy(uri, cordId, desc);
-			return;
-		}else if(response.getStatusCode()==SipcStatus.ACTION_OK){		
-    		//用户已经开通飞信,返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
-    		FetionBuddy buddy = new FetionBuddy();
-    		Element root = XMLHelper.build(response.getBody().toSendString());
-    		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
-    		BeanHelper.toBean(FetionBuddy.class, buddy, element);
-    		
-    		this.context.getFetionStore().addBuddy(buddy);
-		}else{
-			logger.warn("Error ocurred when adding Buddy:[response:"+response);
-		}
-    }
-    
-    
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doNoSubscription(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doNoSubscription(SipcResponse response)
+			throws FetionException
+	{
+		//如果返回的是522，表明用户没开通飞信
+		return new FailureEvent(FailureType.USER_NOT_FOUND);
+	}
 
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		//用户已经开通飞信,返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
+		FetionBuddy buddy = new FetionBuddy();
+		Element root = XMLHelper.build(response.getBody().toSendString());
+		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
+		BeanHelper.toBean(FetionBuddy.class, buddy, element);
+		
+		this.context.getFetionStore().addBuddy(buddy);
+		
+		return super.doActionOK(response);
+	}
+    
+	
+    
 }

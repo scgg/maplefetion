@@ -25,29 +25,24 @@
  */
 package net.solosky.maplefetion.demo.robot;
 
-import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.LoginListener;
-import net.solosky.maplefetion.LoginState;
-import net.solosky.maplefetion.NotifyListener;
+import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.Group;
-import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.bean.Presence;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
-import net.solosky.maplefetion.client.dialog.GroupDialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.NotifyEvent;
 
 /**
  *
+ *消息网关
  *
  * @author solosky <solosky772@qq.com>
  */
-public class FetionGateway implements Gateway, LoginListener,NotifyListener
+public class FetionGateway implements Gateway, NotifyEventListener
 {
 
 	private FetionClient client;
@@ -55,7 +50,7 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
 	
 	public FetionGateway(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, this, this);
+		this.client = new FetionClient(mobile, pass, this);
 	}
 	/* (non-Javadoc)
      * @see net.solosky.maplesms.gateway.Gateway#login()
@@ -99,85 +94,30 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
     	this.listener = listener;
     }
     
-    
-    public void buddyApplication(Buddy buddy, String desc)
-    {
-    	//Cord testCord = this.client.getFetionStore().getCord(10);
-    	System.out.println("请求加为好友-"+buddy.getDisplayName()+"-"+desc);
-	    this.client.agreedApplication(buddy, new DefaultActionListener("同意对方添加好友请求-"+buddy.getDisplayName()));
-	    //this.client.setBuddyCord(buddy, testCord, new DefaultActionListener("添加好友至测试组-"+buddy.getDisplayName()));
-    }
-    @Override
-    public void buddyConfirmed(Buddy arg0, boolean arg1)
-    {
-	    
-    }
-    public void buddyMessageRecived(Buddy buddy, Message msg, ChatDialog dialog)
-    {
-	    println(buddy.getDisplayName()+" 说: "+msg.getText());
-	    this.listener.smsRecived(buddy.getUri(), msg.getText(), this);
-	    
-    }
-    public void clientStateChanged(ClientState state)
-    {
-	    if(state!=ClientState.ONLINE&& state!=ClientState.LOGGING&& state!=ClientState.LOGOUT) {
-	    	println("客户端错误，等待10秒后重新登录 - "+state.name());
-	    	try {
-	            Thread.sleep(10*1000);
-            } catch (InterruptedException e) {
-            	println("等待登录的过程被中断。");
-            }
-            client.login();
-	    }
-    }
-    public void groupMessageRecived(Group arg0, Member arg1, Message arg2,
-            GroupDialog arg3)
-    {
-	    
-    }
-    public void presenceChanged(FetionBuddy b)
-    {
-    	if(b.getPresence().getValue()==Presence.ONLINE) {
-    		println(b.getDisplayName()+" 上线了。");
-    	}else if(b.getPresence().getValue()==Presence.OFFLINE){
-    		println(b.getDisplayName()+" 下线了。");
-    	}
-    }
-    public void systemMessageRecived(String arg0)
-    {
-    }
-    
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.LoginListener#loginStateChanged(net.solosky.maplefetion.LoginState)
-     */
-    @Override
-    public void loginStateChanged(LoginState state)
-    {
-    	println(state.name());
-    }
-    
     public void println(String msg)
     {
     	System.out.println("[FetionGateway] "+msg);
     }
     
-    public class DefaultActionListener implements ActionListener{
+    public class DefaultActionListener implements ActionEventListener{
 
     	private String title;
     	
     	public DefaultActionListener(String title) {
     		this.title = title;
     	}
-        @Override
-        public void actionFinished(int status)
-        {
-        	if(status>=200&&status<300) {
-        		println(title+" 【成功】");
-        	}else {
-        		println(title+" 【失败】");
-        	}
-        }
+		/* (non-Javadoc)
+		 * @see net.solosky.maplefetion.client.dialog.ActionEventListener#fireEevent(net.solosky.maplefetion.event.ActionEvent)
+		 */
+		@Override
+		public void fireEevent(ActionEvent event)
+		{
+			if(event.getEventType()==ActionEventType.SUCCESS){
+				println(title+" 【成功】");
+			}else{
+				println(title+" 【失败】");
+			}
+		}
     }
 
 	/* (non-Javadoc)
@@ -188,5 +128,13 @@ public class FetionGateway implements Gateway, LoginListener,NotifyListener
     {
     	return "[Fetion user="+this.client.getFetionUser().getDisplayName()+", uri="+this.client.getFetionUser().getUri()+"]";
     }
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.NotifyEventListener#fireEvent(net.solosky.maplefetion.event.NotifyEvent)
+	 */
+	@Override
+	public void fireEvent(NotifyEvent event)
+	{
+		println(event.toString());
+	}
 
 }

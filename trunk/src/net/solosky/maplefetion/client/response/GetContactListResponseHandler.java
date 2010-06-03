@@ -28,20 +28,21 @@ package net.solosky.maplefetion.client.response;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.MobileBuddy;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -57,18 +58,20 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public GetContactListResponseHandler(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
+
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	FetionStore store = context.getFetionStore();
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		FetionStore store = context.getFetionStore();
     	Element result = XMLHelper.build(response.getBody().toSendString());
     	Element contacts = result.getChild("contacts");
     	
@@ -116,7 +119,8 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     		logger.debug("No mobile buddies defined in the contact list..");
     	}
     	//TODO 处理allowList...
-    }
+		return super.doActionOK(response);
+	}
     
     
 

@@ -57,11 +57,16 @@ import net.solosky.maplefetion.client.response.GetGroupListResponseHandler;
 import net.solosky.maplefetion.client.response.GetGroupsInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
 import net.solosky.maplefetion.client.response.GetPersonalInfoResponseHandler;
+import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.client.response.ServerRegisterResponseHandler;
 import net.solosky.maplefetion.client.response.SetBuddyInfoResponseHandler;
 import net.solosky.maplefetion.client.response.SetCordTitleResponseHandler;
 import net.solosky.maplefetion.client.response.SetPresenceResponseHandler;
 import net.solosky.maplefetion.client.response.UserAuthResponseHandler;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferService;
@@ -247,7 +252,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param presence		登录状态
 	 * @param listener
 	 */
-	public void register(int presence, ActionListener listener)
+	public void register(int presence, ActionEventListener listener)
 	{
 		SipcRequest request = this.getMessageFactory().createServerRegisterRequest(presence, 
 					this.context.getTransferFactory().isMutiConnectionSupported());
@@ -261,7 +266,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param presence		登录状态
 	 * @param listener
 	 */
-	public void userAuth(int presence, ActionListener listener) 
+	public void userAuth(int presence, ActionEventListener listener) 
 	{
 		String nonce = (String) this.session.getAttribute("NONCE");
 		SipcRequest request = this.getMessageFactory().createUserAuthRequest(nonce, presence, 
@@ -276,7 +281,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 获取个人信息
 	 * @param listener 消息监听器
 	 */
-	public void getPersonalInfo(ActionListener listener) 
+	public void getPersonalInfo(ActionEventListener listener) 
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createGetPersonalInfoRequest();
@@ -288,7 +293,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 获取好友列表
 	 * @param listener 消息监听器
 	 */
-	public void getContactList(ActionListener listener)
+	public void getContactList(ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createGetContactListRequest();
@@ -300,7 +305,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 获取联系人详细信息
 	 * @return
 	 */
-	public void getContactsInfo(Collection<FetionBuddy> buddyList, ActionListener listener)
+	public void getContactsInfo(Collection<FetionBuddy> buddyList, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createGetContactsInfoRequest(buddyList);
@@ -312,7 +317,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 订阅异步通知
 	 * @throws Exception 
 	 */
-	public void subscribeBuddyNotify(Collection<Buddy> buddyList, ActionListener listener)
+	public void subscribeBuddyNotify(Collection<Buddy> buddyList, ActionEventListener listener)
 	{
 		this.ensureOpened();
  	   	SipcRequest request = this.getMessageFactory().createSubscribeRequest(buddyList);
@@ -323,7 +328,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	/**
 	 * 获取群列表
 	 */
-	public void getGroupList(ActionListener listener)
+	public void getGroupList(ActionEventListener listener)
 	{
 		this.ensureOpened();
 		FetionStore store = this.context.getFetionStore();
@@ -335,7 +340,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	/**
 	 * 获取群信息
 	 */
-	public void getGroupsInfo(Collection<Group> groupList, ActionListener listener)
+	public void getGroupsInfo(Collection<Group> groupList, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createGetGroupInfoRequest(groupList);
@@ -346,7 +351,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	/**
 	 * 获取群成员列表
 	 */
-	public void getMemberList(Collection<Group> groupList, ActionListener listener)
+	public void getMemberList(Collection<Group> groupList, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createGetMemberListRequest((groupList));
@@ -376,12 +381,12 @@ public class ServerDialog extends Dialog implements ExceptionHandler
         public void run()
         {
         	SipcRequest request = messageFactory.createKeepAliveRequest();
-        	ActionListener listener = new ActionListener()
+        	ActionEventListener listener = new ActionEventListener()
 			{
-				public void actionFinished(int status)
+				public void fireEevent(ActionEvent event)
 				{
-					if(status!=ActionStatus.ACTION_OK) {
-						logger.fatal("ServerDialog keepAlive failed. status="+status);
+					if(event.getEventType()!=ActionEventType.SUCCESS){
+						logger.fatal("ServerDialog keepAlive failed. event="+event);
 						if(context.getState()==ClientState.ONLINE) {
 							context.handleException(new TransferException("Client keepAlive failed."));
 						}
@@ -425,20 +430,25 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @throws TransferException 
 	 * @throws Exception 
 	 */
-	public void addBuddy(final String uri, final int cordId, int promptId, final String desc, final ActionListener listener)
+	public void addBuddy(final String uri, final int cordId, int promptId, final String desc, final ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cordId, desc);
 		
 		//这里需要建立一个新的监听器进行适配，因为返回的结果可能要进行另外一个操作才能确定操作是否完成
-		ActionListener tmpListener = new ActionListener(){
-			public void actionFinished(int status){
-				if(status==ActionStatus.NO_SUBSCRIPTION) {
-					//如果返回的是522，表明用户没开通飞信，那就添加手机好友,不要调用用户定义的回调函数
-	                addMobileBuddy(uri, cordId, desc, listener);
-				}else {
-					//其他情况，直接调用用户的回调函数
-					listener.actionFinished(status);
+		ActionEventListener tmpListener = new ActionEventListener(){
+			public void fireEevent(ActionEvent event){
+				if(event.getEventType()==ActionEventType.FAILURE){
+					FailureEvent evt = (FailureEvent) event;
+					if(evt.getFailureType()==FailureType.USER_NOT_FOUND){
+						//表明用户没开通飞信，那就添加手机好友,不要调用用户定义的回调函数
+						addMobileBuddy(uri, cordId, desc, listener);
+					}else{
+						//其他情况，直接调用用户的回调函数
+						listener.fireEevent(event);
+					}
+				}else{
+					listener.fireEevent(event);
 				}
 			}
 		};
@@ -456,7 +466,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param desc		“我是xx” xx：名字
 	 * @return
 	 */
-	private void addMobileBuddy(String uri, int cordId, String desc, ActionListener listener)
+	private void addMobileBuddy(String uri, int cordId, String desc, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cordId, desc);
@@ -473,11 +483,11 @@ public class ServerDialog extends Dialog implements ExceptionHandler
      * @param listener		操作监听器
      * @throws TransferException 
      */
-    public void sendSMSMessage(Buddy buddy, Message message, ActionListener listener)
+    public void sendSMSMessage(Buddy buddy, Message message, ActionEventListener listener)
     {
     	this.ensureOpened();
     	SipcRequest request  = this.getMessageFactory().createSendSMSRequest(buddy.getUri(), message);
-    	request.setResponseHandler(new DefaultResponseHandler(listener));
+    	request.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
     	this.process(request);
     }
     
@@ -488,11 +498,11 @@ public class ServerDialog extends Dialog implements ExceptionHandler
      * @param listener		操作监听器
      * @throws TransferException 
      */
-    public void sendChatMessage(Buddy buddy, Message message, ActionListener listener)
+    public void sendChatMessage(Buddy buddy, Message message, ActionEventListener listener)
     {
     	this.ensureOpened();
     	SipcRequest request  = this.getMessageFactory().createSendChatMessageRequest(buddy.getUri(), message);
-    	request.setResponseHandler(new DefaultResponseHandler(listener));
+    	request.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
     	this.process(request);
     }
     /**
@@ -504,7 +514,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
      * @throws TransferException 
 	 * @throws Exception 
 	 */
-	public void agreedApplication(final Buddy buddy, final ActionListener listener)
+	public void agreedApplication(final Buddy buddy, final ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createAgreeApplicationRequest(buddy.getUri());
@@ -517,7 +527,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param uri
 	 * @return
 	 */
-	public void declinedAppliction(Buddy buddy, ActionListener listener)
+	public void declinedAppliction(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createDeclineApplicationRequest(buddy.getUri());
@@ -531,7 +541,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @return
 	 * @throws TransferException 
 	 */
-	public void deleteBuddy(Buddy buddy, ActionListener listener)
+	public void deleteBuddy(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = null;
@@ -552,7 +562,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @throws TransferException 
 	 * @throws Exception
 	 */
-	public void setPresence(int presence, ActionListener listener)
+	public void setPresence(int presence, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createSetPresenceRequest(presence);
@@ -564,7 +574,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 更新用户个人信息
 	 * @param listener
 	 */
-	public void setPesonalInfo(ActionListener listener)
+	public void setPesonalInfo(ActionEventListener listener)
 	{
 		this.ensureOpened();
         SipcRequest request = this.messageFactory.createSetPersonalInfoRequest();
@@ -577,7 +587,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param buddy		好友
 	 * @param listener	
 	 */
-	public void setBuddyLocalName(Buddy buddy,String localName, ActionListener listener)
+	public void setBuddyLocalName(Buddy buddy,String localName, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createSetBuddyLocalName(buddy.getUri(), localName);
@@ -592,7 +602,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param cordList		分组编号列表 传入为null或者大小为零就是默认分组
 	 * @param listener
 	 */
-	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionListener listener)
+	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionEventListener listener)
 	{
 		//把集合改变成22;12;2这样的字符串
 		String cordIds = null;
@@ -620,7 +630,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param buddy		只能是飞信好友才能获取详细信息
 	 * @param listener
 	 */
-	public void getBuddyDetail(FetionBuddy buddy, ActionListener listener)
+	public void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createGetContactDetailRequest(buddy.getUri());
@@ -634,7 +644,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param title		分组名称
 	 * @param listener
 	 */
-	public void createCord(String title, ActionListener listener)
+	public void createCord(String title, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createCreateCordRequest(title);
@@ -648,7 +658,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param cord		需删除的的分组
 	 * @param listener
 	 */
-	public void deleteCord(Cord cord, ActionListener listener)
+	public void deleteCord(Cord cord, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		Collection<Buddy> list = this.context.getFetionStore().getBuddyListByCord(cord);
@@ -666,7 +676,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param title		分组标题
 	 * @param listener	
 	 */
-	public void setCordTitle(Cord cord, String title, ActionListener listener)
+	public void setCordTitle(Cord cord, String title, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createSetCordTitleRequest(cord.getId(), title);
@@ -680,7 +690,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param mobile		手机号码
 	 * @param listener
 	 */
-	public void findBuddyByMobile(long mobile, ActionListener listener)
+	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		this.session.removeAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);

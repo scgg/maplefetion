@@ -25,18 +25,20 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
-import net.solosky.maplefetion.client.dialog.SessionKey;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
+import net.solosky.maplefetion.event.action.FindBuddySuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -45,59 +47,49 @@ import net.solosky.maplefetion.util.XMLHelper;
  */
 public class FindBuddyByMobileResponseHandler extends AbstractResponseHandler
 {
-
-	private int statusCode;
 	/**
      * @param context
      * @param dialog
      * @param listener
      */
     public FindBuddyByMobileResponseHandler(FetionContext context,
-            Dialog dialog, ActionListener listener)
+            Dialog dialog, ActionEventListener listener)
     {
 	    super(context, dialog, listener);
-	    this.statusCode = SipcStatus.ACTION_OK;
     }
 
+
+
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
-    		Element root = XMLHelper.build(response.getBody().toSendString());
-			Element contact = XMLHelper.find(root, "/results/contacts/contact");
-			int status = Integer.parseInt(contact.getAttributeValue("status-code"));
-			if(status==SipcStatus.ACTION_OK) {
-    			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
-    			if(personal!=null) {
-    				int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
-    				Buddy buddy = this.context.getFetionStore().getBuddyByUserId(userId);
-    				if(buddy!=null) {
-        				this.dialog.getSession()
-        					.setAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT,
-        							this.context.getFetionStore().getBuddyByUserId(userId));
-        				this.statusCode = ActionStatus.ACTION_OK;		//找到该用户并且是好友，操作正确完成
-    				}else {
-    					this.statusCode = ActionStatus.INVALD_BUDDY;	//找到该用户但不是好友
-    				}
-    			}
-			}else if(status==SipcStatus.NOT_FOUND) {
-				this.statusCode = ActionStatus.NOT_FOUND;				//该用户找不到
-			}else {
-				this.statusCode = ActionStatus.OTHER_ERROR;				//其他未知错误
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		Element root = XMLHelper.build(response.getBody().toSendString());
+		Element contact = XMLHelper.find(root, "/results/contacts/contact");
+		int status = Integer.parseInt(contact.getAttributeValue("status-code"));
+		if(status==SipcStatus.ACTION_OK) {
+			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
+			if(personal!=null) {
+				int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
+				Buddy buddy = this.context.getFetionStore().getBuddyByUserId(userId);
+				if(buddy!=null) {
+    				return new FindBuddySuccessEvent(buddy);				//找到该用户并且是好友，操作正确完成
+				}else {
+					return new FailureEvent(FailureType.BUDDY_NOT_FOUND);	//找到该用户但不是好友
+				}
+			}else{
+				return new FailureEvent(FailureType.SIPC_FAIL);				//服务器没有返回数据
 			}
-    	}else {
-    		this.statusCode = response.getStatusCode();
-    	}
-    }
+		}else if(status==SipcStatus.NOT_FOUND) {
+			return new FailureEvent( FailureType.USER_NOT_FOUND);			//该用户找不到
+		}else {
+			return new FailureEvent(FailureType.UNKNOWN_FAIL);				//其他未知错误
+		}
+	}
     
-    //重载callback 调用自定义的回调状态
-    protected void callback(SipcResponse response)
-    {
-    	if(this.listener!=null)
-    		this.listener.actionFinished(this.statusCode);
-    }
+    
 
 }

@@ -33,6 +33,7 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.BasicChatDialog;
+import net.solosky.maplefetion.event.notify.BuddyPresenceEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.ParseHelper;
@@ -94,8 +95,8 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
             	    	}
             	    	
             	    	//通知监听器，好友状态已经改变
-            	    	if(this.context.getNotifyListener()!=null)
-            	    		this.context.getNotifyListener().presenceChanged(buddy);
+            	    	if(this.context.getNotifyEventListener()!=null)
+            	    		this.context.getNotifyEventListener().fireEvent(new BuddyPresenceEvent(buddy));
             	    }
         	    }
         	    

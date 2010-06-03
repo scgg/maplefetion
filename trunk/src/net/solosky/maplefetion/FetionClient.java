@@ -40,18 +40,22 @@ import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
 import net.solosky.maplefetion.client.RegistrationException;
 import net.solosky.maplefetion.client.SystemException;
-import net.solosky.maplefetion.client.dialog.ActionFuture;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
+import net.solosky.maplefetion.client.dialog.ActionEventFuture;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
 import net.solosky.maplefetion.client.dialog.DialogSession;
-import net.solosky.maplefetion.client.dialog.FutureActionListener;
+import net.solosky.maplefetion.client.dialog.FutureActionEventListener;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
 import net.solosky.maplefetion.client.dialog.SessionKey;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.FindBuddySuccessEvent;
+import net.solosky.maplefetion.event.action.SystemErrorEvent;
+import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
@@ -128,14 +132,9 @@ public class FetionClient implements FetionContext
 	private LoginWork loginWork;
 	
 	/**
-	 * 登录监听器
-	 */
-	private LoginListener loginListener;
-	
-	/**
 	 * 通知监听器
 	 */
-	private NotifyListener notifyListener;
+	private NotifyEventListener notifyEventListener;
 	
 	/**
 	 * 客户端状态，尽量使用简单的同步方法
@@ -171,16 +170,14 @@ public class FetionClient implements FetionContext
 						String pass, 
 						TransferFactory transferFactory,
 						FetionStore fetionStore,
-						NotifyListener notifyListener,
-						LoginListener loginListener,
+						NotifyEventListener notifyEventListener,
 						FetionTimer timer,
 						FetionExecutor executor)
 	{
 		this(new User(mobileNo, pass, "fetion.com.cn"),
 				transferFactory,
 				fetionStore, 
-				notifyListener,
-				loginListener,
+				notifyEventListener,
 				timer,
 				executor);
 	}
@@ -191,18 +188,15 @@ public class FetionClient implements FetionContext
 	 * @param mobileNo			手机号码
 	 * @param pass				密码
 	 * @param notifyListener	通知监听器
-	 * @param loginListener		登录监听器
 	 */
 	public FetionClient(long mobileNo, 
 						String pass, 
-						NotifyListener notifyListener,
-						LoginListener loginListener)
+						NotifyEventListener notifyEventListener)
 	{
 		this(new User(mobileNo, pass, "fetion.com.cn"), 
 				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
-				notifyListener, 
-				loginListener,
+				notifyEventListener, 
 				new ThreadTimer(),
 				new SingleExecutor());
 	}
@@ -214,7 +208,7 @@ public class FetionClient implements FetionContext
 	 */
 	public FetionClient(long mobile, String pass)
 	{
-		this(mobile, pass, null, null);
+		this(mobile, pass, null);
 	}
 	
 	
@@ -224,13 +218,11 @@ public class FetionClient implements FetionContext
 	 * @param transferFactory	连接工厂
 	 * @param fetionStore		存储接口
 	 * @param notifyListener	通知监听器
-	 * @param loginListener		登录监听器
 	 */
     public FetionClient(User user, 
     					TransferFactory transferFactory,
     					FetionStore fetionStore, 
-    					NotifyListener notifyListener, 
-    					LoginListener loginListener,
+    					NotifyEventListener notifyEventListener, 
     					FetionTimer timer,
 						FetionExecutor executor)
     {
@@ -240,12 +232,11 @@ public class FetionClient implements FetionContext
     	this.user            = user;
     	this.transferFactory = transferFactory;
     	this.store           = fetionStore;
-    	this.loginListener   = loginListener;
-		this.notifyListener  = notifyListener;
 		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		this.proxyFactory    = new ChatDialogProxyFactory(this);
 		this.timer           = timer;
 		this.executor        = executor;
+		this.notifyEventListener  = notifyEventListener;
 		
 		
     }
@@ -257,6 +248,16 @@ public class FetionClient implements FetionContext
 	public DialogFactory getDialogFactory()
 	{
 		return this.dialogFactory;
+	}
+	
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.FetionContext#getChatDialogProxyFactoy()
+	 */
+	@Override
+	public ChatDialogProxyFactory getChatDialogProxyFactoy()
+	{
+		return this.proxyFactory;
 	}
 	
 	/* (non-Javadoc)
@@ -299,21 +300,12 @@ public class FetionClient implements FetionContext
 		return this.store;
 	}
 	
-	
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#getLoginListener()
-     */
-    public LoginListener getLoginListener()
-    {
-    	return loginListener;
-    }
-    
     /* (non-Javadoc)
      * @see net.solosky.maplefetion.FetionContext#getNotifyListener()
      */
-    public NotifyListener getNotifyListener()
+    public NotifyEventListener getNotifyEventListener()
     {
-    	return notifyListener;
+    	return this.notifyEventListener;
     }
     
 	/* (non-Javadoc)
@@ -326,20 +318,11 @@ public class FetionClient implements FetionContext
     }
     
     /**
-     * 设置登录监听器
-     * @param loginListener
-     */
-
-    public void setLoginListener(LoginListener loginListener) {
-		this.loginListener = loginListener;
-	}
-
-    /**
      * 设置通知监听器
      * @param notifyListener
      */
-	public void setNotifyListener(NotifyListener notifyListener) {
-		this.notifyListener = notifyListener;
+	public void setNotifyEventListener(NotifyEventListener notifyEventListener) {
+		this.notifyEventListener = notifyEventListener;
 	}
 	
 	/**
@@ -411,8 +394,8 @@ public class FetionClient implements FetionContext
     public void updateState(ClientState state)
     {
     	this.state = state;
-    	if(this.notifyListener!=null)
-    		this.notifyListener.clientStateChanged(state);
+    	if(this.notifyEventListener!=null)
+    		this.notifyEventListener.fireEvent(new ClientStateEvent(state));
     }
     
     /* (non-Javadoc)
@@ -469,8 +452,8 @@ public class FetionClient implements FetionContext
     	
     	//上面只是更新了客户端状态，还没有回调状态改变函数，为了防止用户在回调函数里面做一些
     	//可能会影响客户端状态的操作，如马上登陆，所以把回调用户函数放在最后面来完成
-    	if(this.notifyListener!=null)
-    		this.notifyListener.clientStateChanged(this.state);
+    	if(this.notifyEventListener!=null)
+    		this.notifyEventListener.fireEvent(new ClientStateEvent(state));
     }
 
     
@@ -602,12 +585,15 @@ public class FetionClient implements FetionContext
 	 * @param toBuddy  发送聊天消息的好友
 	 * @param message  需发送的消息
 	 * @param listener 操作结果监听器
-	 * @throws DialogException 如果对话框建立失败抛出
 	 */
-	public void sendChatMessage(final Buddy toBuddy, final Message message, final ActionListener listener) throws DialogException
+	public void sendChatMessage(final Buddy toBuddy, final Message message, ActionEventListener listener)
 	{
-		ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
-		proxy.sendChatMessage(message, listener);
+		try {
+			ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
+			proxy.sendChatMessage(message, listener);
+		} catch (DialogException e) {
+			listener.fireEevent(new SystemErrorEvent(e));
+		}
 	}
 	
 	/**
@@ -615,12 +601,11 @@ public class FetionClient implements FetionContext
 	 * @param toBuddy  发送聊天消息的好友
 	 * @param message  需发送的消息
 	 * @return 操作结果等待对象， 可以在这个对象上调用waitStatus()等待操作结果
-	 * @throws DialogException 如果对话框建立失败抛出
 	 */
-	public ActionFuture sendChatMessage(Buddy toBuddy, Message message) throws DialogException
+	public ActionEventFuture sendChatMessage(Buddy toBuddy, Message message)
 	{
-		ActionFuture future = new ActionFuture();
-		this.sendChatMessage(toBuddy, message, new FutureActionListener(future));
+		ActionEventFuture future = new ActionEventFuture();
+		this.sendChatMessage(toBuddy, message, new FutureActionEventListener(future));
 		return future;
 	}
 	
@@ -630,7 +615,7 @@ public class FetionClient implements FetionContext
 	 * @param message	需发送的消息
 	 * @param listener	操作监听器
 	 */
-	public void sendSMSMessage(Buddy toBuddy, Message message, ActionListener listener)
+	public void sendSMSMessage(Buddy toBuddy, Message message, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().sendSMSMessage(toBuddy, message, listener);
 	}
@@ -640,54 +625,60 @@ public class FetionClient implements FetionContext
 	 * @param message  需发送的消息
 	 * @param listener 操作监听器
 	 */
-	public void sendSMSMessageToSelf(Message message, ActionListener listener)
+	public void sendSMSMessageToSelf(Message message, ActionEventListener listener)
 	{
 		this.sendSMSMessage(this.getFetionUser(), message, listener);
 	}
 	
 	/**
 	 * 通过手机号给好友发送消息，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败
-	 * 这是个同步方法，因为调用了findBuddyByMobile
 	 * @param mobile		手机号码
 	 * @param message		消息
-	 * @return 			操作结果的状态码，定义在ActionStatus中
-	 * @throws InterruptedException 	同步出现异常抛出中断异常
-	 * @throws RequestTimeoutException 请求超时抛出超时异常
-	 * @throws TransferException 		传输失败抛出传输异常
-	 * @throws DialogException 		如果对话框建立失败抛出
+	 * @param listener 		操作事件监听器
 	 */
-	public int sendChatMessage(long mobile,Message message) throws RequestTimeoutException, TransferException, InterruptedException, DialogException
+	public void sendChatMessage(long mobile,final Message message, final ActionEventListener listener)
 	{
-		Buddy buddy = this.findBuddyByMobile(mobile);
-		if(buddy!=null) {
-    		ActionFuture future  = new ActionFuture();
-    		this.sendChatMessage(buddy, message, new FutureActionListener(future));
-    		return future.waitStatus();
-		}else {
-			return ActionStatus.INVALD_BUDDY;
-		}
+		//要做的第一件事是找到这个好友，因为通过手机查找好友需要向服务器发起请求，所以这里先建立一个临时的事件监听器
+		//当找到好友操作完成之后，判断是否找到，如果找到就发送消息
+		ActionEventListener tmpListener = new ActionEventListener() {
+			public void fireEevent(ActionEvent event){
+				if(event.getEventType()==ActionEventType.SUCCESS){
+					//成功的找到了好友，获取这个好友，然后发送消息
+					FindBuddySuccessEvent evt = (FindBuddySuccessEvent) event;
+					sendChatMessage(evt.getFoundBuddy(), message, listener);
+				}else{
+					//查找失败直接回调设置的方法
+					listener.fireEevent(event);
+				}
+			}
+		};
+		//开始查找好友请求
+		this.findBuddyByMobile(mobile, tmpListener);
 	}
 	
 	
 	/**
-	 * 通过手机号给好友发送短信，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败，同步方法
+	 * 通过手机号给好友发送短信，前提是该手机号对应的飞信用户必须已经是好友，否则会发送失败
 	 * @param mobile		手机号码
 	 * @param message		消息
-	 * @return 			操作结果的状态码，定义在ActionStatus中
-	 * @throws InterruptedException 	同步出现异常抛出中断异常
-	 * @throws RequestTimeoutException 请求超时抛出超时异常
-	 * @throws TransferException 		传输失败抛出传输异常
+	 * @param listener		操作事件监听器
 	 */
-	public int sendSMSMessage(long mobile, Message message) throws RequestTimeoutException, TransferException, InterruptedException
+	public void sendSMSMessage(long mobile, final Message message, final ActionEventListener listener)
 	{
-		Buddy buddy = this.findBuddyByMobile(mobile);
-		if(buddy!=null) {
-    		ActionFuture future  = new ActionFuture();
-    		this.sendSMSMessage(buddy, message, new FutureActionListener(future));
-    		return future.waitStatus();
-		}else {
-			return ActionStatus.INVALD_BUDDY;
-		}
+		//注释同上一个方法，这里不赘述了
+		ActionEventListener tmpListener = new ActionEventListener() {
+			public void fireEevent(ActionEvent event){
+				if(event.getEventType()==ActionEventType.SUCCESS){
+					FindBuddySuccessEvent evt = (FindBuddySuccessEvent) event;
+					sendSMSMessage(evt.getFoundBuddy(), message, listener);
+				}else{
+					listener.fireEevent(event);
+				}
+			}
+		};
+		//开始查找好友请求
+		this.findBuddyByMobile(mobile, tmpListener);
+		
 	}
 
 	
@@ -697,30 +688,14 @@ public class FetionClient implements FetionContext
 	 * 
 	 * 因为飞信权限的原因，直接去遍历手机好友是不行的，因为部分好友设置为对方看不见好友的手机号码，
 	 * 这里需要发起一个获取好友信息的请求然后返回user-id，用这个user-id去遍历好友列表就可以查询到好友
-	 * 这是个同步方法因为ActionListener只能返回一个状态码，没法返回对象，所以只能把结果放在DialogSession里
-	 * 如果设置为异步接口，可能一次进行多个请求，但结果同时只有一个，为了保证程序的正确性，所以这里设置为同步方法
-	 * 这个是设计上的缺陷，暂时这样，可能在下一版本更新为事件驱动设计模式
 	 * @param mobile	手机号码
-	 * @return		如果找到返回好友对象，如果没有找到返回null
-	 * @throws InterruptedException 	同步出现异常抛出中断异常
-	 * @throws RequestTimeoutException 请求超时抛出超时异常
-	 * @throws TransferException 		传输失败抛出传输异常
+	 * @param listener  操作结果监听器
 	 */
-	public synchronized Buddy findBuddyByMobile(long mobile) throws RequestTimeoutException, InterruptedException, TransferException
+	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
 		if(!Validator.validateMobile(mobile))
 			throw new IllegalArgumentException(mobile+" is not a valid CMCC mobile number.. ");
-		
-		ActionFuture future  = new ActionFuture();
-		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, new FutureActionListener(future));
-		int status = future.waitStatus();
-		if(status==ActionStatus.ACTION_OK) {
-			DialogSession session = dialogFactory.getServerDialog().getSession();
-    		Buddy buddy = (Buddy)session.getAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
-    		return buddy;
-		}else {
-			return null;
-		}
+		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, listener);
 	}
 	/**
 	 * 设置个人信息
@@ -732,7 +707,7 @@ public class FetionClient implements FetionContext
 	 * User user = client.getFetionUser();
 	 * user.setNickName("GoodDay");
 	 * user.setImpresa("I'd love it..");
-	 * client.setPersonalInfo(new ActionListener(){
+	 * client.setPersonalInfo(new ActionEventListener(){
 	 * 		public void actionFinished(int status){
 	 * 			if(status==ActionStatus.ACTION_OK)
 	 * 				System.out.println("set personal info success!");
@@ -743,7 +718,7 @@ public class FetionClient implements FetionContext
 	 * </code>
 	 * @param listener
 	 */
-	public void setPersonalInfo(ActionListener listener)
+	public void setPersonalInfo(ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setPesonalInfo(listener);
 	}
@@ -754,7 +729,7 @@ public class FetionClient implements FetionContext
 	 * @param localName	 本地姓名
 	 * @param listener
 	 */
-	public void setBuddyLocalName(Buddy buddy,String localName, ActionListener listener)
+	public void setBuddyLocalName(Buddy buddy,String localName, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setBuddyLocalName(buddy, localName, listener);
 	}
@@ -765,7 +740,7 @@ public class FetionClient implements FetionContext
 	 * @param cordIds
 	 * @param listener
 	 */
-	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionListener listener)
+	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setBuddyCord(buddy, cordList, listener);
 	}
@@ -776,7 +751,7 @@ public class FetionClient implements FetionContext
 	 * @param cordIds
 	 * @param listener
 	 */
-	public void setBuddyCord(Buddy buddy, Cord cord, ActionListener listener)
+	public void setBuddyCord(Buddy buddy, Cord cord, ActionEventListener listener)
 	{
 		ArrayList<Cord> list = new ArrayList<Cord>();
 		list.add(cord);
@@ -788,7 +763,7 @@ public class FetionClient implements FetionContext
 	 * @param mobile		手机号码
 	 * @param listener		结果监听器
 	 */
-	public void addBuddy(long mobile, ActionListener listener)
+	public void addBuddy(long mobile, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(mobile), 0, 1, user.getNickName(), listener);
 	}
@@ -798,7 +773,7 @@ public class FetionClient implements FetionContext
 	 * @param buddy
 	 * @param listener
 	 */
-	public void deleteBuddy(Buddy buddy, ActionListener listener)
+	public void deleteBuddy(Buddy buddy, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().deleteBuddy(buddy, listener);
 	}
@@ -808,7 +783,7 @@ public class FetionClient implements FetionContext
 	 * @param buddy			飞信好友
 	 * @param listener
 	 */
-	public void agreedApplication(Buddy buddy, ActionListener listener)
+	public void agreedApplication(Buddy buddy, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().agreedApplication(buddy, listener);
 	}
@@ -818,7 +793,7 @@ public class FetionClient implements FetionContext
 	 * @param buddy			飞信好友
 	 * @param listener
 	 */
-	public void declinedApplication(Buddy buddy, ActionListener listener)
+	public void declinedApplication(Buddy buddy, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().declinedAppliction(buddy, listener);
 	}
@@ -829,7 +804,7 @@ public class FetionClient implements FetionContext
 	 * @param presence		用户状态定义在Presence中
 	 * @param listener
 	 */
-	public void setPresence(int presence, ActionListener listener)
+	public void setPresence(int presence, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setPresence(presence, listener);
 	}
@@ -839,7 +814,7 @@ public class FetionClient implements FetionContext
 	 * @param buddy		飞信好友，只能是飞信好友
 	 * @param listener
 	 */
-	public void getBuddyDetail(FetionBuddy buddy, ActionListener listener)
+	public void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().getBuddyDetail(buddy, listener);
 	}
@@ -851,7 +826,7 @@ public class FetionClient implements FetionContext
 	 * @param buddy		飞信好友列表，只能是飞信好友
 	 * @param listener
 	 */
-	public void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionListener listener)
+	public void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().getContactsInfo(buddyList, listener);
 	}
@@ -861,7 +836,7 @@ public class FetionClient implements FetionContext
 	 * @param title		分组名称
 	 * @param listener
 	 */
-	public void createCord(String title, ActionListener listener)
+	public void createCord(String title, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().createCord(title, listener);
 	}
@@ -871,7 +846,7 @@ public class FetionClient implements FetionContext
 	 * @param cord		分组对象
 	 * @param listener
 	 */
-	public void deleteCord(Cord cord, ActionListener listener)
+	public void deleteCord(Cord cord, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().deleteCord(cord, listener);
 	}
@@ -882,7 +857,7 @@ public class FetionClient implements FetionContext
 	 * @param title		分组名称
 	 * @param listener
 	 */
-	public void setCordTitle(Cord cord, String title, ActionListener listener)
+	public void setCordTitle(Cord cord, String title, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
 	}

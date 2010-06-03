@@ -27,10 +27,11 @@ package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.sipc.SipcStatus;
 
 /**
  *
@@ -46,24 +47,31 @@ public class ServerRegisterResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public ServerRegisterResponseHandler(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
+
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getStatusCode()==SipcStatus.NOT_AUTHORIZED) {
-        	String w = response.getHeader("W").getValue();
-    		int o = w.indexOf("nonce=\"");
-    		String nonce = w.substring(o+7,w.length()-1);
-    		dialog.getSession().setAttribute("NONCE", nonce);
-    		logger.debug("Nonce:"+nonce);
-        }
-    }
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doNotAuthorized(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doNotAuthorized(SipcResponse response)
+			throws FetionException
+	{
+		String w = response.getHeader("W").getValue();
+		int o = w.indexOf("nonce=\"");
+		String nonce = w.substring(o+7,w.length()-1);
+		dialog.getSession().setAttribute("NONCE", nonce);
+		logger.debug("Nonce:"+nonce);
+		
+		return new SuccessEvent();
+		
+	}
+    
+	
+	
+    
 
 }

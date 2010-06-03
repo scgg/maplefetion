@@ -17,27 +17,28 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionListener.java
+ * Package  : net.solosky.maplefetion.event
+ * File     : NotifyEventType.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-5-11
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion;
-
+package net.solosky.maplefetion.event;
 
 /**
  *
- * 登录监听器
+ * 通知事件类型
  *
  * @author solosky <solosky772@qq.com>
  */
-public interface LoginListener
-{
+public enum NotifyEventType {
+	LOGIN_STATE,		//登录状态发生变化
+	CLIENT_STATE,		//客户端状态发生变化
+	BUDDY_MESSAGE,		//好友消息
+	GROUP_MESSAGE,		//群消息
+	SYSTEM_MESSAGE, 	//系统消息
+	BUDDY_APPLICAION,	//添加好友请求
+	BUDDY_CONFIRMED,	//对方回复了添加好友的请求
+	BUDDY_PRESENCE,			//对方状态发生改变
 	
-	/**
-	 * 登录状态发生了改变，仅在登录时候有效
-	 * @param state
-	 */
-	public void loginStateChanged(LoginState state);
 }

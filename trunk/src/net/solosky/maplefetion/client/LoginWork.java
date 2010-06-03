@@ -39,14 +39,15 @@ import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.bean.VerifyImage;
-import net.solosky.maplefetion.client.dialog.ActionFuture;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
+import net.solosky.maplefetion.client.dialog.ActionEventFuture;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.client.dialog.DialogException;
-import net.solosky.maplefetion.client.dialog.FutureActionListener;
+import net.solosky.maplefetion.client.dialog.FutureActionEventListener;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
+import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.notify.LoginStateEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
@@ -195,17 +196,17 @@ public class LoginWork implements Runnable
 		try {
 	        serverDialog.openDialog();
 	        
-	        ActionFuture future = new ActionFuture();
-	    	ActionListener listener = new FutureActionListener(future);
+	        ActionEventFuture future = new ActionEventFuture();
+	    	ActionEventListener listener = new FutureActionEventListener(future);
 	    	
 	    	//注册服务器
 	    	serverDialog.register(presence, listener);
-	    	Dialog.assertStatus(future.waitStatus(), ActionStatus.NOT_AUTHORIZED);
+	    	Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
 	    	
 	    	//用户验证
 	    	future.clear();
 	    	serverDialog.userAuth(presence, listener);
-	    	Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+	    	Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
 	    	
 	    	state = LoginState.SIPC_REGISGER_SUCCESS;
 		} catch (TransferException e) {
@@ -220,7 +221,10 @@ public class LoginWork implements Runnable
         } catch (InterruptedException e) {
         	logger.warn("serverDialog: login thread interrupted.", e);
         	state = LoginState.OHTER_ERROR;
-        }
+        } catch (SystemException e) {
+        	logger.warn("serverDialog: login system error.", e);
+        	state = LoginState.OHTER_ERROR;
+		}
     	this.updateLoginState(this.state);
     	
     	return this.state == LoginState.SIPC_REGISGER_SUCCESS;
@@ -231,8 +235,8 @@ public class LoginWork implements Runnable
      */
     private boolean getContactsInfo()
     {
-    	ActionFuture future = new ActionFuture();
-    	ActionListener listener = new FutureActionListener(future);
+    	ActionEventFuture future = new ActionEventFuture();
+    	ActionEventListener listener = new FutureActionEventListener(future);
     	ServerDialog dialog = this.context.getDialogFactory().getServerDialog();
     	StoreVersion storeVersion   = this.context.getFetionStore().getStoreVersion();
     	StoreVersion userVersion    = this.context.getFetionUser().getStoreVersion();
@@ -249,7 +253,7 @@ public class LoginWork implements Runnable
     			//清除存储对象
     			future.clear();
     			dialog.getPersonalInfo(listener);
-    			Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+    			Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
     			storeVersion.setPersonalVersion(userVersion.getPersonalVersion());
     		}
 	        
@@ -264,7 +268,7 @@ public class LoginWork implements Runnable
     			store.clearBuddyList();
     			store.clearCordList();
     	        dialog.getContactList(listener);
-    	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+    	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
     	        
     	        //获取联系人详细信息， 这里只有飞信好友才能获取消息信息
     	        ArrayList<FetionBuddy> list = new ArrayList<FetionBuddy>();
@@ -278,7 +282,7 @@ public class LoginWork implements Runnable
     	        
     	        future.clear();
     	        dialog.getContactsInfo(list, listener);
-    	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+    	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
     	        
        	        storeVersion.setContactVersion(userVersion.getContactVersion());
     		}
@@ -286,7 +290,7 @@ public class LoginWork implements Runnable
 	        //订阅异步通知
 	        future.clear();
 	        dialog.subscribeBuddyNotify(this.context.getFetionStore().getBuddyList(), listener);
-	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
 	        
 	        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS);
 	        
@@ -305,8 +309,8 @@ public class LoginWork implements Runnable
      */
     private boolean getGroupsInfo()
     {
-    	ActionFuture future = new ActionFuture();
-    	ActionListener listener = new FutureActionListener(future);
+    	ActionEventFuture future = new ActionEventFuture();
+    	ActionEventListener listener = new FutureActionEventListener(future);
     	ServerDialog dialog = this.context.getDialogFactory().getServerDialog();
     	StoreVersion storeVersion   = this.context.getFetionStore().getStoreVersion();
     	StoreVersion userVersion    = this.context.getFetionUser().getStoreVersion();
@@ -316,7 +320,7 @@ public class LoginWork implements Runnable
 	        //获取群列表
 	        future.clear();
 	        dialog.getGroupList(listener);
-	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
 	        
 			//如果群列表为空，就不发送下面的一些请求了
 			FetionStore store = this.context.getFetionStore();
@@ -338,12 +342,12 @@ public class LoginWork implements Runnable
     	        //获取群信息
     	        future.clear();
     	        dialog.getGroupsInfo(this.context.getFetionStore().getGroupList(), listener);
-    	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+    	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
 	        
 	        	//获取群成员
     	        future.clear();
     	        dialog.getMemberList(this.context.getFetionStore().getGroupList(), listener);
-    	        Dialog.assertStatus(future.waitStatus(), ActionStatus.ACTION_OK);
+    	        Dialog.assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
     	        
     	        storeVersion.setGroupVersion(userVersion.getGroupVersion());
 	        }
@@ -386,9 +390,9 @@ public class LoginWork implements Runnable
      */
     private void updateLoginState(LoginState state)
     {
-    	if(this.context.getLoginListener()!=null)
-    		this.context.getLoginListener().loginStateChanged(state);
-    	
+    	if(this.context.getNotifyEventListener()!=null)
+    		this.context.getNotifyEventListener().fireEvent(new LoginStateEvent(state));
+    		
     	if(state.getValue()>0x400) {	//大于400都是登录出错
     		this.context.handleException(new LoginException(state));
     		this.context.getLoginWaiter().objectArrive(state);

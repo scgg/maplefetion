@@ -35,18 +35,8 @@ import java.util.Iterator;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
-import net.solosky.maplefetion.LoginListener;
-import net.solosky.maplefetion.LoginState;
-import net.solosky.maplefetion.NotifyListener;
-import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.Group;
-import net.solosky.maplefetion.bean.Member;
-import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.bean.Presence;
-import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.client.dialog.ChatDialog;
-import net.solosky.maplefetion.client.dialog.GroupDialog;
+import net.solosky.maplefetion.NotifyEventListener;
+import net.solosky.maplefetion.event.NotifyEvent;
 import net.solosky.maplefetion.util.SharedExecutor;
 import net.solosky.maplefetion.util.SharedTimer;
 
@@ -199,8 +189,7 @@ public class FetionPool
     {
     	FetionClient client = new FetionClient(Long.parseLong(mobile), password);
     	FetionPoolListener listener = new FetionPoolListener(client);
-    	client.setLoginListener(listener);
-    	client.setNotifyListener(listener);
+    	client.setNotifyEventListener(listener);
     	client.setFetionExecutor(this.shareExecutor);
     	client.setFetionTimer(this.sharedTimer);
     	this.clientList.add(client);
@@ -263,90 +252,20 @@ public class FetionPool
     }
 	
 	
-	private class FetionPoolListener implements NotifyListener, LoginListener
+	private class FetionPoolListener implements NotifyEventListener
 	{
 		private FetionClient client;
 		public FetionPoolListener(FetionClient client)
 		{
 			this.client = client;
 		}
-        public void buddyApplication(Buddy buddy, String desc)
-        {
-        	printlnx("[好友请求]:"+desc+" 想加你为好友。请输入 【agree/decline 好友编号】 同意/拒绝添加请求。");
-        }
-        public void buddyConfirmed(Buddy buddy, boolean isAgreed)
-        {
-        	if(isAgreed)
-        		printlnx("[系统通知]:"+buddy.getDisplayName()+" 同意了你的好友请求。");
-        	else 
-        		printlnx("[系统通知]:"+buddy.getDisplayName()+" 拒绝了你的好友请求。");
-        }
-        public void buddyMessageRecived(Buddy from, Message message,
-                ChatDialog dialog)
-        {
-        	if(from.getRelation()==Relation.BUDDY)
-        		printlnx("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
-        	else 
-        		printlnx("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());
-        }
-        public void clientStateChanged(ClientState state)
-        {
-        	switch (state)
-            {
-                case OTHER_LOGIN:
-                	printlnx("你已经从其他客户端登录。");
-                	printlnx("30秒之后重新登录..");
-                	//新建一个线程等待登录，不能在这个回调函数里做同步操作
-                	new Thread(new Runnable() {
-                		public void run() {
-                			try {
-        	                    Thread.sleep(30000);
-                            } catch (InterruptedException e) {
-                            	System.out.println("重新登录等待过程被中断");
-                            }
-                            client.login();
-                		}
-                	}).start();
-        	        break;
-                case CONNECTION_ERROR:
-                	printlnx("客户端连接异常");
-        	        break;
-                case DISCONNECTED:
-                	printlnx("服务器关闭了连接");
-                	break;
-                case LOGOUT:
-                	printlnx("已经退出。。");
-                	break;
-                case ONLINE:
-                	printlnx("当前是在线状态。");
-                	break;
-                default:
-        	        break;
-            }
-        }
-        public void groupMessageRecived(Group group, Member from,
-                Message message, GroupDialog dialog)
-        {
-        	 printlnx("[群消息] 群 "+group.getName()+" 里的 "+from.getDisplayName()+" 说："+message.getText());   
-        }
-        public void presenceChanged(FetionBuddy b)
-        {
-        	if(b.getPresence().getValue()==Presence.ONLINE) {
-        		printlnx("[系统通知]:"+b.getDisplayName()+" 上线了。");
-        	}else if(b.getPresence().getValue()==Presence.OFFLINE){
-        		printlnx("[系统通知]:"+b.getDisplayName()+" 下线了。");
-        	}
-        }
-        public void systemMessageRecived(String m)
-        {
-        	printlnx("[系统消息]:"+m);
-        }
-        public void loginStateChanged(LoginState state)
-        {
-        }
-        public void printlnx(String m)
-        {
-        	println("["+client.getFetionUser().getDisplayName()+"]"+m);
-        }
+		/* (non-Javadoc)
+		 * @see net.solosky.maplefetion.NotifyEventListener#fireEvent(net.solosky.maplefetion.event.NotifyEvent)
+		 */
+		@Override
+		public void fireEvent(NotifyEvent event)
+		{
+			println("["+client.getFetionUser().getDisplayName()+"] "+event.toString());
+		}
 	}
 }

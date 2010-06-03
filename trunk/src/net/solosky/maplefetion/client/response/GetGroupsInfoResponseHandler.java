@@ -28,17 +28,19 @@ package net.solosky.maplefetion.client.response;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Group;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -54,30 +56,31 @@ public class GetGroupsInfoResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public GetGroupsInfoResponseHandler(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
+
     @Override
-    protected void doHandle(SipcResponse response) throws FetionException
+    protected ActionEvent doActionOK(SipcResponse response) throws FetionException
     {
     	FetionStore store = this.context.getFetionStore();
-		if(response.getBody()==null)	return;
-    	Element root = XMLHelper.build(response.getBody().toSendString());
-		List groupList = XMLHelper.findAll(root, "/results/groups/*group");
-		Iterator it = groupList.iterator();
-		while(it.hasNext()) {
-			Element e = (Element) it.next();
-			Group group = store.getGroup(e.getAttributeValue("uri"));
-			if(group!=null) {
-	            BeanHelper.toBean(Group.class, group, e);
-				logger.debug("Got a group:"+group);
+		if(response.getBody()!=null){
+	    	Element root = XMLHelper.build(response.getBody().toSendString());
+			List groupList = XMLHelper.findAll(root, "/results/groups/*group");
+			Iterator it = groupList.iterator();
+			while(it.hasNext()) {
+				Element e = (Element) it.next();
+				Group group = store.getGroup(e.getAttributeValue("uri"));
+				if(group!=null) {
+		            BeanHelper.toBean(Group.class, group, e);
+					logger.debug("Got a group:"+group);
+				}
 			}
 		}
+		
+		return super.doActionOK(response);
     }
 
 }

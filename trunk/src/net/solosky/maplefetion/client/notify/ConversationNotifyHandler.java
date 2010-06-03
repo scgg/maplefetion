@@ -26,6 +26,7 @@
 package net.solosky.maplefetion.client.notify;
 
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.client.dialog.MutipartyDialog;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -69,7 +70,8 @@ public class ConversationNotifyHandler extends AbstractNotifyHandler
     		MutipartyDialog cd = (MutipartyDialog) this.dialog;
     		Element member = event.getChild("member");
     		String uri = member.getAttributeValue("uri");
-    		cd.buddyEntered(uri);
+    		Buddy buddy = this.context.getFetionStore().getBuddyByUri(uri);
+    		cd.buddyEntered(buddy);
     		
     		logger.debug("Buddy entered this dialog:"+uri);
     	}
@@ -86,7 +88,8 @@ public class ConversationNotifyHandler extends AbstractNotifyHandler
     		MutipartyDialog cd = (MutipartyDialog) this.dialog;
     		Element member = event.getChild("member");
     		String uri = member.getAttributeValue("uri");
-    		cd.buddyLeft(uri);
+    		Buddy buddy = this.context.getFetionStore().getBuddyByUri(uri);
+    		cd.buddyLeft(buddy);
     		
     		logger.debug("Buddy left this dialog:"+uri);
     	}

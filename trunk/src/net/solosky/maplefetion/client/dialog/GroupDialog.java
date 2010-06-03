@@ -33,6 +33,8 @@ import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
@@ -254,12 +256,12 @@ public class GroupDialog extends Dialog
         {
         	SipcRequest request = getMessageFactory().createGroupKeepLiveRequest(group.getUri());
         	request = helper.set(request);
-        	ActionListener listener = new ActionListener()
+        	ActionEventListener listener = new ActionEventListener()
 			{
-				public void actionFinished(int status)
+				public void fireEevent(ActionEvent event)
 				{
-					if(status!=ActionStatus.ACTION_OK) {
-						Logger.getLogger(GroupDialog.class).warn("GroupDialog keepAlive failed - status="+status);
+					if(event.getEventType()!=ActionEventType.SUCCESS){
+						Logger.getLogger(GroupDialog.class).warn("GroupDialog keepAlive failed.. Event="+event);
 					}
 				}
 			};
@@ -274,7 +276,7 @@ public class GroupDialog extends Dialog
      * @param listener		操作监听器
      * @throws TransferException
      */
-    public void sendChatMessage(Message message, ActionListener listener)
+    public void sendChatMessage(Message message, ActionEventListener listener)
     {
     	this.ensureOpened();
     	SipcRequest request = this.getMessageFactory().createSendGroupChatMessageRequest(this.group.getUri(), message.toString());

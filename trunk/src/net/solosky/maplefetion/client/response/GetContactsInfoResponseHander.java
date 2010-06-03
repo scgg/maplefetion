@@ -28,18 +28,19 @@ package net.solosky.maplefetion.client.response;
 import java.util.Iterator;
 import java.util.List;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  *
@@ -55,35 +56,38 @@ public class GetContactsInfoResponseHander extends AbstractResponseHandler
      * @param listener
      */
     public GetContactsInfoResponseHander(FetionContext client, Dialog dialog,
-            ActionListener listener)
+            ActionEventListener listener)
     {
 	    super(client, dialog, listener);
     }
 
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getBody()==null)	return;
-    	Element root = XMLHelper.build(response.getBody().toSendString());
-    	Element contacts = root.getChild("contacts");
-    	if(contacts!=null) {
-     	    List list = contacts.getChildren();
-     	    Iterator it = list.iterator();
-     	    while(it.hasNext()) {
-     	    	Element e = (Element) it.next();
-     	    	Element p = e.getChild("personal");
-     	    	
-     	    	String uri = e.getAttributeValue("uri");
-     	    	FetionStore store = context.getFetionStore();
-     	    	if(store.getBuddyByUri(uri)!=null&& p!=null) {
-         	    	Buddy b = store.getBuddyByUri(uri);
-         	    	BeanHelper.toBean(FetionBuddy.class, b, p);
-     	    	}
-     	    }
-        }
-    }
 
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		if(response.getBody()!=null){
+	    	Element root = XMLHelper.build(response.getBody().toSendString());
+	    	Element contacts = root.getChild("contacts");
+	    	if(contacts!=null) {
+	     	    List list = contacts.getChildren();
+	     	    Iterator it = list.iterator();
+	     	    while(it.hasNext()) {
+	     	    	Element e = (Element) it.next();
+	     	    	Element p = e.getChild("personal");
+	     	    	
+	     	    	String uri = e.getAttributeValue("uri");
+	     	    	FetionStore store = context.getFetionStore();
+	     	    	if(store.getBuddyByUri(uri)!=null&& p!=null) {
+	         	    	Buddy b = store.getBuddyByUri(uri);
+	         	    	BeanHelper.toBean(FetionBuddy.class, b, p);
+	     	    	}
+	     	    }
+	    	}
+		}
+		return super.doActionOK(response);
+	}
 }

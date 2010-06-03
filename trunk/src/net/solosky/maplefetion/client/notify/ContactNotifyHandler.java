@@ -32,10 +32,11 @@ import java.util.List;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
+import net.solosky.maplefetion.event.notify.BuddyApplicationEvent;
+import net.solosky.maplefetion.event.notify.BuddyConfirmedEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
@@ -140,8 +141,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
         	dialog.process(request);
     	}
     	//通知监听器
-    	if(this.context.getNotifyListener()!=null)
-    		context.getNotifyListener().buddyApplication(buddy, desc);
+    	if(this.context.getNotifyEventListener()!=null)
+    		context.getNotifyEventListener().fireEvent(new BuddyApplicationEvent( buddy, desc));
 		logger.debug("Recived a buddy application:"+desc);
     }
     
@@ -167,14 +168,16 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     				
     				//因为这里是手机好友，没有详细信息，故不再获取详细信息
     				logger.debug("Mobile buddy agreed your buddy request:"+buddy.getFetionId());
-    				if(this.context.getNotifyListener()!=null)
-    					context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
+    				if(this.context.getNotifyEventListener()!=null)
+    					context.getNotifyEventListener()
+    					.fireEvent(new BuddyConfirmedEvent(buddy, true));		//通知监听器
     				
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				if(this.context.getNotifyListener()!=null)
-    					context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
+    				if(this.context.getNotifyEventListener()!=null)
+    					context.getNotifyEventListener()
+    					.fireEvent(new BuddyConfirmedEvent(buddy, false));	//通知监听器
     				
     			}else {}
 
@@ -220,8 +223,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		    				}
     		    				
     		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
-    		    				if(context.getNotifyListener()!=null)
-    		    					context.getNotifyListener().buddyConfirmed( buddy, true);		//通知监听器
+    		    				if(context.getNotifyEventListener()!=null)
+    		    					context.getNotifyEventListener()
+    		    					.fireEvent(new BuddyConfirmedEvent(buddy, true));			//通知监听器
     						}
 
 							@Override
@@ -242,8 +246,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     					dialog.process(request);
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				if(this.context.getNotifyListener()!=null)
-    					context.getNotifyListener().buddyConfirmed(buddy, false);		//通知监听器
+    				if(this.context.getNotifyEventListener()!=null)
+    					context.getNotifyEventListener()
+    					.fireEvent(new BuddyConfirmedEvent( buddy, false));	//通知监听器
     			}else {}
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));

@@ -28,10 +28,10 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.client.dialog.ActionListener;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.sipc.SipcStatus;
 
 /**
  *
@@ -51,21 +51,23 @@ public class DeleteBuddyResponseHandler extends AbstractResponseHandler
      * @param dialog
      * @param listener
      */
-    public DeleteBuddyResponseHandler(FetionContext client, Dialog dialog,ActionListener listener, Buddy deletedBuddy)
+    public DeleteBuddyResponseHandler(FetionContext client, Dialog dialog,ActionEventListener listener, Buddy deletedBuddy)
     {
 	    super(client, dialog, listener);
 	    this.deletedBuddy = deletedBuddy;
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doHandle(net.solosky.maplefetion.sipc.SipcResponse)
-     */
-    @Override
-    protected void doHandle(SipcResponse response) throws FetionException
-    {
-    	if(response.getStatusCode()==SipcStatus.ACTION_OK) {
-    		this.context.getFetionStore().deleteBuddy(this.deletedBuddy);
-    	}
-    }
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doActionOK(SipcResponse response)
+			throws FetionException
+	{
+		this.context.getFetionStore().deleteBuddy(this.deletedBuddy);
+		return super.doActionOK(response);
+	}
+    
+    
 
 }

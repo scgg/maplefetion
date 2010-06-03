@@ -17,36 +17,62 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : FutureActionListener.java
+ * Package  : net.solosky.maplefetion.event.action
+ * File     : SystemErrorEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-5-11
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event.action;
+
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.ActionEventType;
 
 /**
  *
- * 异步通知结果监听器
+ * 系统错误事件
  *
  * @author solosky <solosky772@qq.com>
  */
-public class FutureActionListener implements ActionListener
+public class SystemErrorEvent extends ActionEvent
 {
-	private ActionFuture future;
+	/**
+	 * 回复异常
+	 */
+	private Throwable cause;
 	
-	public FutureActionListener(ActionFuture future)
-	{
-		this.future = future;
-	}
 
+	/**
+	 * 
+	 * @param cause
+	 */
+	public SystemErrorEvent(Throwable cause)
+	{
+		this.cause    = cause;
+	}
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.event.ActionEvent#getType()
+     */
     @Override
-    public void actionFinished(int status)
+    public ActionEventType getEventType()
     {
-    	if(status==ActionStatus.TIME_OUT)
-    		this.future.setTimeout();
-    	else
-    		this.future.setStatus(status); 
+    	return ActionEventType.SYSTEM_ERROR;
     }
-	
+	/**
+	 * @return the cause
+	 */
+	public Throwable getCause()
+	{
+		return cause;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return "SystemErrorEvent [cause=" + cause + ", EventType="
+				+ getEventType() + "]";
+	}
+    
 }

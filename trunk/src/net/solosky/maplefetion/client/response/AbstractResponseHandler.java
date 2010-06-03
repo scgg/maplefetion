@@ -28,11 +28,19 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.client.ResponseHandler;
-import net.solosky.maplefetion.client.dialog.ActionListener;
-import net.solosky.maplefetion.client.dialog.ActionStatus;
+import net.solosky.maplefetion.client.SystemException;
+import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
+import net.solosky.maplefetion.event.action.SuccessEvent;
+import net.solosky.maplefetion.event.action.SystemErrorEvent;
+import net.solosky.maplefetion.event.action.TimeoutEvent;
+import net.solosky.maplefetion.event.action.TransferErrorEvent;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.sipc.SipcStatus;
 
 import org.apache.log4j.Logger;
 
@@ -48,7 +56,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
 	//对话框
 	protected Dialog dialog;
 	//监听器
-	protected ActionListener listener;
+	protected ActionEventListener listener;
 	//logger
 	protected static Logger logger = Logger.getLogger(ResponseHandler.class);
 	
@@ -58,7 +66,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
 	 * @param dialog
 	 * @param listener
 	 */
-	public AbstractResponseHandler(FetionContext context, Dialog dialog, ActionListener listener)
+	public AbstractResponseHandler(FetionContext context, Dialog dialog, ActionEventListener listener)
 	{
 		this.context = context;
 		this.dialog = dialog;
@@ -71,28 +79,99 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     @Override
     public void handle(SipcResponse response) throws FetionException
     {
-    	this.doHandle(response);
-    	this.callback(response);
+    	try {
+    		//交给子类处理这个回复，并捕获所有异常
+    		this.fireEvent(this.doHandle(response));
+		} catch (FetionException e) {
+			this.fireEvent(new SystemErrorEvent(e));
+			throw e;							//重新抛出已知异常
+		} catch(Throwable t){
+			this.fireEvent(new SystemErrorEvent(t));
+			throw new SystemException(t);		//包装下未知异常为系统异常，重新抛出
+		}
     }
 
-    protected abstract void doHandle(SipcResponse response) throws FetionException;
     
+    /**
+     * 超时错误
+     */
     public void timeout(SipcRequest request)
     {
-    	if(this.listener!=null)
-    		this.listener.actionFinished(ActionStatus.TIME_OUT);
+		this.fireEvent(new TimeoutEvent());
     }
     
+    
+    /**
+     * 发生了网络错误
+     */
     public void ioerror(SipcRequest request)
     {
-    	if(this.listener!=null)
-    		this.listener.actionFinished(ActionStatus.IO_ERROR);
+    	this.fireEvent(new TransferErrorEvent());
     }
     
-    protected void callback(SipcResponse response)
+    
+    /**
+     * 触发操作事件
+     */
+    private void fireEvent(ActionEvent event)
     {
     	if(this.listener!=null)
-    		this.listener.actionFinished(response.getStatusCode());
+    		this.listener.fireEevent(event);
+    }
+    /**
+     * 处理这个回复，根据不同的状态回调不同的方法，子类可以重载这个
+     * @param response	回复对象
+     * @return 处理后会产生一个结果事件
+     * @throws FetionException
+     */
+    protected ActionEvent doHandle(SipcResponse response) throws FetionException
+    {
+    	switch(response.getStatusCode()){
+    		case SipcStatus.TRYING:			 return this.doTrying(response);
+    		case SipcStatus.ACTION_OK:       return this.doActionOK(response);
+    		case SipcStatus.SEND_SMS_OK:     return this.doSendSMSOK(response);
+    		case SipcStatus.NOT_AUTHORIZED:  return this.doNotAuthorized(response);
+    		case SipcStatus.NOT_FOUND:       return this.doNotFound(response);
+    		case SipcStatus.TA_EXIST:        return this.doTaExsit(response);
+    		case SipcStatus.NO_SUBSCRIPTION: return this.doNoSubscription(response);
+    		default:	
+				logger.warn("Unhandled sipc response status, default make action fail. status="
+						+response.getStatusCode()+", response="+response);
+				return new FailureEvent(FailureType.SIPC_FAIL);
+    	}
     }
     
+    //100
+    protected ActionEvent doTrying(SipcResponse response) throws FetionException {
+    	return new SuccessEvent();
+    }
+    
+    //200
+    protected ActionEvent doActionOK(SipcResponse response) throws FetionException{
+    	return new SuccessEvent();
+    }
+    
+    //208
+    protected ActionEvent doSendSMSOK(SipcResponse response) throws FetionException{
+    	return new SuccessEvent();
+    }
+    
+    //401
+    protected ActionEvent doNotAuthorized(SipcResponse response) throws FetionException{
+    	return new FailureEvent(FailureType.SIPC_FAIL);
+    }
+    //404
+    protected ActionEvent doNotFound(SipcResponse response) throws FetionException{
+    	return new FailureEvent(FailureType.SIPC_FAIL);
+    }
+    
+    //521
+    protected ActionEvent doTaExsit(SipcResponse response) throws FetionException{
+    	return new FailureEvent(FailureType.SIPC_FAIL);
+    }
+    
+    //522
+    protected ActionEvent doNoSubscription(SipcResponse response) throws FetionException{
+    	return new FailureEvent(FailureType.SIPC_FAIL);
+    }
 }

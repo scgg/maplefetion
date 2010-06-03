@@ -17,28 +17,53 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionStatus.java
+ * Package  : net.solosky.maplefetion.event.action
+ * File     : FindBuddySuccessEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event.action;
 
-import net.solosky.maplefetion.sipc.SipcStatus;
+import net.solosky.maplefetion.bean.Buddy;
 
 /**
  *
- * 操作结果枚举
+ * 以手机号码查找好友成功
  *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public interface ActionStatus extends SipcStatus
+public class FindBuddySuccessEvent extends SuccessEvent
 {
-	public static final int TIME_OUT = 600;		//超时
-	public static final int IO_ERROR = 700;		//网络错误
-	public static final int OTHER_ERROR = 800;	//其他未知错误
+
+	/**
+	 * 找到的好友对象
+	 */
+	private Buddy foundBuddy;
+	/**
+	 * @param response
+	 */
+	public FindBuddySuccessEvent(Buddy buddy)
+	{
+		this.foundBuddy = buddy;
+	}
+	/**
+	 * @return the foundBuddy
+	 */
+	public Buddy getFoundBuddy()
+	{
+		return foundBuddy;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return "FindBuddySuccessEvent [foundBuddy=" + foundBuddy
+				+ ", EventType=" + getEventType() + "]";
+	}
+
 	
-	public static final int INVALD_CORD_ID = 901;		//无效的分组编号
-	public static final int INVALD_BUDDY = 902;		//不是好友
 }

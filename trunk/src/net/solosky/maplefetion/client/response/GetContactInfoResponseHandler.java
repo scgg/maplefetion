@@ -31,7 +31,6 @@ import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
-import net.solosky.maplefetion.util.ParseHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
