@@ -126,6 +126,7 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public void login(int presence)
 	{
+		//this.client.enableGroup(false);
 		this.client.login(presence);
 	}
 	
@@ -232,7 +233,11 @@ public class MapleFetion extends NotifyEventAdapter
         case SSI_AUTH_FAIL:
         	println("用户名或者密码错误!");
         	break;
-        
+        	
+        case SSI_ACCOUNT_SUSPEND:
+        	println("你已经停机，请缴费后再使用飞信。");
+        	break;
+        	
         default:
         	println("其他状态:"+state.name());
 	        break;

@@ -139,6 +139,11 @@ public class SSISignV2 implements SSISign
 	        	state = LoginState.SSI_VERIFY_FAIL;
 	        	break;
 	        	
+	        case 433:
+	        	logger.debug("SSISignIn: User account suspend.");
+	        	state = LoginState.SSI_ACCOUNT_SUSPEND;
+	        	break;
+	        	
 	        case 404:
 	        	logger.debug("SSISginIn: User not found..");
 	        	state = LoginState.SSI_ACCOUNT_NOT_FOUND;
