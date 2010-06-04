@@ -23,12 +23,11 @@
  * Created  : 2010-1-11
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event.action;
 
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
-import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 
@@ -70,9 +69,9 @@ public class ActionEventFuture
 	 * @throws SystemException			如果处理结果的过程中出现未知的异常抛出
 	 * @throws ReqeustTimeoutExcetion 	如果请求超时会跑出请求超时异常
 	 */
-	public ActionEvent waitActionEvent() throws RequestTimeoutException, InterruptedException, TransferException, SystemException
+	public ActionEvent waitActionEventWithException() throws RequestTimeoutException, InterruptedException, TransferException, SystemException
 	{
-		return this.waitActionEvent(0);
+		return this.waitActionEventWithException(0);
 	}
 	/**
 	 * 在指定的时间内等待操作结果，
@@ -83,7 +82,7 @@ public class ActionEventFuture
 	 * @throws SystemException 			如果处理结果的过程中出现未知的异常抛出
 	 * @throws ReqeustTimeoutExcetion 	如果请求超时会抛出请求超时异常
 	 */
-	public ActionEvent waitActionEvent(long timeout) throws RequestTimeoutException, InterruptedException, TransferException, SystemException
+	public ActionEvent waitActionEventWithException(long timeout) throws RequestTimeoutException, InterruptedException, TransferException, SystemException
 	{
 		synchronized (lock) {
 	        //判断是否已经提前通知过了
@@ -118,7 +117,44 @@ public class ActionEventFuture
              return this.event;
         }
 	}
+
+	/**
+	 * 在指定的时间内等待时间结果，不抛出任何异常，异常被封装为错误事件返回
+	 * @param timeout	等待多长时间，如果超过这个时间就抛出超时异常
+	 * @return	操作成功返回SuccessEvent
+	 * 			操作失败返回FailureEvent
+	 * 			超时返回         TimeoutEvent
+	 *			网络错误返回TransferErrorEvent
+	 *			其他错误返回SystemErrorEvent
+	 */
+	public ActionEvent waitActionEventWithoutException(long timeout)
+	{
+		try {
+			return this.waitActionEventWithException(timeout);
+		} catch (RequestTimeoutException e) {
+			return new TimeoutEvent();
+		} catch (TransferException e) {
+			return new TransferErrorEvent();
+		} catch (SystemException e) {
+			return new SystemErrorEvent(e);
+		} catch (InterruptedException e) {
+			return new SystemErrorEvent(e);
+		}
+	}
 	
+	/**
+	 * 无限时间等待时间结果，不抛出任何异常，异常被封装为错误事件返回
+	 * 这个方法不会永远等待，在数据包超时后会也会发生超时异常
+	 * @return	操作成功返回SuccessEvent
+	 * 			操作失败返回FailureEvent
+	 * 			超时返回         TimeoutEvent
+	 *			网络错误返回TransferErrorEvent
+	 *			其他错误返回SystemErrorEvent
+	 */
+	public ActionEvent waitActionEventWithoutException()
+	{
+		return this.waitActionEventWithoutException(0);
+	}
 	
 	/**
 	 * 设置操作结果

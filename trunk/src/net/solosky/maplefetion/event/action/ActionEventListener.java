@@ -18,37 +18,25 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.dialog
- * File     : FutureActionListener.java
+ * File     : ActionEventListener.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event.action;
 
 import net.solosky.maplefetion.event.ActionEvent;
 
 /**
+ * 
+ * 操作事件监听器，用于完成操作的回调
  *
- * 异步通知结果监听器
- *
- * @author solosky <solosky772@qq.com>
  */
-public class FutureActionEventListener implements ActionEventListener
+public interface ActionEventListener
 {
-	private ActionEventFuture future;
-	
-	public FutureActionEventListener(ActionEventFuture future)
-	{
-		this.future = future;
-	}
-
-	/* (non-Javadoc)
-	 * @see net.solosky.maplefetion.client.dialog.ActionEventListener#fireEevent(net.solosky.maplefetion.event.ActionEvent)
+	/**
+	 * 触发操作事件
+	 * @param event	操作事件
 	 */
-	@Override
-	public void fireEevent(ActionEvent event)
-	{
-		if(this.future!=null)
-			this.future.setActionEvent(event);
-	}
+	public void fireEevent(ActionEvent event);
 }

@@ -5,12 +5,12 @@ import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.client.SystemException;
-import net.solosky.maplefetion.client.dialog.ActionEventFuture;
-import net.solosky.maplefetion.client.dialog.FutureActionEventListener;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.NotifyEvent;
+import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.FailureEvent;
-import net.solosky.maplefetion.event.action.SendChatMessageSuccessEvent;
+import net.solosky.maplefetion.event.action.FutureActionEventListener;
+import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 
@@ -53,7 +53,7 @@ public class SimpleFetion {
 					client.sendChatMessage(Long.parseLong(args[2]),
 							new Message(args[3]), new FutureActionEventListener(future));
 					try {
-						ActionEvent event = future.waitActionEvent();
+						ActionEvent event = future.waitActionEventWithException();
 						switch(event.getEventType()){
 							
 							case SUCCESS:

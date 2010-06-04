@@ -62,6 +62,7 @@ public class LocaleSettingHelper
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
+        conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");
         String content = "<config><user mobile-no=\""+user.getMobile()+"\" /><client type=\"PC\" version=\""+FetionClient.PROTOCOL_VERSION+"\" platform=\"W5.1\" /><servers version=\"0\" /><service-no version=\"0\" /><parameters version=\"0\" /><hints version=\"0\" /><http-applications version=\"0\" /><client-config version=\"0\" /><services version=\"0\" /></config>";
         OutputStream out = conn.getOutputStream();
         out.write(content.getBytes());

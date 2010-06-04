@@ -28,9 +28,9 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.sipc.SipcResponse;
@@ -85,6 +85,16 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 		this.context.getFetionStore().addBuddy(buddy);
 		
 		return super.doActionOK(response);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doTaExsit(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doTaExsit(SipcResponse response)
+			throws FetionException
+	{
+		return new FailureEvent(FailureType.BUDDY_IN_LIST);
 	}
     
 	

@@ -28,7 +28,7 @@ package net.solosky.maplefetion.client.dialog;
 import java.util.ArrayList;
 
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.net.TransferException;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 
 /**
  *

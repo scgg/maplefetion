@@ -30,11 +30,11 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.NotifyEvent;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 
 /**
  *

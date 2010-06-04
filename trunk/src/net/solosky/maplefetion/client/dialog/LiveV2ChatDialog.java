@@ -40,6 +40,9 @@ import net.solosky.maplefetion.client.dispatcher.LiveV2MessageDispatcher;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.ActionEventFuture;
+import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.net.Port;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.Transfer;
@@ -346,7 +349,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     {
     	ActionEventFuture future = new ActionEventFuture();
     	this.inviteBuddy(this.mainBuddy, new FutureActionEventListener(future));
-    	assertActionEvent(future.waitActionEvent(), ActionEventType.SUCCESS);
+    	assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
     }
     
     /**

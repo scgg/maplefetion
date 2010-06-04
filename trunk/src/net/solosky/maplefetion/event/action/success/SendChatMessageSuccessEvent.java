@@ -23,8 +23,9 @@
  * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.event.action;
+package net.solosky.maplefetion.event.action.success;
 
+import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.sipc.SipcStatus;
 
 /**

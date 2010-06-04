@@ -28,6 +28,9 @@ package net.solosky.maplefetion.client.dialog;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.event.action.ActionEventFuture;
+import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.net.TransferException;
 
 /**

@@ -54,15 +54,15 @@ import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
-import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogState;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
-import net.solosky.maplefetion.event.action.SendChatMessageSuccessEvent;
+import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.store.FetionStore;
 
 /**
@@ -126,7 +126,7 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public void login(int presence)
 	{
-		//this.client.enableGroup(false);
+		this.client.enableGroup(false);
 		this.client.login(presence);
 	}
 	

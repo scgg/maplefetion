@@ -26,8 +26,8 @@
 package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
-import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 
 /**
  * 

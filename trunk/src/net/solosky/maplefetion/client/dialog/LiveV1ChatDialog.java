@@ -29,6 +29,7 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcNotify;

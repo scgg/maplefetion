@@ -17,26 +17,54 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : ActionEventListener.java
+ * Package  : net.solosky.maplefetion.event.action
+ * File     : FindBuddySuccessEvent.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.client.dialog;
+package net.solosky.maplefetion.event.action.success;
 
-import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.event.action.SuccessEvent;
 
 /**
- * 
- * 操作事件监听器，用于完成操作的回调
+ *
+ * 以手机号码查找好友成功
+ *
+ * @author solosky <solosky772@qq.com>
  *
  */
-public interface ActionEventListener
+public class FindBuddySuccessEvent extends SuccessEvent
 {
+
 	/**
-	 * 触发操作事件
-	 * @param event	操作事件
+	 * 找到的好友对象
 	 */
-	public void fireEevent(ActionEvent event);
+	private Buddy foundBuddy;
+	/**
+	 * @param response
+	 */
+	public FindBuddySuccessEvent(Buddy buddy)
+	{
+		this.foundBuddy = buddy;
+	}
+	/**
+	 * @return the foundBuddy
+	 */
+	public Buddy getFoundBuddy()
+	{
+		return foundBuddy;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return "FindBuddySuccessEvent [foundBuddy=" + foundBuddy
+				+ ", EventType=" + getEventType() + "]";
+	}
+
+	
 }

@@ -27,10 +27,10 @@ package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.client.dialog.ActionEventListener;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
-import net.solosky.maplefetion.event.action.SendChatMessageSuccessEvent;
+import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 
 /**

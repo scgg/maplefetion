@@ -31,6 +31,9 @@ import java.util.Iterator;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.event.action.ActionEventFuture;
+import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.event.action.TimeoutEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -174,7 +177,7 @@ public class ChatDialogProxy implements DialogListener
 
 	/**
      * @param listener
-     * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog(net.solosky.maplefetion.client.dialog.ActionEventListener)
+     * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog(net.solosky.maplefetion.event.action.ActionEventListener)
      */
     public void openDialog(ActionEventListener listener)
     {
@@ -241,7 +244,7 @@ public class ChatDialogProxy implements DialogListener
 	/**
      * @param message
      * @param listener
-     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendSMSMessage(net.solosky.maplefetion.bean.Message, net.solosky.maplefetion.client.dialog.ActionEventListener)
+     * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendSMSMessage(net.solosky.maplefetion.bean.Message, net.solosky.maplefetion.event.action.ActionEventListener)
      */
     public void sendSMSMessage(Message message, ActionEventListener listener)
     {
