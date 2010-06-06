@@ -126,7 +126,7 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public void login(int presence)
 	{
-		this.client.enableGroup(false);
+		this.client.enableGroup(true);
 		this.client.login(presence);
 	}
 	
@@ -407,9 +407,9 @@ public class MapleFetion extends NotifyEventAdapter
 						case SUCCESS:
 							SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
 							if(evt.isSendToMobile()){
-								System.out.println("发送成功，消息已通过短信发送到对方手机！");
+								println("发送成功，消息已通过短信发送到对方手机！");
 							}else if(evt.isSendToClient()){
-								System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+								println("发送成功，消息已通过服务直接发送到对方客户端！");
 							}
 							break;
 							
@@ -417,28 +417,28 @@ public class MapleFetion extends NotifyEventAdapter
 							FailureEvent evt2 = (FailureEvent) event;
 							switch(evt2.getFailureType()){
 								case BUDDY_NOT_FOUND:
-									System.out.println("发送失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+									println("发送失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
 									break;
 								case USER_NOT_FOUND:
-									System.out.println("发送失败, 该用户不是移动用户。");
+									println("发送失败, 该用户不是移动用户。");
 									break;
 								case SIPC_FAIL:
-									System.out.println("发送失败, 服务器返回了错误的信息。");
+									println("发送失败, 服务器返回了错误的信息。");
 									break;
 								case UNKNOWN_FAIL:
-									System.out.println("发送失败, 不知道错在哪里。");
+									println("发送失败, 不知道错在哪里。");
 									default:;
 							}
 							break;
 						 
 						case SYSTEM_ERROR:
-							System.out.println("发送失败, 客户端内部错误。");
+							println("发送失败, 客户端内部错误。");
 							break;
 						case TIMEOUT:
-							System.out.println("发送失败, 超时");
+							println("发送失败, 超时");
 							break;
 						case TRANSFER_ERROR:
-							System.out.println("发送失败, 超时");
+							println("发送失败, 超时");
 							
 					}
 				}
@@ -821,12 +821,8 @@ public class MapleFetion extends NotifyEventAdapter
 	    {
 	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(this.activeChatDialog==null) {
-	    		try {
-	                this.activeChatDialog = new ChatDialogProxy(buddy, client);
-	                println("提示：你现在可以和 "+ buddy.getDisplayName()+" 聊天了。");
-                } catch (FetionException e) {
-                	println("建立对话框失败~"+e.getMessage());
-                }
+                this.activeChatDialog = this.client.getChatDialogProxy(buddy);
+                println("提示：你现在可以和 "+ buddy.getDisplayName()+" 聊天了。");
 	    	}
 	    }
 	    
@@ -862,12 +858,12 @@ public class MapleFetion extends NotifyEventAdapter
  					if(event.getEventType()==ActionEventType.SUCCESS){
 						SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
 						if(evt.isSendToMobile()){
-							System.out.println("发送成功，消息已通过短信发送到对方手机！");
+							println("发送成功，消息已通过短信发送到对方手机！");
 						}else if(evt.isSendToClient()){
-							System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+							println("发送成功，消息已通过服务直接发送到对方客户端！");
 						}
  					}else{
- 						println("拒绝对方请求失败！");
+ 						println("发送消息失败！");
  					}
  				}
 			});

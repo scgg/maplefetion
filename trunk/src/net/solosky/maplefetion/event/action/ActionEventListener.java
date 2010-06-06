@@ -17,7 +17,7 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
+ * Package  : net.solosky.maplefetion.event.action
  * File     : ActionEventListener.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-6-3

@@ -17,7 +17,7 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.event.action
+ * Package  : net.solosky.maplefetion.event.action.success
  * File     : FindBuddySuccessEvent.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-6-3

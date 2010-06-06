@@ -36,11 +36,12 @@ public interface SipcStatus
 	
 	public static final int TRYING = 100;				//操作已经成功接收，正在操作中
 	public static final int ACTION_OK = 200;			//操作成功
-	public static final int SEND_SMS_OK = 280;		//发送手机短信成功
+	public static final int SEND_SMS_OK = 280;			//发送手机短信成功
 	
 	public static final int NOT_AUTHORIZED = 401;		//需要验证
 	public static final int NOT_FOUND = 404;			//未找到
 	
-	public static final int TA_EXIST = 521;			//对方已经存在
-	public static final int NO_SUBSCRIPTION = 522;	//对方已经存在
+	public static final int SERVER_UNAVAILABLE = 503;	// 服务暂时不可用
+	public static final int TA_EXIST = 521;				//对方已经存在
+	public static final int NO_SUBSCRIPTION = 522;		//没有定义
 }

@@ -37,6 +37,7 @@ import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -81,12 +82,14 @@ public class GetMemberListResponseHandler extends AbstractResponseHandler
 			while(mit.hasNext()) {
 				Element e = (Element) mit.next();
 				Member member = new Member();
-				member.setUri(e.getAttributeValue("uri"));
-				member.setNickName(e.getAttributeValue("nickname"));
-				member.setIicNickName(e.getAttributeValue("iicnickname"));
-				//member.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
-				member.setT6svcid(Integer.parseInt(e.getAttributeValue("t6svcid")));
-				member.setIdentity(Integer.parseInt(e.getAttributeValue("identity")));
+//				member.setUri(e.getAttributeValue("uri"));
+//				member.setNickName(e.getAttributeValue("nickname"));
+//				member.setIicNickName(e.getAttributeValue("iicnickname"));
+//				//member.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
+//				member.setT6svcid(Integer.parseInt(e.getAttributeValue("t6svcid")));
+//				member.setIdentity(Integer.parseInt(e.getAttributeValue("identity")));
+				
+				BeanHelper.toBean(Member.class, member, e);
 				
 				store.addGroupMember(group, member);
 			}

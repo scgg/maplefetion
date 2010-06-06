@@ -26,6 +26,7 @@
 package net.solosky.maplefetion.util;
 
 import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.Date;
@@ -59,16 +60,16 @@ public class SipcLogger extends AbstractProcessor
 	public SipcLogger(String name)
 	{
 		this.name = name;
+		this.isClosed = false;
 		enableLogging = FetionConfig.getBoolean("log.sipc.enable");
-		if(!enableLogging)
-			return;
-		String fileName = FetionConfig.getString("log.sipc.dir")+name+".log";
-		try {
-			writer = new BufferedWriter(new FileWriter(fileName));
-		}catch (IOException e) {
-			logger.warn("Cannot create SIPMessage log file:"+fileName);
+		if(enableLogging){
+			File logFile = new File(FetionConfig.getString("log.sipc.dir"),name+".log");
+			try {
+				writer = new BufferedWriter(new FileWriter(logFile));
+			}catch (IOException e) {
+				logger.warn("Cannot create SIPMessage log file:"+logFile.getAbsolutePath());
+			}
 		}
-		isClosed = false;
 	}
 	
 	/**

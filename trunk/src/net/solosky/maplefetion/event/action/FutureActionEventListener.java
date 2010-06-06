@@ -1,5 +1,5 @@
  /*
- * Licensed to the Apache Software Foundation (ASF) under one or more
+    * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -17,8 +17,8 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.client.dialog
- * File     : FutureActionListener.java
+ * Package  : net.solosky.maplefetion.event.action
+ * File     : FutureActionEventListener.java
  * Author   : solosky < solosky772@qq.com >
  * Created  : 2010-1-11
  * License  : Apache License 2.0 
