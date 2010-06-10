@@ -44,10 +44,8 @@ import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.DialogFactory;
-import net.solosky.maplefetion.client.dialog.DialogSession;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
-import net.solosky.maplefetion.client.dialog.SessionKey;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
@@ -57,7 +55,6 @@ import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.event.action.success.FindBuddySuccessEvent;
 import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
-import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.sipc.SipcMessage;
@@ -214,17 +211,19 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 完整的构造函数
-	 * @param user				登录用户
-	 * @param transferFactory	连接工厂
-	 * @param fetionStore		存储接口
-	 * @param notifyListener	通知监听器
+	 * @param user				登录用户，每一个客户端都只有一个唯一的登录用户对象
+	 * @param transferFactory	连接工厂，需实现TransferFactory接口，用于创建连接对象
+	 * @param fetionStore		飞信存储对象，需实现FetionStore接口，存储了飞信好友列表等信息
+	 * @param notifyListener	通知监听器，需实现NotifyEventListener，用户设置的通知监听器，处理客户端主动发起的事件
+	 * @param fetionTimer		飞信定时器，需实现FetionTimer接口，用于完成不同的定时任务
+	 * @param fetionExecutor	飞信执行器，需实现FetionExecutor接口，可以在另外一个单独的线程中执行任务
 	 */
     public FetionClient(User user, 
     					TransferFactory transferFactory,
     					FetionStore fetionStore, 
     					NotifyEventListener notifyEventListener, 
-    					FetionTimer timer,
-						FetionExecutor executor)
+    					FetionTimer fetionTimer,
+						FetionExecutor fetionExecutor)
     {
     	FetionConfig.init();
     	
@@ -234,8 +233,8 @@ public class FetionClient implements FetionContext
     	this.store           = fetionStore;
 		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		this.proxyFactory    = new ChatDialogProxyFactory(this);
-		this.timer           = timer;
-		this.executor        = executor;
+		this.timer           = fetionTimer;
+		this.executor        = fetionExecutor;
 		this.notifyEventListener  = notifyEventListener;
 		
 		
@@ -388,8 +387,9 @@ public class FetionClient implements FetionContext
          this.timer.stopTimer();
     }
 
-    /* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#updateStatus(ClientState)
+    /**
+     * 更新客户端状态 
+     * 这个方法是不同步的，因为属性state是volatile的
      */
     public void updateState(ClientState state)
     {
@@ -406,8 +406,9 @@ public class FetionClient implements FetionContext
     	return this.state;
     }
     
-    /* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#handleException(net.solosky.maplefetion.FetionException)
+    /**
+     * 处理客户端异常
+     * 通常交给客户端处理的异常都是致命的，也就是说如果调用了这个方法客户端都会主动退出
      */
     public void handleException(FetionException exception)
     {
@@ -425,17 +426,17 @@ public class FetionClient implements FetionContext
     			logger.fatal("Server closed connecction. Please try to login again after several time.");
     			this.state = ClientState.DISCONNECTED;		//服务器关闭了连接
     		}else {
-    			logger.fatal("Unkown registration exception", exception);
+    			logger.fatal("Unknown registration exception", exception);
     		}
 		}else if(exception instanceof SystemException){		//系统错误
-			logger.fatal("System error. Please email crush report or log to the author and wait for bug fix, thanks.", exception);
+			logger.fatal("System error. Please email the crush report or the system log to the project owner and wait for bug fix, thank you.", exception);
 			this.state = ClientState.SYSTEM_ERROR;
 			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
     	}else if(exception instanceof LoginException){		//登录错误
     		logger.fatal("Login error. state="+((LoginException)exception).getState().name());
     		this.state = ClientState.LOGIN_ERROR;
     	}else {
-    		logger.fatal("Unkown error. Please email crush report or log below to the author and wait for bug fix, thanks.", exception);
+    		logger.fatal("Unknown error. Please email the crush report or the system log to the project owner and wait for bug fix, thank you.", exception);
     		this.state = ClientState.SYSTEM_ERROR;			//其他错误
     		CrushBuilder.handleCrushReport(exception);
     	}
@@ -565,12 +566,22 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 客户端同步登录
+	 * @param verifyImage 验证图片
+	 * @return 登录结果
+	 */
+	public LoginState syncLogin(VerifyImage img)
+	{
+		this.loginWork.setVerifyImage(img);
+		return this.syncLogin();
+	}
+	
+	/**
+	 * 以验证码同步登陆
 	 * @param presence 登录状态
 	 * @return 登录结果
 	 */
 	public LoginState syncLogin(int presence)
 	{
-		this.login(presence);
 		try {
 	        return this.loginWaiter.waitObject();
         } catch (Exception e) {
@@ -708,8 +719,8 @@ public class FetionClient implements FetionContext
 	 * user.setNickName("GoodDay");
 	 * user.setImpresa("I'd love it..");
 	 * client.setPersonalInfo(new ActionEventListener(){
-	 * 		public void actionFinished(int status){
-	 * 			if(status==ActionStatus.ACTION_OK)
+	 * 		public void fireEvent(ActionEvent event){
+	 * 			if(event.getEventType()==ActionEventType.SUCCESS)
 	 * 				System.out.println("set personal info success!");
 	 * 			else
 	 * 				System.out.println("set personal info failed!");
@@ -735,9 +746,10 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
-	 * 设置好友分组
-	 * @param buddy
-	 * @param cordIds
+	 * 移动好友到多个分组
+	 * 飞信好友分组有点奇怪，一个好友可以属于多个分组，谁想出的这个需求····
+	 * @param buddy			好友对象
+	 * @param cordIds		多个好友分组列表
 	 * @param listener
 	 */
 	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionEventListener listener)
@@ -746,9 +758,9 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
-	 * 设置好友分组
-	 * @param buddy
-	 * @param cordIds
+	 * 移动好友到单个分组
+	 * @param buddy		好友对象
+	 * @param cordIds	单个好友分组对象
 	 * @param listener
 	 */
 	public void setBuddyCord(Buddy buddy, Cord cord, ActionEventListener listener)
@@ -770,7 +782,7 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 删除好友
-	 * @param buddy
+	 * @param buddy		需删除的好友
 	 * @param listener
 	 */
 	public void deleteBuddy(Buddy buddy, ActionEventListener listener)

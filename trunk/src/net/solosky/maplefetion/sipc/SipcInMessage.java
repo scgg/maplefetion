@@ -68,10 +68,23 @@ public abstract class SipcInMessage extends SipcMessage
 	 * 返回正文长度
 	 * @return		正文长度，如果没有消息头返回-1
 	 */
-	public int getLength()
+	public int getContentLength()
 	{
-		//长度有点奇怪，只在有回复正文时候才会有长度回复头
+		//如果没有长度信息，默认为0。
+		//长度有可能是这样的内容：64240;p=0
+		//前面的数字是这个包的长度，后面的p数字是这个包的起始位置
 		SipcHeader header = this.getHeader(SipcHeader.LENGTH);
-		return header==null ? -1 : Integer.parseInt(header.getValue());
+		if(header!=null && header.getValue()!=null){
+			String value = header.getValue();
+			if(value.length()<1){
+				return -1;
+			}else if(value.indexOf(';')!=-1){
+				return Integer.parseInt(value.substring(0, value.indexOf(';')));
+			}else{
+				return Integer.parseInt(value);
+			}
+		}else{
+			return -1;
+		}
 	}
 }

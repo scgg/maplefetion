@@ -39,7 +39,7 @@ import net.solosky.maplefetion.net.TransferException;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class ActionEventFuture
+public class ActionEventFuture implements ActionEventListener
 {
 	//锁
 	private Object lock;
@@ -58,9 +58,9 @@ public class ActionEventFuture
 	}
 	
 	/**
-	 * 等待操作结果
-	 * 事实上这个操作不会一直等待，因为传输层如果在请求发出的后的指定时间内没有收到回复，
-	 * 并且重发过一定次数后仍没有收到回复，就会抛出请求超时异常
+	 * 等待操作结果<br />
+	 * 事实上这个操作不会一直等待，因为传输层如果在请求发出的后的指定时间内没有收到回复，<br />
+	 * 并且重发过一定次数后仍没有收到回复，就会抛出请求超时异常<br />
 	 * 
 	 * 建议使用这个方法等待操作结果
 	 * 
@@ -121,11 +121,11 @@ public class ActionEventFuture
 	/**
 	 * 在指定的时间内等待时间结果，不抛出任何异常，异常被封装为错误事件返回
 	 * @param timeout	等待多长时间，如果超过这个时间就抛出超时异常
-	 * @return	操作成功返回SuccessEvent
-	 * 			操作失败返回FailureEvent
-	 * 			超时返回         TimeoutEvent
-	 *			网络错误返回TransferErrorEvent
-	 *			其他错误返回SystemErrorEvent
+	 * @return	操作成功返回SuccessEvent<br />
+	 * 			操作失败返回FailureEvent<br />
+	 * 			超时返回         TimeoutEvent<br />
+	 *			网络错误返回TransferErrorEvent<br />
+	 *			其他错误返回SystemErrorEvent<br />
 	 */
 	public ActionEvent waitActionEventWithoutException(long timeout)
 	{
@@ -179,6 +179,13 @@ public class ActionEventFuture
 	        this.isNotifyed = false;
         }
 	}
-	
-	
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.event.action.ActionEventListener#fireEevent(net.solosky.maplefetion.event.ActionEvent)
+	 */
+	@Override
+	public void fireEevent(ActionEvent event)
+	{
+		this.setActionEvent(event);
+	}
 }

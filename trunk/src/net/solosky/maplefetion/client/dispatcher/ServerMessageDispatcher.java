@@ -90,7 +90,9 @@ public class ServerMessageDispatcher extends AbstractMessageDispatcher
 																		//列表改变事件 TODO ..
 			}else if(event.equals("permission")) {
 				clazz = "PermissionNotifyHandler";						//权限改变事件
-			}
+			}else if(event.equals("SystemNotifyV4")){
+				clazz = "SystemNotifyHandler";							//系统通知,啥东西。。 TODO ..
+			}else{}
 		}else if(method.equals(SipcMethod.MESSAGE)) {
 			clazz = "MessageNotifyHandler";							//消息，这里包括系统消息和好友消息
 		}else if(method.equals(SipcMethod.INVATE)) {

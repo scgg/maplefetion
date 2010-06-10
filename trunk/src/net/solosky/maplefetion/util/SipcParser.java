@@ -259,8 +259,8 @@ public class SipcParser extends AbstractProcessor
     private boolean readSipcBody()
     {
     	if(this.lastAction==ACTION_NONE) {
-    		if(this.curMessage.getLength()>0) {
-    			this.contentLeft = this.curMessage.getLength();
+    		if(this.curMessage.getContentLength()>0) {
+    			this.contentLeft = this.curMessage.getContentLength();
     			this.byteWriter.clear();
     		}else {
     			lastAction = ACTION_NONE;

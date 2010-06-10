@@ -35,8 +35,11 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
 import net.solosky.maplefetion.sipc.SipcHeader;
+import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.sipc.SipcStatus;
+import net.solosky.maplefetion.util.SliceSipcResponseHelper;
 
 import org.apache.log4j.Logger;
 
@@ -53,6 +56,11 @@ public class TransferService extends AbstractProcessor
 	 * 已发送请求队列
 	 */
 	private Queue<SipcRequest> requestQueue;
+	
+	/**
+	 * 分块传输的消息队列
+	 */
+	private Queue<SliceSipcResponseHelper> slicedResponseQueue;
 	
 	/**
 	 * 飞信上下文
@@ -74,8 +82,9 @@ public class TransferService extends AbstractProcessor
 	 */
 	public TransferService(FetionContext context)
 	{
-		this.requestQueue = new LinkedList<SipcRequest>();
 		this.context = context;
+		this.requestQueue = new LinkedList<SipcRequest>();
+		this.slicedResponseQueue = new LinkedList<SliceSipcResponseHelper>();
 	}
 
 	/**
@@ -84,24 +93,49 @@ public class TransferService extends AbstractProcessor
 	@Override
 	protected boolean doProcessIncoming(Object o) throws FetionException
 	{
+		//-_-!!! , 好吧，我承认这里判断逻辑有点乱。。
 		if (o instanceof SipcResponse) {
-			// 如果是回复的话，查找对应的请求，并通知回复等待对象
 			SipcResponse response = (SipcResponse) o;
-			SipcRequest request = this.findRequest(response);
-			response.setRequest(request);
-			
-			//找到了对应的请求，然后判断是否回复已经到了指定的回复次数，如果到了就从队列中移除，如果没有，就不移除
-			if(request!=null) {
-				request.incReplyTimes();
-				if(request.getNeedReplyTimes()==request.getReplyTimes()) {
-					synchronized(this.requestQueue) {
-						this.requestQueue.remove(request);
+			//先检查这个回复是不是分块回复的一部分
+			SliceSipcResponseHelper helper = this.findSliceResponseHelper(response);
+			if(helper!=null){
+				//如果是分块回复，就添加到分块回复列表中
+				helper.addSliceSipcResponse(response);
+				if(helper.isFullSipcResponseRecived()){
+					synchronized (slicedResponseQueue) {
+						slicedResponseQueue.remove(helper);
 					}
+					
+					//构造新的回复
+					SipcResponse some = helper.getFullSipcResponse();
+					this.handleFullResponse(some);
+					
+					//这里遇到点麻烦了，因为这里改变了请求的对象，如果直接返回true，那前一个处理器仍然处理的是原来那个请求
+					//所以这里直接返回false,让基类的processImcoming不再传到下一个处理器，在这里调用下一个处理器，
+					//是设计问题，应该一个处理器是应该是对一个对象的加工，也就是说前一个处理的对对象加工后再返回新对象交给下一个处理器处理
+					//是一个输入和输出的关系，设计的时候没有考虑到这个问题，等待下一个版本重构。。。先暂时就这样了吧。。
+					if(this.previousProcessor!=null)
+						this.previousProcessor.processIncoming(some);
+					return false;
+				}else{
+					return false;
 				}
+			}else if(response.getStatusCode()==SipcStatus.PARTIAL){	//可能是第一次收到的分块回复
+				helper = new SliceSipcResponseHelper(response);
+				synchronized (slicedResponseQueue) {
+					slicedResponseQueue.add(helper);
+				}
+				return false;
+			}else{	//不是分块回复的对象就直接进行下一步操作
+				this.handleFullResponse(response);
+				return true;
 			}
+		}else if(o instanceof SipcNotify){
+			this.handleFullNotify((SipcNotify) o);
+			return true;
+		}else{
+			return false;
 		}
-
-		return true;
 	}
 
 	/**
@@ -165,7 +199,7 @@ public class TransferService extends AbstractProcessor
 	    this.context.getFetionTimer().scheduleTask(
 	    						this.sipcTimeoutCheckTask, 50*1000, 60*1000);
     }
-
+    
 
 	/**
 	 * 
@@ -213,6 +247,30 @@ public class TransferService extends AbstractProcessor
     		return null;
 		}
 	}
+	
+	/**
+	 * 查找这个回复是否是分块回复的一部分
+	 * @param response
+	 * @return
+	 */
+	private SliceSipcResponseHelper findSliceResponseHelper(SipcResponse response)
+	{
+		synchronized(this.slicedResponseQueue) {
+			Iterator<SliceSipcResponseHelper> it = this.slicedResponseQueue.iterator();
+    		int resCallID = response.getCallID();
+    		String resSequence = response.getSequence();
+    		SliceSipcResponseHelper helper = null;
+    		
+    		while (it.hasNext()) {
+    			helper = it.next();
+    			if (helper.getCallid()==resCallID && helper.getSequence().equals(resSequence)) {
+    				return helper;
+    			}
+    		}
+    		return null;
+		}
+	}
+	
 
 	/**
 	 * 检查超时的包，如果没有超过指定的重发次数，就重发 如果只要有一个包超出了重发的次数，就抛出超时异常
@@ -273,6 +331,39 @@ public class TransferService extends AbstractProcessor
 		}else {
 			logger.warn("Request already was timeout, but there wasn't a timeout handler, ignore it. Request="+request);
 		}
+	}
+	
+	/**
+	 * 处理收到的完整回复，主要完成查找对应的请求包并注入到回复中
+	 * @param response
+	 */
+	private boolean handleFullResponse(SipcResponse response)
+	{
+		// 如果是回复的话，查找对应的请求，并通知回复等待对象
+		SipcRequest request = this.findRequest(response);
+		response.setRequest(request);
+		
+		//找到了对应的请求，然后判断是否回复已经到了指定的回复次数，如果到了就从队列中移除，如果没有，就不移除
+		if(request!=null) {
+			request.incReplyTimes();
+			if(request.getNeedReplyTimes()==request.getReplyTimes()) {
+				synchronized(this.requestQueue) {
+					this.requestQueue.remove(request);
+				}
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
+	 * 处理收到完整通知
+	 * @param notify
+	 */
+	private boolean handleFullNotify(SipcNotify notify)
+	{
+		//目前什么也不做
+		return true;
 	}
 
 }

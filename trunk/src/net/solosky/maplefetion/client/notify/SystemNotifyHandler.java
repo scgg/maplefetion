@@ -17,32 +17,34 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.sipc
- * File     : SipcStatus.java
+ * Package  : net.solosky.maplefetion.client.notify
+ * File     : SystemNotifyHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-11
+ * Created  : 2010-6-10
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.sipc;
+package net.solosky.maplefetion.client.notify;
+
+import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.sipc.SipcNotify;
 
 /**
  *
- * SIPC请求状态
+ * 系统通知
  *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public interface SipcStatus
+public class SystemNotifyHandler extends AbstractNotifyHandler
 {
-	
-	public static final int TRYING = 100;				//操作已经成功接收，正在操作中
-	public static final int PARTIAL = 188;				//部分结果
-	public static final int ACTION_OK = 200;			//操作成功
-	public static final int SEND_SMS_OK = 280;			//发送手机短信成功
-	
-	public static final int NOT_AUTHORIZED = 401;		//需要验证
-	public static final int NOT_FOUND = 404;			//未找到
-	
-	public static final int SERVER_UNAVAILABLE = 503;	// 服务暂时不可用
-	public static final int TA_EXIST = 521;				//对方已经存在
-	public static final int NO_SUBSCRIPTION = 522;		//没有定义
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.NotifyHandler#handle(net.solosky.maplefetion.sipc.SipcNotify)
+	 */
+	@Override
+	public void handle(SipcNotify notify) throws FetionException
+	{
+		//TODO ..
+	}
+
 }

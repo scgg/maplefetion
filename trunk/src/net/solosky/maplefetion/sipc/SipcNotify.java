@@ -91,7 +91,7 @@ public class SipcNotify extends SipcInMessage
 	
 	public String toString()
 	{
-		return "[SIPNotify: M="+this.getMethod()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getLength()+"]";
+		return "[SIPNotify: M="+this.getMethod()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getContentLength()+"]";
 	}
 
 	/* (non-Javadoc)

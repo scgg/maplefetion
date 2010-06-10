@@ -91,8 +91,6 @@ public class SipcResponse extends SipcInMessage
 	{
 		return this.statusMessage;
 	}
-	
-	
 
 	/**
      * @return the request
@@ -110,9 +108,45 @@ public class SipcResponse extends SipcInMessage
     	this.request = request;
     }
 
+    /**
+     * ToString
+     */
 	public String toString()
 	{
-		return "[SipcResponse: status="+this.getStatusCode()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getLength()+"]";
+		return "[SipcResponse: status="+this.getStatusCode()+"; I:"+this.getCallID()+"; Q:"+this.getSequence()+"; L:"+this.getContentLength()+"]";
+	}
+	
+	/**
+	 * 返回分块包的偏移， 如果没有就返回-1
+	 * 一个请求的结果如果太大，服务器就会分成几个小的信令包返回，一般状态码为188 Partial就是一个分块包
+	 * 如果是一个分块包，L头部类似于64240;p=0，后面的p就代表了这个分块包在整个包的偏移
+	 * @return
+	 */
+	public int getSliceOffset()
+	{
+		SipcHeader header = this.getHeader(SipcHeader.LENGTH);
+		if(header!=null && header.getValue()!=null 
+				&& header.getValue().length()>0 
+				&& header.getValue().indexOf(";p=")!=-1){
+			String value = header.getValue();
+			String offset = value.substring(value.indexOf(";p=")+3);
+			if(offset.length()>0){
+				return Integer.parseInt(offset);
+			}else{
+				return -1;
+			}
+		}else{
+			return -1;
+		}
+	}
+	
+	/**
+	 * 是否是某个大消息的部分消息块
+	 * @return
+	 */
+	public boolean isSlice()
+	{
+		return this.getStatusCode()==SipcStatus.PARTIAL || this.getSliceOffset()!=-1;
 	}
 
 	
