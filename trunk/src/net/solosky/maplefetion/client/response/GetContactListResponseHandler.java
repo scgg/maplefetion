@@ -34,6 +34,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.MobileBuddy;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
@@ -118,6 +119,22 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     	}else {
     		logger.debug("No mobile buddies defined in the contact list..");
     	}
+    	
+    	//处理 chat-friend..
+    	//这个chat-friend具体是什么含义我也没搞得太清楚，目前猜测里面的名单可能和用户是陌生人关系
+    	Element chatFriends = contacts.getChild("chat-friends");
+    	if(chatFriends!=null){
+    		List list = chatFriends.getChildren();
+    		Iterator it = list.iterator();
+    		while(it.hasNext()){
+    			Element e = (Element) it.next();
+    			Buddy b = new FetionBuddy();
+        		BeanHelper.toBean(FetionBuddy.class, b, e);
+        		BeanHelper.setValue(b, "relation", Relation.STRANGER);
+        		store.addBuddy(b);
+    		}
+    	}
+    	
     	//TODO 处理allowList...
 		return super.doActionOK(response);
 	}

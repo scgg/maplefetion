@@ -26,6 +26,8 @@
 package net.solosky.maplefetion.client.notify;
 
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -66,8 +68,14 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
 		}
 		this.dialog.process(receipt);
 		
-		
-		//建立会话
+		//检查是否发起会话的好友是否存在，如果不存在建立一个新飞信好友对象，并设置关系为陌生人关系
+		Buddy buddy = this.context.getFetionStore().getBuddyByUri(notify.getFrom());
+		if(buddy==null){
+			buddy = new FetionBuddy();
+			buddy.setUri(notify.getFrom());
+			this.context.getFetionStore().addBuddy(buddy);
+		}
+		//和邀请的好友建立会话
     	final ChatDialog dialog = context.getDialogFactory().createChatDialog(notify);
     	Runnable r = new Runnable(){
 			public void run(){
