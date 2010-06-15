@@ -35,14 +35,24 @@ public class Validator
 {
 	/**
 	 * 判断手机号是否合法
+	 * 目前仅判断了是否是以下号码段1340-1348，135-139，150-152,187-188
 	 * @param mobile	手机号码
 	 * @return	是否合法
 	 */
 	public static boolean validateMobile(long mobile)
 	{
-		String ms = Long.toString(mobile);
-		return ms.length()!=11			//TODO 现在仅验证手机号码长度，需要添加更加详细的规则。。
-					? false:true; 
-		
+		if(mobile>=13400000000L && mobile<=13489999999L){	//1340-1348
+			return true;
+		}else if(mobile>=13500000000L && mobile<=13999999999L){	//135-139
+			return true;
+		}else if(mobile>=15000000000L && mobile<=15299999999L){	//150-152
+			return true;
+		}else if(mobile>=15700000000L && mobile<=15999999999L){	//157-159
+			return true;
+		}else if(mobile>=18700000000L && mobile<=18899999999L){	//187-188
+			return true;
+		}else {
+			return false;
+		}
 	}
 }

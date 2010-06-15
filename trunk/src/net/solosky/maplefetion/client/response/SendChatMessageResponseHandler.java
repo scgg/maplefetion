@@ -30,6 +30,8 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 
@@ -73,8 +75,14 @@ public class SendChatMessageResponseHandler extends AbstractResponseHandler
 	{
 		return new SendChatMessageSuccessEvent(response.getStatusCode());
 	}
-	
-	
-	
 
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doNotFound(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doNotFound(SipcResponse response)
+			throws FetionException
+	{
+		return new FailureEvent(FailureType.USER_NOT_FOUND);
+	}
 }

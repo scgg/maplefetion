@@ -27,6 +27,7 @@ package net.solosky.maplefetion;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Iterator;
 
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
@@ -50,6 +51,8 @@ import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.event.action.success.FindBuddySuccessEvent;
@@ -157,24 +160,24 @@ public class FetionClient implements FetionContext
 	/**
 	 * 详细的构造函数
 	 * @param mobileNo			手机号
-	 * @param pass				用户密码
+	 * @param password			用户密码
+	 * @param notifyListener	通知监听器
 	 * @param transferFactory	传输工厂
 	 * @param fetionStore		分析存储对象
-	 * @param notifyListener	通知监听器
 	 * @param loginListener		登录监听器
 	 */
 	public FetionClient(long mobileNo,
-						String pass, 
+						String password, 
+						NotifyEventListener notifyEventListener,
 						TransferFactory transferFactory,
 						FetionStore fetionStore,
-						NotifyEventListener notifyEventListener,
 						FetionTimer timer,
 						FetionExecutor executor)
 	{
-		this(new User(mobileNo, pass, "fetion.com.cn"),
+		this(new User(mobileNo, password, "fetion.com.cn"),
+				notifyEventListener,
 				transferFactory,
 				fetionStore, 
-				notifyEventListener,
 				timer,
 				executor);
 	}
@@ -183,17 +186,17 @@ public class FetionClient implements FetionContext
 	/**
 	 * 使用默认的传输模式和存储模式构造
 	 * @param mobileNo			手机号码
-	 * @param pass				密码
+	 * @param password			密码
 	 * @param notifyListener	通知监听器
 	 */
 	public FetionClient(long mobileNo, 
-						String pass, 
+						String password, 
 						NotifyEventListener notifyEventListener)
 	{
-		this(new User(mobileNo, pass, "fetion.com.cn"), 
+		this(new User(mobileNo, password, "fetion.com.cn"), 
+				notifyEventListener, 
 				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
-				notifyEventListener, 
 				new ThreadTimer(),
 				new SingleExecutor());
 	}
@@ -201,7 +204,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 简单的构造函数
 	 * @param mobile	用户手机号码
-	 * @param pass		用户密码
+	 * @param password	用户密码
 	 */
 	public FetionClient(long mobile, String pass)
 	{
@@ -212,16 +215,16 @@ public class FetionClient implements FetionContext
 	/**
 	 * 完整的构造函数
 	 * @param user				登录用户，每一个客户端都只有一个唯一的登录用户对象
+	 * @param notifyListener	通知监听器，需实现NotifyEventListener接口，用户设置的通知监听器，处理客户端主动发起的事件
 	 * @param transferFactory	连接工厂，需实现TransferFactory接口，用于创建连接对象
 	 * @param fetionStore		飞信存储对象，需实现FetionStore接口，存储了飞信好友列表等信息
-	 * @param notifyListener	通知监听器，需实现NotifyEventListener，用户设置的通知监听器，处理客户端主动发起的事件
 	 * @param fetionTimer		飞信定时器，需实现FetionTimer接口，用于完成不同的定时任务
 	 * @param fetionExecutor	飞信执行器，需实现FetionExecutor接口，可以在另外一个单独的线程中执行任务
 	 */
     public FetionClient(User user, 
+    					NotifyEventListener notifyEventListener, 
     					TransferFactory transferFactory,
     					FetionStore fetionStore, 
-    					NotifyEventListener notifyEventListener, 
     					FetionTimer fetionTimer,
 						FetionExecutor fetionExecutor)
     {
@@ -368,6 +371,8 @@ public class FetionClient implements FetionContext
     {
     	this.timer.startTimer();
     	this.executor.startExecutor();
+    	this.transferFactory.openFactory();
+    	
     	this.dialogFactory   = new DialogFactory(this);
     	this.loginWork       = new LoginWork(this, Presence.ONLINE);
     	
@@ -704,8 +709,27 @@ public class FetionClient implements FetionContext
 	 */
 	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
-		if(!Validator.validateMobile(mobile))
-			throw new IllegalArgumentException(mobile+" is not a valid CMCC mobile number.. ");
+		//先判断是否是合法的移动号码
+		if(!Validator.validateMobile(mobile)){
+			if(listener!=null){
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+			}
+		}
+		
+		//可能部分好友已经获取到了手机号，特别是没有开通飞信的好友手机号码就是已知的
+		//为了提高效率，这里先遍历好友，查看是否有好友的手机号码和给定的号码相同
+		Iterator<Buddy> it = this.getFetionStore().getBuddyList().iterator();
+		while(it.hasNext()){
+			Buddy buddy = it.next();
+			if(buddy.getMobile()==mobile){	//找到了好友，直接通知监听器
+				if(listener!=null){
+					listener.fireEevent(new FindBuddySuccessEvent(buddy));
+					return;
+				}
+			}
+		}
+		
+		//仍然没找到，这才向服务器发起查询
 		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, listener);
 	}
 	/**
@@ -777,7 +801,12 @@ public class FetionClient implements FetionContext
 	 */
 	public void addBuddy(long mobile, ActionEventListener listener)
 	{
-		this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(mobile), 0, 1, user.getNickName(), listener);
+		if(!Validator.validateMobile(mobile)){
+			if(listener!=null)
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+		}else{
+			this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(mobile), 0, 1, user.getNickName(), listener);
+		}
 	}
 	
 	/**

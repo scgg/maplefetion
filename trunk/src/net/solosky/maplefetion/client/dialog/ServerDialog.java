@@ -694,7 +694,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		this.session.removeAttribute(SessionKey.FIND_BUDDY_BY_MOBILE_RESULT);
 		SipcRequest request = this.messageFactory.createGetContactDetailRequest("tel:"+mobile);
 		request.setResponseHandler(new FindBuddyByMobileResponseHandler(context, this, listener));
 		this.process(request);

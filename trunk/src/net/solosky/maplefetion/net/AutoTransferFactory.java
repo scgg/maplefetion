@@ -133,7 +133,6 @@ public class AutoTransferFactory implements TransferFactory
     @Override
     public void openFactory()
     {
-    	this.activeFactory.openFactory();
     }
 
 	/* (non-Javadoc)

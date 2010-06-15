@@ -28,6 +28,7 @@ package net.solosky.maplefetion.client.dialog;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
@@ -79,9 +80,18 @@ public class BasicChatDialog extends ChatDialog
     @Override
     public void sendChatMessage(Message message, ActionEventListener listener)
     {
-	    //给手机在线的人发送消息是通过服务器对话框发送的
+    	//确保对话框时打开状态
     	this.ensureOpened();
-    	this.context.getDialogFactory().getServerDialog().sendChatMessage(this.mainBuddy, message, listener);
+    	ServerDialog serverDialog = this.context.getDialogFactory().getServerDialog();
+    	
+    	//如果当前好友是手机好友，也就是没有开通飞信的好友的时候，只能发短信
+    	if(this.mainBuddy instanceof MobileBuddy){
+    		serverDialog.sendSMSMessage(this.mainBuddy, message, listener);
+    	}else{	
+    		//如果当前对话好友是飞信好友，发送消息的是通过服务器中转的，
+    		//如果好友短信在线，直接发送到对方手机上，如果手机也离线，服务器会保存这个消息，然后等待好友登陆客户端的时候再发送
+    		serverDialog.sendChatMessage(this.mainBuddy, message, listener);
+    	}
     	this.updateActiveTime();
 	    
     }

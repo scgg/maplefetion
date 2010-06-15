@@ -34,13 +34,48 @@ package net.solosky.maplefetion.event.action;
  *
  */
 public enum FailureType {
-	SIPC_FAIL,			//是指Sipc返回的状态不是成功状态，如果无需区分错误的类型，就可以使用一般错误来简化代码的编写
-	SERVER_BUSY,		//服务器繁忙，暂时无法响应请求
-	SERVER_ERROR,		//服务器内部错误
-	NOT_ACCEPTABLE,		//请求的数据格式不对
+	/**
+	 * 是指Sipc返回的状态不是成功状态（2xx），如果无需区分错误的类型，就可以使用一般错误来简化代码的编写
+	 */
+	SIPC_FAIL,
 	
-	BUDDY_NOT_FOUND,	//好友不存在，是指用户存在，但不是好友
-	USER_NOT_FOUND,		//用户不存在，无效的号码或者用户由于其他的原因无法访问
-	BUDDY_IN_LIST,		//添加好友是好友已经存在
-	UNKNOWN_FAIL,		//未知错误
+	/**
+	 * 服务器繁忙，暂时无法响应请求
+	 */
+	SERVER_BUSY,
+	
+	/**
+	 * 服务器内部错误
+	 */
+	SERVER_ERROR,	
+	
+	/**
+	 * 请求的数据格式不对
+	 */
+	NOT_ACCEPTABLE,
+	
+	/**
+	 * 好友不存在，是指用户存在，但不是好友
+	 */
+	BUDDY_NOT_FOUND,
+	
+	/**
+	 * 用户不存在，无效的号码或者用户由于其他的原因无法访问
+	 */
+	USER_NOT_FOUND,
+	
+	/**
+	 * 添加好友是好友已经存在
+	 */
+	BUDDY_EXISTS,
+	
+	/**
+	 * 未知错误
+	 */
+	UNKNOWN_FAIL,		
+	
+	/**
+	 * 不是移动的号码
+	 */
+	INVALID_CMCC_MOBILE,
 }

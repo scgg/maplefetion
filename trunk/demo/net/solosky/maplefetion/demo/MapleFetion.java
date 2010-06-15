@@ -63,7 +63,12 @@ import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
+import net.solosky.maplefetion.net.AutoTransferFactory;
+import net.solosky.maplefetion.net.nio.NioTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
+import net.solosky.maplefetion.store.SimpleFetionStore;
+import net.solosky.maplefetion.util.SingleExecutor;
+import net.solosky.maplefetion.util.ThreadTimer;
 
 /**
  * 这个是MapleFetion的演示程序，也提供了一个完整的命令行下的飞信
@@ -115,7 +120,11 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public MapleFetion(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, this);
+		this.client = new FetionClient(mobile, pass,
+				this, new AutoTransferFactory(),
+				new SimpleFetionStore(), 
+				new ThreadTimer(),
+				new SingleExecutor());
 		this.reader = new BufferedReader(new InputStreamReader(System.in));
 		this.writer = new BufferedWriter(new OutputStreamWriter(System.out));
 		this.buddymap = new Hashtable<String, String>();
@@ -1112,7 +1121,7 @@ public class MapleFetion extends NotifyEventAdapter
 									System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
 								}
 		 					}else{
-		 						println("拒绝对方请求失败！");
+		 						println("发送消息失败！");
 		 					}
 		 				}
 					});

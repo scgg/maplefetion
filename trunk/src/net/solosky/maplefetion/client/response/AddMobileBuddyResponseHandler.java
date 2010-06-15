@@ -84,7 +84,7 @@ public class AddMobileBuddyResponseHandler extends AbstractResponseHandler
 	protected ActionEvent doTaExsit(SipcResponse response)
 			throws FetionException
 	{
-		return new FailureEvent(FailureType.BUDDY_IN_LIST);
+		return new FailureEvent(FailureType.BUDDY_EXISTS);
 	}
 
 	
