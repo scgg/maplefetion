@@ -99,11 +99,6 @@ public interface FetionContext
 	 * 返回客户端状态
 	 */
 	public abstract ClientState getState();
-	
-	/**
-	 * 返回登录等待对象,  用于同步登录
-	 */
-	public abstract ObjectWaiter<LoginState> getLoginWaiter();
 
 	/**
 	 * 处理不可恢复的异常的回调方法

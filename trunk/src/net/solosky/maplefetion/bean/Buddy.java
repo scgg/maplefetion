@@ -107,4 +107,15 @@ public abstract class Buddy extends Person
      */
     
     public abstract String getDisplayName();
+
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return "Buddy [getDisplayName()=" + getDisplayName() + ", getUri()="
+				+ getUri() + "]";
+	}
 }

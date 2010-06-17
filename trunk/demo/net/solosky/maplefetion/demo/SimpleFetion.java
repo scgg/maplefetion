@@ -4,6 +4,7 @@ import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.NotifyEvent;

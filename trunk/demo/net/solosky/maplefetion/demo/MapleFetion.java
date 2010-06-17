@@ -39,7 +39,6 @@ import java.util.Iterator;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
-import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventAdapter;
 import net.solosky.maplefetion.bean.Buddy;
@@ -64,7 +63,6 @@ import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
-import net.solosky.maplefetion.net.nio.NioTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.SingleExecutor;
@@ -136,7 +134,7 @@ public class MapleFetion extends NotifyEventAdapter
 	public void login(int presence)
 	{
 		this.client.enableGroup(true);
-		this.client.login(presence);
+		this.client.login(presence, null);
 	}
 	
 	
@@ -223,7 +221,7 @@ public class MapleFetion extends NotifyEventAdapter
     	        	if(img!=null) {
     	        		saveImage(img.getImageData());
     	        		img.setVerifyCode(readLine());
-    	        		client.login(img);
+    	        		client.login(Presence.ONLINE, img);
     	        	}else {
     	        		println("刷新验证图片失败···");
     	        	}
@@ -1109,7 +1107,6 @@ public class MapleFetion extends NotifyEventAdapter
 		else {
 			if( line!=null && line.length()>0 ){
 				if(this.activeChatDialog!=null) {
-					final Buddy buddy = this.activeChatDialog.getMainBuddy(); 
 					this.activeChatDialog.sendChatMessage(Message.wrap(line),new ActionEventListener(){
 						public void fireEevent(ActionEvent event)
 		 				{

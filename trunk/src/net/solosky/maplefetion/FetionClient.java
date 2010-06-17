@@ -142,11 +142,6 @@ public class FetionClient implements FetionContext
 	private volatile ClientState state;
 	
 	/**
-	 * 登录结果同步对象
-	 */
-	private ObjectWaiter<LoginState> loginWaiter;
-	
-	/**
 	 * 聊天对话代理工厂
 	 */
 	private ChatDialogProxyFactory proxyFactory;
@@ -234,7 +229,6 @@ public class FetionClient implements FetionContext
     	this.user            = user;
     	this.transferFactory = transferFactory;
     	this.store           = fetionStore;
-		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		this.proxyFactory    = new ChatDialogProxyFactory(this);
 		this.timer           = fetionTimer;
 		this.executor        = fetionExecutor;
@@ -308,15 +302,6 @@ public class FetionClient implements FetionContext
     public NotifyEventListener getNotifyEventListener()
     {
     	return this.notifyEventListener;
-    }
-    
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.FetionContext#getLoginWaiter()
-     */
-    @Override
-    public ObjectWaiter<LoginState> getLoginWaiter()
-    {
-	    return this.loginWaiter;
     }
     
     /**
@@ -527,71 +512,53 @@ public class FetionClient implements FetionContext
     }
 
 
-	/**
-	 * 以验证码登录
-     * @param verifyImage 验证图片
-     */
-    public void login(VerifyImage img)
-    {
-		this.init();
-    	this.loginWork.setVerifyImage(img);
-		this.executor.submitTask(this.loginWork);
-    }
-
 
 	/**
 	 * 客户端登录
-	 * 这是个异步操作，会把登录的操作封装在单线程池里去执行，登录结果应该通过LoginListener异步通知结果
-	 * @param presence 在线状态 定义在Presence中 
+	 * 这是个异步操作，会把登录的操作封装在单线程池里去执行，登录结果应该通过NotifyEventListener异步通知结果
+	 * @param presence 		在线状态 定义在Presence中 
+	 * @param verifyImage	验证图片，如果没有可以设置为null
 	 */
-	public void login(int presence)
+	public void login(int presence, VerifyImage verifyImage)
 	{
 		//为了便于掉线后可以重新登录，把初始化对象的工作放在登录函数做
 		this.init();
 		this.loginWork.setPresence(presence);
+		this.loginWork.setVerifyImage(verifyImage);
 		this.executor.submitTask(this.loginWork);
 	}
 	
+	
 	/**
-	 * 客户端异步登录登录
+	 *  客户端异步登陆登录
+	 *  登陆结果在NotifyEventListener监听LoginStateEvent事件
+     */
+    public void login()
+    {
+		this.login(Presence.ONLINE, null);
+    }
+
+	
+	/**
+	 * 客户端同步登录
+	 * @param presence 		在线状态 定义在Presence中 
+	 * @param verifyImage	验证图片，如果没有可以设置为null
+	 * @return 登录结果,定义在LoginState中
 	 */
-	public void login()
+	public LoginState syncLogin(int presence, VerifyImage verifyImage)
 	{
-		this.login(Presence.ONLINE);
+		this.login(presence, verifyImage);
+		return this.loginWork.waitLoginState();
 	}
 	
 	/**
 	 * 客户端同步登录
-	 * @return 登录结果
+	 * 不设置超时时间，超时由客户端控制
+	 * @return 登录结果,定义在LoginState中
 	 */
 	public LoginState syncLogin()
 	{
-		return this.syncLogin(Presence.ONLINE);
-	}
-	
-	/**
-	 * 客户端同步登录
-	 * @param verifyImage 验证图片
-	 * @return 登录结果
-	 */
-	public LoginState syncLogin(VerifyImage img)
-	{
-		this.loginWork.setVerifyImage(img);
-		return this.syncLogin();
-	}
-	
-	/**
-	 * 以验证码同步登陆
-	 * @param presence 登录状态
-	 * @return 登录结果
-	 */
-	public LoginState syncLogin(int presence)
-	{
-		try {
-	        return this.loginWaiter.waitObject();
-        } catch (Exception e) {
-	        return LoginState.OHTER_ERROR;
-        }
+		return this.syncLogin(Presence.ONLINE, null);
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////
@@ -697,6 +664,31 @@ public class FetionClient implements FetionContext
 		
 	}
 
+	/**
+	 * 设置个人信息
+	 * 
+	 * <code>
+	 * 这是一个强大的API，基本上可以改变自己的任何信息
+	 * 建议使用client.setNickName()和client.setImpresa()简单接口
+	 * 比如要更改用户昵称和签名可以这样
+	 * User user = client.getFetionUser();
+	 * user.setNickName("GoodDay");
+	 * user.setImpresa("I'd love it..");
+	 * client.setPersonalInfo(new ActionListener(){
+	 * 		public void actionFinished(int status){
+	 * 			if(status==ActionStatus.ACTION_OK)
+	 * 				System.out.println("set personal info success!");
+	 * 			else
+	 * 				System.out.println("set personal info failed!");
+	 * 		}
+	 * });
+	 * </code>
+	 * @param listener
+	 */
+	public void setPersonalInfo(ActionEventListener listener)
+	{
+		this.dialogFactory.getServerDialog().setPesonalInfo(listener);
+	}
 	
 	
 	/**
@@ -731,31 +723,6 @@ public class FetionClient implements FetionContext
 		
 		//仍然没找到，这才向服务器发起查询
 		this.dialogFactory.getServerDialog().findBuddyByMobile(mobile, listener);
-	}
-	/**
-	 * 设置个人信息
-	 * 
-	 * <code>
-	 * 这是一个强大的API，基本上可以改变自己的任何信息
-	 * 建议使用client.setNickName()和client.setImpresa()简单接口
-	 * 比如要更改用户昵称和签名可以这样
-	 * User user = client.getFetionUser();
-	 * user.setNickName("GoodDay");
-	 * user.setImpresa("I'd love it..");
-	 * client.setPersonalInfo(new ActionEventListener(){
-	 * 		public void fireEvent(ActionEvent event){
-	 * 			if(event.getEventType()==ActionEventType.SUCCESS)
-	 * 				System.out.println("set personal info success!");
-	 * 			else
-	 * 				System.out.println("set personal info failed!");
-	 * 		}
-	 * });
-	 * </code>
-	 * @param listener
-	 */
-	public void setPersonalInfo(ActionEventListener listener)
-	{
-		this.dialogFactory.getServerDialog().setPesonalInfo(listener);
 	}
 	
 	/**

@@ -53,6 +53,7 @@ import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.LocaleSettingHelper;
+import net.solosky.maplefetion.util.ObjectWaiter;
 
 import org.apache.log4j.Logger;
 import org.jdom.Document;
@@ -91,6 +92,11 @@ public class LoginWork implements Runnable
 	 * 用户状态
 	 */
 	private int presence;
+	
+	/**
+	 * 同步登陆等待对象
+	 */
+	private ObjectWaiter<LoginState> loginWaiter;
 	/**
 	 * LOGGER
 	 */
@@ -106,6 +112,7 @@ public class LoginWork implements Runnable
 		this.isConfigFetched = false;
 		this.presence = presence;
 		this.signAction = new SSISignV2();
+		this.loginWaiter = new ObjectWaiter<LoginState>();
 	}
 	
 	/**
@@ -395,10 +402,10 @@ public class LoginWork implements Runnable
     		
     	if(state.getValue()>0x400) {	//大于400都是登录出错
     		this.context.handleException(new LoginException(state));
-    		this.context.getLoginWaiter().objectArrive(state);
+    		this.loginWaiter.objectArrive(state);
     	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.context.updateState(ClientState.ONLINE);
-    		this.context.getLoginWaiter().objectArrive(state);
+    		this.loginWaiter.objectArrive(state);
     	}
     }
     ////////////////////////////////////////////////////////////////////
@@ -423,4 +430,18 @@ public class LoginWork implements Runnable
     	}
     }
     
+    
+    /**
+     * 等待登陆结果通知
+     * 事实上这个方法不会永远超时，因为客户端登陆已经包含了超时控制
+     * @return
+     */
+    public LoginState waitLoginState()
+    {
+    	try {
+			return this.loginWaiter.waitObject();
+		} catch (Exception e) {
+			return LoginState.OHTER_ERROR;
+		}
+    }
 }

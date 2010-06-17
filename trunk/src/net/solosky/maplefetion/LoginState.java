@@ -65,8 +65,8 @@ public enum LoginState {
 	SIPC_REGISTER_FAIL(0x603),			//SIPC服务器注册失败
 	SIPC_TIMEOUT(604),					//SIPC服务器注册超时
 	
-	OHTER_ERROR(0x701),				//其他未知错误
-	
+	OHTER_ERROR(0x701),					//其他未知错误
+	LOGIN_TIMEOUT(0x702),				//登陆超时
 	
 	LOGIN_SUCCESS(0x200)				//登录成功
 	;
