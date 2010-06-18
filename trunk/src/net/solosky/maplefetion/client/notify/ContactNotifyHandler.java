@@ -32,6 +32,7 @@ import java.util.List;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
@@ -40,7 +41,9 @@ import net.solosky.maplefetion.event.notify.BuddyConfirmedEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.ParseHelper;
 import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -63,20 +66,27 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     {
     	if(notify.getBody()==null)	return;
     	Element root  = XMLHelper.build(notify.getBody().toSendString());
-    	Element event = XMLHelper.find(root, "/results/event"); 
-    	if(event==null)		return;
-    	String eventType = event.getAttributeValue("type");
-    	if(eventType==null)	return;
-    	if(eventType.equals("ServiceResult")) {
-    		this.serviceResult(event);
-    	}else if(eventType.equals("UpdateBuddy")) {
-    		this.updateBuddy(event);
-    	}else if(eventType.equals("UpdateMobileBuddy")) {
-    		this.updateMobileBuddy(event);
-    	}else if(eventType.equals("AddBuddyApplication")){
-    		this.buddyApplication(event);
-    	}else{
-    		logger.warn("Unknown cantact event type:"+eventType);
+    	List list = XMLHelper.findAll(root, "/results/*event"); 
+    	Iterator it = list.iterator();
+    	while(it.hasNext()){
+	    	Element event = (Element) it.next();
+	    	String eventType = event.getAttributeValue("type");
+	    	if(eventType==null)	return;
+	    	if(eventType.equals("ServiceResult")) {
+	    		this.serviceResult(event);
+	    	}else if(eventType.equals("UpdateBuddy")) {
+	    		this.updateBuddy(event);
+	    	}else if(eventType.equals("UpdateMobileBuddy")) {
+	    		this.updateMobileBuddy(event);
+	    	}else if(eventType.equals("AddBuddyApplication")){
+	    		this.buddyApplication(event);
+	    	}else if(eventType.equals("DeleteBuddy")){
+	    		this.deleteBuddy(event);
+	    	}else if(eventType.equals("AddBuddy")){
+	    		this.addBuddy(event);
+	    	}else{
+	    		logger.warn("Unknown cantact event type:"+eventType);
+	    	}
     	}
     	
     }
@@ -254,6 +264,81 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
     			BeanHelper.setValue(buddy, "relation", relation);
     		}
+    	}
+    }
+    
+    /**
+     * 服务器发回删除好友的请求，这个一般是客户端设置为全部同意对方邀请时服务器首先发挥删除好友请求，然后发回添加好友请求
+     * @param event
+     */
+    private void deleteBuddy(Element event)
+    {
+    	Element contacts = XMLHelper.find(event, "/event/contacts");
+    	List buddyList = XMLHelper.findAll(event, "/event/contacts/buddies/*buddy");
+    	
+    	//查找把这些好友，如果在当前列表中，直接从当前飞信好友列表中删除
+    	Iterator it = buddyList.iterator();
+		FetionStore store = this.context.getFetionStore();
+    	while(it.hasNext()){
+    		Element e = (Element) it.next();
+    		String suserId = e.getAttributeValue("user-id");	//使用user-id更合理
+    		if(suserId!=null){
+	    		int    iuserId = Integer.parseInt(suserId); 
+	    		Buddy buddy    = store.getBuddyByUserId(iuserId);
+	    		if(buddy!=null){
+	    			store.deleteBuddy(buddy);
+	    			logger.info("Deleted buddy: "+buddy);
+	    		}
+    		}
+    	}
+    	
+    	//更新联系人版本信息
+    	String sContactVersion = contacts.getAttributeValue("version");
+    	if(sContactVersion!=null){
+    		int iContactVersion = Integer.parseInt(sContactVersion);
+    		store.getStoreVersion().setContactVersion(iContactVersion);
+    	}
+    }
+    
+    
+    /**
+     * 服务器发回的添加好友请求，注释同上
+     * @throws ParseException 
+     */
+    private void addBuddy(Element event) throws ParseException
+    {
+    	Element contacts = XMLHelper.find(event, "/event/contacts");
+    	List buddyList = XMLHelper.findAll(event, "/event/contacts/buddies/*buddy");
+    	
+    	//遍历所有需要添加的好友，逐个把好友添加到列表中
+    	Iterator it = buddyList.iterator();
+		FetionStore store = this.context.getFetionStore();
+    	while(it.hasNext()){
+    		Element e = (Element) it.next();
+    		String uri = e.getAttributeValue("uri");
+    		if(uri!=null){
+    			//这里应该都是飞信好友，不过还是做了相应的判断
+    			Buddy buddy = null;
+    			if(UriHelper.isMobile(uri)){
+    				buddy = new MobileBuddy();
+    				BeanHelper.toBean(MobileBuddy.class, buddy, e);
+    			}else{
+    				buddy = new FetionBuddy();
+    				BeanHelper.toBean(FetionBuddy.class, buddy, e);
+    			}
+    			
+    			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
+				store.addBuddy(buddy);
+				
+				logger.info("Added Buddy : "+buddy);
+    		}
+    	}
+    	
+    	//更新联系人版本信息
+    	String sContactVersion = contacts.getAttributeValue("version");
+    	if(sContactVersion!=null){
+    		int iContactVersion = Integer.parseInt(sContactVersion);
+    		store.getStoreVersion().setContactVersion(iContactVersion);
     	}
     }
 

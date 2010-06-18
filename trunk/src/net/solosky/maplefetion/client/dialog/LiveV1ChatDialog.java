@@ -126,8 +126,8 @@ public class LiveV1ChatDialog extends ChatDialog
 		this.ensureOpened();
 		SipcRequest req = this.getMessageFactory().createSendChatMessageRequest(this.mainBuddy.getUri(), message);
 		req.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
-		
 		this.process(req);
+		this.updateActiveTime();
 	}
 
 	/*

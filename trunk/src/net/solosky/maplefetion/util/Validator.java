@@ -55,4 +55,20 @@ public class Validator
 			return false;
 		}
 	}
+	
+	
+	/**
+	 * 是否是飞信号码
+	 * 这个判断很简单，就是如果给的号码在100000000-999999999就是有效的飞信号码
+	 * @param fetionId
+	 * @return
+	 */
+	public static boolean validateFetionId(int fetionId)
+	{
+		if(fetionId>100000000 && fetionId<999999999){
+			return true;
+		}else{
+			return false;
+		}
+	}
 }

@@ -287,17 +287,21 @@ public class LoginWork implements Runnable
     	        	}
     	        }
     	        
-    	        future.clear();
-    	        dialog.getContactsInfo(list, listener);
-    	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
-    	        
+    	        //只有在飞信好友列表不为空时才获取
+    	        if(list.size()>0){
+	    	        future.clear();
+	    	        dialog.getContactsInfo(list, listener);
+	    	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+    	        }
        	        storeVersion.setContactVersion(userVersion.getContactVersion());
     		}
 	        
 	        //订阅异步通知
-	        future.clear();
-	        dialog.subscribeBuddyNotify(this.context.getFetionStore().getBuddyList(), listener);
-	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+    		if(this.context.getFetionStore().getBuddyList().size()>0){
+		        future.clear();
+		        dialog.subscribeBuddyNotify(this.context.getFetionStore().getBuddyList(), listener);
+		        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+    		}
 	        
 	        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS);
 	        

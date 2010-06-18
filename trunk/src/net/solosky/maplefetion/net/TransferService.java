@@ -308,7 +308,7 @@ public class TransferService extends AbstractProcessor
 						// 重新发送这个包
 						this.processOutcoming(out);
 					} else { // 这个包已经超过重发次数，通知对话对象，发生了超时异常
-						logger.warn("A request was sended three times, handle this timeout exception...");
+						logger.warn("A request was sent three times, handle this timeout exception...");
 						this.handleRequestTimeout(out);
 					}
 				}

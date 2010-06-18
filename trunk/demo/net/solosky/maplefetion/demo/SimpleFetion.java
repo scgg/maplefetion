@@ -52,9 +52,11 @@ public class SimpleFetion {
 					//建立一个Future来等待操作事件
 					ActionEventFuture future = new ActionEventFuture();
 					client.sendChatMessage(Long.parseLong(args[2]),
-							new Message(args[3]), new FutureActionEventListener(future));
+							new Message(args[3]), future);
 					try {
-						ActionEvent event = future.waitActionEventWithException();
+						ActionEvent event = future.waitActionEventWithException();	//等待操作完成事件
+						//这里使用的是会抛出异常的等待， 使用这个方法时，SYSTEM_ERROR,TRANSFER_ERROR, TIMEOUT均作为异常抛出
+						// future.waitActionEventWithoutException(); 这个方法等待操作完成事件时会把上面的错误事件包装为相应的操作事件返回，不抛出异常
 						switch(event.getEventType()){
 							
 							case SUCCESS:
@@ -85,8 +87,9 @@ public class SimpleFetion {
 								break;
 							
 							/* 以下三个错误状态是在异步发送消息的情况才会发生，
-							 * 为了方便处理，同步的情况下，这三个错误是通过异常来处理的
+							 * 为了方便处理，使用waitActionEventWithException()同步的情况下，这三个错误是通过异常来处理的
 							 * 也就是在waitActionEvent的时候就会判断是否出现了这三个错误，如果出现了就会抛出相应的异常
+							 * 而waitActionEventWithoutException()不会抛出异常，会把这些错误作为操作事件返回
 							 
 							case SYSTEM_ERROR:
 								System.out.println("发送失败, 客户端内部错误。");
@@ -101,7 +104,7 @@ public class SimpleFetion {
 					} catch (RequestTimeoutException e) {
 						System.out.println("发送失败, 超时");
 					} catch (TransferException e) {
-						System.out.println("发送失败, 超时");
+						System.out.println("发送失败, 网络连接错误。");
 					} catch (SystemException e) {
 						System.out.println("发送失败, 客户端内部错误。");
 					} catch (InterruptedException e) {

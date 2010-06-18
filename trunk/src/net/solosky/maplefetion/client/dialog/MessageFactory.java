@@ -358,8 +358,7 @@ public class MessageFactory
     	String body = MessageTemplate.TMPL_ADD_BUDDY;
     	body = body.replace("{uri}", uri);
     	body = body.replace("{promptId}", Integer.toString(promptId));
-    	body = body.replace("{cordId}", "");
-    	//body = body.replace("{cordId}", Integer.toString(cordId));
+    	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
     	body = body.replace("{desc}", desc);
     	
     	req.addHeader(SipcHeader.EVENT,"AddBuddy");
@@ -379,8 +378,7 @@ public class MessageFactory
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	String body = MessageTemplate.TMPL_ADD_MOBILE_BUDDY;
     	body = body.replace("{uri}", uri);
-    	body = body.replace("{cordId}", "");
-    	//body = body.replace("{cordId}", Integer.toString(cordId));
+    	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
     	body = body.replace("{desc}", desc);
     	
     	req.addHeader(SipcHeader.EVENT,"AddMobileBuddy");

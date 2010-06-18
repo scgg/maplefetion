@@ -424,17 +424,17 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 添加好友
 	 * 注意：无论是添加飞信好友还是手机好友，都可以使用这个方法，这个方法会自动判断
 	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
-	 * @param cordId	添加好友的组编号
-	 * @param promptId	提示信息编号
+	 * @param cord		添加好友的分组，如为null，添加到默认分组
 	 * @param desc 		“我是xx” xx：名字
+	 * @param promptId	提示信息编号
 	 * @return
 	 * @throws TransferException 
 	 * @throws Exception 
 	 */
-	public void addBuddy(final String uri, final int cordId, int promptId, final String desc, final ActionEventListener listener)
+	public void addBuddy(final String uri, final Cord cord,final String desc, int promptId, final ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cordId, desc);
+		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cord!=null?cord.getId():-1, desc);
 		
 		//这里需要建立一个新的监听器进行适配，因为返回的结果可能要进行另外一个操作才能确定操作是否完成
 		ActionEventListener tmpListener = new ActionEventListener(){
@@ -443,7 +443,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 					FailureEvent evt = (FailureEvent) event;
 					if(evt.getFailureType()==FailureType.USER_NOT_FOUND){
 						//表明用户没开通飞信，那就添加手机好友,不要调用用户定义的回调函数
-						addMobileBuddy(uri, cordId, desc, listener);
+						addMobileBuddy(uri, cord, desc, listener);
 					}else{
 						//其他情况，直接调用用户的回调函数
 						listener.fireEevent(event);
@@ -463,14 +463,14 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	/**
 	 * 添加手机好友
 	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
-	 * @param cordId	添加好友的组编号
+	 * @param cord		设置添加到那个好友分组，如果传递null就表示放入默认分组
 	 * @param desc		“我是xx” xx：名字
 	 * @return
 	 */
-	private void addMobileBuddy(String uri, int cordId, String desc, ActionEventListener listener)
+	private void addMobileBuddy(String uri, Cord cord, String desc, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cordId, desc);
+		SipcRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cord!=null?cord.getId():-1, desc);
 		request.setResponseHandler(new AddMobileBuddyResponseHandler(context, this, listener));
     	
     	this.process(request);

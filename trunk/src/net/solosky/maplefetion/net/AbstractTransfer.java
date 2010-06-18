@@ -109,4 +109,31 @@ public abstract class AbstractTransfer extends AbstractProcessor implements Tran
             }
     	}
     }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.net.Transfer#startTransfer()
+	 */
+	@Override
+	public void startTransfer() throws TransferException
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.net.Transfer#stopTransfer()
+	 */
+	@Override
+	public void stopTransfer() throws TransferException
+	{
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.net.Transfer#getTransferName()
+	 */
+	@Override
+	public String getTransferName()
+	{
+		return this.toString();
+	}
+    
+    
 }

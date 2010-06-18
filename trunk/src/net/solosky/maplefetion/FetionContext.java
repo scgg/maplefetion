@@ -32,7 +32,6 @@ import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
-import net.solosky.maplefetion.util.ObjectWaiter;
 
 /**
  *

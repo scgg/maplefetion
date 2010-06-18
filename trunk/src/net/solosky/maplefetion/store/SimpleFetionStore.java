@@ -40,8 +40,8 @@ import net.solosky.maplefetion.bean.User;
 
 /**
  * 
- * 保存飞信的数据
- * 如好友，消息历史等
+ * 简单的飞信存储的一个实现 
+ * 所有的数据都是保存在内存中
  *
  * @author solosky <solosky772@qq.com> 
  */

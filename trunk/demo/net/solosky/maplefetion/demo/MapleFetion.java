@@ -51,7 +51,6 @@ import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.DialogException;
@@ -571,9 +570,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void nickname(String nickName)
 	    {
-	    	User user = this.client.getFetionUser();
-	    	user.setNickName(nickName);
-	    	this.client.setPersonalInfo(new ActionEventListener() {
+	    	this.client.setNickName(nickName, new ActionEventListener() {
                 public void fireEevent(ActionEvent event)
 				{
 					if(event.getEventType()==ActionEventType.SUCCESS){
@@ -591,9 +588,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void impresa(String impresa) throws Exception
 	    {
-	    	User user = this.client.getFetionUser();
-	    	user.setImpresa(impresa);
-	    	this.client.setPersonalInfo(new ActionEventListener() {
+	    	this.client.setImpresa(impresa, new ActionEventListener() {
                 public void fireEevent(ActionEvent event)
 				{
 					if(event.getEventType()==ActionEventType.SUCCESS){
@@ -744,7 +739,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void add(String mobile)
 	    {
-	    	client.addBuddy(Long.parseLong(mobile), new ActionEventListener() {
+	    	client.addBuddy(Long.parseLong(mobile), null, client.getFetionUser().getNickName(), 0 ,  new ActionEventListener() {
                 public void fireEevent(ActionEvent event)
  				{
  					if(event.getEventType()==ActionEventType.SUCCESS){

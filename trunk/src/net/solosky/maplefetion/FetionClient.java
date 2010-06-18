@@ -66,7 +66,6 @@ import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
-import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.ThreadTimer;
 import net.solosky.maplefetion.util.Validator;
@@ -664,28 +663,29 @@ public class FetionClient implements FetionContext
 		
 	}
 
-	/**
-	 * 设置个人信息
-	 * 
-	 * <code>
-	 * 这是一个强大的API，基本上可以改变自己的任何信息
-	 * 建议使用client.setNickName()和client.setImpresa()简单接口
-	 * 比如要更改用户昵称和签名可以这样
-	 * User user = client.getFetionUser();
-	 * user.setNickName("GoodDay");
-	 * user.setImpresa("I'd love it..");
-	 * client.setPersonalInfo(new ActionListener(){
-	 * 		public void actionFinished(int status){
-	 * 			if(status==ActionStatus.ACTION_OK)
-	 * 				System.out.println("set personal info success!");
-	 * 			else
-	 * 				System.out.println("set personal info failed!");
-	 * 		}
-	 * });
-	 * </code>
-	 * @param listener
-	 */
-	public void setPersonalInfo(ActionEventListener listener)
+	 /** 
+     * 设置个人信息 
+     * @deprecated
+     *  
+     * <code> 
+     * 这是一个强大的API，基本上可以改变自己的任何信息 
+     * 建议使用client.setNickName()和client.setImpresa()简单接口 
+     * 比如要更改用户昵称和签名可以这样 
+     * User user = client.getFetionUser(); 
+     * user.setNickName("GoodDay"); 
+     * user.setImpresa("I'd love it.."); 
+     * client.setPersonalInfo(new ActionEventListener(){ 
+     *              public void fireEvent(ActionEvent event){ 
+     *                  if(event.getEventType()==ActionEventType.SUCCESS) 
+     *                      System.out.println("set personal info success!"); 
+     *                  else 
+     *                      System.out.println("set personal info failed!"); 
+     *              } 
+     * }); 
+     * </code> 
+     * @param listener 
+     */  
+	private void setPersonalInfo(ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setPesonalInfo(listener);
 	}
@@ -763,16 +763,40 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 添加飞信好友
-	 * @param mobile		手机号码
+	 * @param seviceId		手机号码或者飞信号码
+	 * @param cord			好友添加到分组的编号，如果为null，添加到默认分组
+	 * @param desc			对自己的说明 ，如 xxx，在对方飞信好友里就会收到：我是xxxx
+	 * @param promptId		提示的信息编号,见下面的说明。如果不清楚，请直接传递0
 	 * @param listener		结果监听器
+	 * 
+	 * <pre>
+	 * 对于promptId的和desc的说明：
+	 * 飞信添加好友的提示信息是这样的格式 我是{名字}, {提示}。
+	 * 其中desc就是格式中的{名字}(不包含我是)，
+	 * 参数中的promptId, 是添加好友时，后面的提示信息
+	 * 后面的说明是一个整形数字，为啥不是字符串，解释一下：
+	 * 因为飞信预定义了一些提示信息，这些信息会在登陆时获取系统配置那一步获取到，如 
+	 * 
+	 *   0. 正在用中国移动飞信业务，想加你为好友
+	 *   1. 想加你为飞信好友，方便咱们联系。
+	 *   2. 飞信挺好用的，我想加你为好友。
+	 *   3. 希望你能成为我的飞信好友，常联系。
+	 *   4. 成我的飞信好友，能免费的给你发短信。
+	 *   
+	 *   这些提示信息，会有个编号，这里的参数 promptId就是这里的编号。
+	 *   至于飞信为啥不允许用户输入一些描述信息，可能是考虑到防止用户被骚扰吧。
+	 *</pre>
 	 */
-	public void addBuddy(long mobile, ActionEventListener listener)
+	public void addBuddy(long serviceId, Cord cord, String desc, int promptId, ActionEventListener listener)
 	{
-		if(!Validator.validateMobile(mobile)){
-			if(listener!=null)
-				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+		if(Validator.validateMobile(serviceId)){
+			this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(serviceId), cord, desc, promptId, listener);
+		}else if(Validator.validateFetionId((int)(serviceId))){
+			this.dialogFactory.getServerDialog().addBuddy("sip:"+Long.toString(serviceId), cord, desc, promptId, listener);
 		}else{
-			this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(mobile), 0, 1, user.getNickName(), listener);
+			if(listener!=null){
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+			}
 		}
 	}
 	
@@ -868,5 +892,27 @@ public class FetionClient implements FetionContext
 	public void setCordTitle(Cord cord, String title, ActionEventListener listener)
 	{
 		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
+	}
+	
+	/**
+	 * 设置用户昵称
+	 * @param nickName	设置用户昵称
+	 * @param listener
+	 */
+	public void setNickName(String nickName, ActionEventListener listener)
+	{
+		 this.user.setNickName(nickName);
+		 this.setPersonalInfo(listener);
+	}
+	
+	/**
+	 * 设置用户个性签名
+	 * @param impresa	个性签名
+	 * @param listener
+	 */
+	public void setImpresa(String impresa, ActionEventListener listener)
+	{
+		this.user.setImpresa(impresa);
+		this.setPersonalInfo(listener);
 	}
 }
