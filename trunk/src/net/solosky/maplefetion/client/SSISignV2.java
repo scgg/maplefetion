@@ -36,6 +36,7 @@ import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.PasswordEncrypter;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -52,6 +53,7 @@ import org.jdom.Element;
 public class SSISignV2 implements SSISign
 {
 	private User user;
+	private LocaleSetting localeSetting;
 	private static Logger logger = Logger.getLogger(SSISignV2.class);
 	
 	/**
@@ -92,8 +94,12 @@ public class SSISignV2 implements SSISign
 	 */
 	private String buildUrl(long mobileNo, String pass, String pid, String pic)
 	{
+		String v2 = this.localeSetting.getNodeText("/config/servers/ssi-app-sign-in-v2");
+		if(v2==null)	throw new IllegalStateException("couldn't find ssi-app-sign-in-v2 in LocaleSetting...");
+		
 		StringBuffer b = new StringBuffer();
-		b.append(FetionConfig.getString("server.ssi-sign-in-v2")+"?");
+		b.append(v2);
+		b.append("?");
 		b.append("mobileno="+Long.toString(mobileNo));
 		b.append("&domains=fetion.com.cn%3bm161.com.cn%3bwww.ikuwa.cn");
 		b.append("&digest="+(new PasswordEncrypter().encrypt(pass)));		//就是用以前写的密码加密工具，我在这里很郁闷。。
@@ -210,4 +216,13 @@ public class SSISignV2 implements SSISign
     	this.user = user;
 	    return this.signIn(user.getMobile(), user.getPassword(), img.getImageId(), img.getVerifyCode());
     }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.SSISign#setLocaleSetting(net.solosky.maplefetion.util.LocaleSetting)
+	 */
+	@Override
+	public void setLocaleSetting(LocaleSetting localeSetting)
+	{
+		this.localeSetting = localeSetting;
+	}
 }

@@ -66,6 +66,7 @@ import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
+import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.ThreadTimer;
 import net.solosky.maplefetion.util.Validator;
@@ -144,6 +145,11 @@ public class FetionClient implements FetionContext
 	 * 聊天对话代理工厂
 	 */
 	private ChatDialogProxyFactory proxyFactory;
+	
+	/**
+	 * 区域化配置
+	 */
+	private LocaleSetting localeSetting;
 	
 	 /**
 	 * 日志记录
@@ -232,6 +238,7 @@ public class FetionClient implements FetionContext
 		this.timer           = fetionTimer;
 		this.executor        = fetionExecutor;
 		this.notifyEventListener  = notifyEventListener;
+		this.localeSetting   = new LocaleSetting();
 		
 		
     }
@@ -302,6 +309,16 @@ public class FetionClient implements FetionContext
     {
     	return this.notifyEventListener;
     }
+    
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.FetionContext#getLocaleSetting()
+	 */
+	@Override
+	public LocaleSetting getLocaleSetting()
+	{
+		return this.localeSetting;
+	}
     
     /**
      * 设置通知监听器
@@ -453,7 +470,8 @@ public class FetionClient implements FetionContext
      */
     public VerifyImage fetchVerifyImage()
     {
-    	return VerifyImageFetcher.fetch();
+    	String picUrl = this.localeSetting.getNodeText("/config/servers/get-pic-code");
+    	return VerifyImageFetcher.fetch(picUrl);
     }
     
     /**
@@ -915,4 +933,5 @@ public class FetionClient implements FetionContext
 		this.user.setImpresa(impresa);
 		this.setPersonalInfo(listener);
 	}
+
 }

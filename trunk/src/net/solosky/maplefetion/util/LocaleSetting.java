@@ -17,10 +17,10 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.util
- * File     : LocaleSettingHelper.java
+ * Package  : net.solosky.maplefetion
+ * File     : LocaleSetting.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-27
+ * Created  : 2010-6-18
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.util;
@@ -41,14 +41,44 @@ import org.jdom.input.SAXBuilder;
 
 /**
  *
- * 自适应系统配置工具类
- * 因为不同的地方登陆飞信是登陆到不同的服务器上的，所以服务器的IP需要根据用户登录的地址去获取
- * 我称之为自适应的系统配置
+ * 区域配置，部分配置和区域有关
+ *
  *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public class LocaleSettingHelper
+public class LocaleSetting
 {
+	/**
+	 * 配置的Dom文档
+	 */
+	private Document document;
+	
+	/**
+	 * 配置是否被加载
+	 */
+	private boolean isLoaded;
+	/**
+	 * 默认的构造函数
+	 */
+	public LocaleSetting()
+	{
+		this.isLoaded = false;
+		this.document = null;
+	}
+	
+	
+	/**
+	 * 返回一个节点的文本
+	 * @param path		路径
+	 * @return
+	 */
+	public String getNodeText(String path)
+	{
+		Element el = XMLHelper.find(this.document.getRootElement(), path);
+		return el!=null?el.getText():null;
+	}
+	
 	/**
 	 * 获取自适应系统配置
 	 * @param user
@@ -56,7 +86,7 @@ public class LocaleSettingHelper
 	 * @throws IOException
 	 * @throws JDOMException
 	 */
-	public static Document load(User user) throws IOException, JDOMException
+	public void load(User user) throws IOException, JDOMException
 	{
         URL url = new URL(FetionConfig.getString("server.nav-system-uri"));
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
@@ -69,23 +99,17 @@ public class LocaleSettingHelper
         out.flush();
         
         SAXBuilder builder = new SAXBuilder();
-        return builder.build(conn.getInputStream());
-        
+        this.document = builder.build(conn.getInputStream());
+        this.isLoaded = true;
 	}
-	
+
+
 	/**
-	 * 激活自适应配置
-	 * @param doc
+	 * 是否被加载
+	 * @return the isLoaded
 	 */
-	public static void active(Document doc)
+	public boolean isLoaded()
 	{
-		Element root = doc.getRootElement();
-        
-        Element servers = root.getChild("servers");
-        FetionConfig.setString("server.ssi-sign-in-v2",  servers.getChildText("ssi-app-sign-in-v2"));
-        FetionConfig.setString("server.sipc-proxy",   servers.getChildText("sipc-proxy"));
-        FetionConfig.setString("server.sipc-ssl-proxy",   servers.getChildText("sipc-ssl-proxy"));
-        FetionConfig.setString("server.http-tunnel",  servers.getChildText("http-tunnel"));
+		return isLoaded;
 	}
-	
 }

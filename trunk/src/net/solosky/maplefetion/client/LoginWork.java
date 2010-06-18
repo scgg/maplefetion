@@ -52,11 +52,10 @@ import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.CrushBuilder;
-import net.solosky.maplefetion.util.LocaleSettingHelper;
+import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ObjectWaiter;
 
 import org.apache.log4j.Logger;
-import org.jdom.Document;
 
 /**
  *
@@ -70,10 +69,6 @@ public class LoginWork implements Runnable
 	 * 飞信运行上下文
 	 */
 	private FetionContext context;
-	/**
-	 * 是否已经获取配置信息
-	 */
-	private boolean isConfigFetched;
 
 	/**
 	 * 用户登录的验证图片信息
@@ -109,10 +104,11 @@ public class LoginWork implements Runnable
 	public LoginWork(FetionContext context, int presence)
 	{
 		this.context = context;
-		this.isConfigFetched = false;
 		this.presence = presence;
 		this.signAction = new SSISignV2();
 		this.loginWaiter = new ObjectWaiter<LoginState>();
+		
+		this.signAction.setLocaleSetting(this.context.getLocaleSetting());
 	}
 	
 	/**
@@ -159,14 +155,13 @@ public class LoginWork implements Runnable
      */
     private boolean updateSystemConfig()
     {
-    	if(!this.isConfigFetched) {
+    	LocaleSetting localeSetting = this.context.getLocaleSetting();
+    	if(!localeSetting.isLoaded()) {
     		try {
     			logger.debug("Loading locale setting...");
 				this.updateLoginState(LoginState.SEETING_LOAD_DOING);
-				Document doc = LocaleSettingHelper.load(this.context.getFetionUser());
-				LocaleSettingHelper.active(doc);
+				localeSetting.load(this.context.getFetionUser());
 				this.updateLoginState(LoginState.SETTING_LOAD_SUCCESS);
-				this.isConfigFetched = true;
 				return true;
 			} catch (Exception e) {
 				logger.debug("Load localeSetting error", e);

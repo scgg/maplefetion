@@ -29,6 +29,7 @@ import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.net.TransferException;
+import net.solosky.maplefetion.util.LocaleSetting;
 
 /**
  *
@@ -61,5 +62,12 @@ public interface SSISign
 	 * @throws TransferException
 	 */
 	public LoginState signOut(User user);
+	
+	
+	/**
+	 * 设置区域化的配置
+	 * @param localeSetting
+	 */
+	public void setLocaleSetting(LocaleSetting localeSetting);
 
 }

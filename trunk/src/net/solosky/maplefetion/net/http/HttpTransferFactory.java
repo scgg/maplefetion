@@ -63,7 +63,8 @@ public class HttpTransferFactory implements TransferFactory
     public Transfer createDefaultTransfer() throws TransferException
     {
 	    String pragma = "xz4BBcV"+UUID.randomUUID().toString();
-	    return new HttpTransfer(FetionConfig.getString("server.http-tunnel"), this.context.getFetionUser().getSsic(), pragma);
+	    String httpTunnel = this.context.getLocaleSetting().getNodeText("/config/servers/http-tunnel");
+	    return new HttpTransfer(httpTunnel, this.context.getFetionUser().getSsic(), pragma);
     }
 
 	/* (non-Javadoc)

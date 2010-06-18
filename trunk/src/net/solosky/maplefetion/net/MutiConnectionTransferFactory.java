@@ -67,11 +67,13 @@ public abstract class MutiConnectionTransferFactory implements TransferFactory
     public Transfer createDefaultTransfer() throws TransferException
     {
     	//尝试建立Sipc-proxy连接
-    	Transfer transfer = null;
-    	transfer = this.tryCreateTransfer(FetionConfig.getString("server.sipc-proxy"));
+    	Transfer transfer   = null;
+    	String sipcProxy    = this.context.getLocaleSetting().getNodeText("/config/servers/sipc-proxy");
+    	String sipcSslProxy = this.context.getLocaleSetting().getNodeText("/config/servers/sipc-ssl-proxy");
+    	transfer = this.tryCreateTransfer(sipcProxy);
     	//尝试建立sipc-proxy-ssl连接
     	if(transfer==null) 
-    		transfer = this.tryCreateTransfer(FetionConfig.getString("server.sipc-ssl-proxy"));
+    		transfer = this.tryCreateTransfer(sipcSslProxy);
         
     	if(transfer==null) {
     		//仍然建立失败，抛出异常

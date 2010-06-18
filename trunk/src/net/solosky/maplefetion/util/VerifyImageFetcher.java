@@ -46,10 +46,9 @@ import net.solosky.maplefetion.bean.VerifyImage;
 public class VerifyImageFetcher
 {
 	
-	public static VerifyImage fetch()
+	public static VerifyImage fetch(String picUrl)
 	{
 		try {
-	        String picUrl = FetionConfig.getString("server.verify-pic-uri");
 	        URL url = new URL(picUrl);
 	        HttpURLConnection conn = (HttpURLConnection) url.openConnection();
 	        conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");		//必须要加这个，否则失败  很奇怪

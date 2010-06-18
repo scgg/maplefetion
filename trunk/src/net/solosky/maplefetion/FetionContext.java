@@ -32,6 +32,7 @@ import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
+import net.solosky.maplefetion.util.LocaleSetting;
 
 /**
  *
@@ -46,7 +47,7 @@ public interface FetionContext
 	 * 返回对话框工厂
 	 * @return
 	 */
-	public abstract DialogFactory getDialogFactory();
+	public DialogFactory getDialogFactory();
 	
 	/**
 	 * 返回聊天对话代理工厂
@@ -58,52 +59,57 @@ public interface FetionContext
 	 * 返回传输工厂
 	 * @return
 	 */
-	public abstract TransferFactory getTransferFactory();
+	public TransferFactory getTransferFactory();
 
 	/**
 	 * 返回单线程执行器
 	 * @return
 	 */
-	public abstract FetionExecutor getFetionExecutor();
+	public FetionExecutor getFetionExecutor();
 
 	/**
 	 * 返回全局的定时器
 	 * @return
 	 */
-	public abstract FetionTimer getFetionTimer();
+	public FetionTimer getFetionTimer();
 
 	/**
 	 * 返回飞信用户
 	 * @return
 	 */
-	public abstract User getFetionUser();
+	public User getFetionUser();
 
 	/**
 	 * 返回存储对象
 	 */
-	public abstract FetionStore getFetionStore();
+	public FetionStore getFetionStore();
 
 	/**
 	 * 返回通知监听器
 	 * @return the notifyListener
 	 */
-	public abstract NotifyEventListener getNotifyEventListener();
+	public NotifyEventListener getNotifyEventListener();
 
 	/**
 	 * 设置客户端状态
 	 */
-	public abstract void updateState(ClientState state);
+	public void updateState(ClientState state);
 
 	/**
 	 * 返回客户端状态
 	 */
-	public abstract ClientState getState();
+	public ClientState getState();
 
+	/**
+	 * 返回区域化配置
+	 */
+	public LocaleSetting getLocaleSetting();
+	
 	/**
 	 * 处理不可恢复的异常的回调方法
 	 * 通常这个方法是为Client处理异常准备的
 	 * @param exception
 	 */
-	public abstract void handleException(FetionException exception);
+	public void handleException(FetionException exception);
 
 }
