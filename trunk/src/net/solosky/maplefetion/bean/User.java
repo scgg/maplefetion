@@ -25,7 +25,7 @@
  */
 package net.solosky.maplefetion.bean;
 
-import net.solosky.maplefetion.util.Validator;
+import net.solosky.maplefetion.util.AccountValidator;
 
 /**
  *
@@ -53,13 +53,24 @@ public class User extends FetionBuddy
 	private StoreVersion storeVersion;
 	
 	/**
-	 * 默认构造函数
+	 * 详细的构造函数
+	 * @param account	 	账号，可以是飞信号，手机号 ,Email（Email暂时不支持）
+	 * @param password		密码
+	 * @param domain		账号所在的域，默认为fetion.com.cn
 	 */
-	public User(long mobile, String password,String domain)
+	public User(String account, String password, String domain)
 	{
-		if(!Validator.validateMobile(mobile))
-			throw new IllegalArgumentException(mobile+" is not a valid Mobile number.");
-		this.mobile = mobile;
+		AccountValidator validator = new AccountValidator(account);
+		if(validator.isValidEmail()){
+			throw new UnsupportedOperationException("Sorry, the Fetion2008 Protocol does not supported Email sign in.");
+		}else if(validator.isValidMobile()){
+			this.mobile = validator.getMobile();
+		}else if(validator.isValidFetionId()){
+			this.fetionId = validator.getFetionId();
+		}else{
+			throw new IllegalStateException("Invalid account "+account+", it should be CMCC mobile number, FetionId or Registered Email.");
+		}
+		
 		this.password = password;
 		this.domain = domain;
 		this.storeVersion = new StoreVersion();

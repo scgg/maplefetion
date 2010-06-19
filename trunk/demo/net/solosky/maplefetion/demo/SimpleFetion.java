@@ -32,7 +32,7 @@ public class SimpleFetion {
 			System.out.println("参数不正确。参数格式为：手机号 密码 发送消息的手机号 消息内容");
 			System.out.println("说明：可以给指定的手机号码发送消息然后退出，前提是这个手机号码的飞信用户是你的好友，否则会发送失败。");
 		}else{
-			FetionClient client = new FetionClient(Long.parseLong(args[0]), args[1]);
+			FetionClient client = new FetionClient(args[0], args[1]);
 			System.out.println("正在登录中，可能需要1分钟左右，请稍候...");
 			
 			//这里设置一个登录状态监听器，可以显示当前登录步骤，避免用户感到焦虑

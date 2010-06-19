@@ -93,7 +93,19 @@ public class LocaleSetting
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
         conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");
-        String content = "<config><user mobile-no=\""+user.getMobile()+"\" /><client type=\"PC\" version=\""+FetionClient.PROTOCOL_VERSION+"\" platform=\"W5.1\" /><servers version=\"0\" /><service-no version=\"0\" /><parameters version=\"0\" /><hints version=\"0\" /><http-applications version=\"0\" /><client-config version=\"0\" /><services version=\"0\" /></config>";
+        
+        String accountType = null;
+        if(user.getMobile()>0){
+        	accountType = "mobile-no=\""+user.getMobile()+"\"";
+        }else if(user.getFetionId()>0){
+        	accountType = "sid=\""+user.getFetionId()+"\"";
+        }else if(user.getEmail()!=null){
+        	accountType = "email=\""+user.getEmail()+"\"";
+        }else{
+        	throw new IllegalStateException("Invalid CMCC mobile number, FetionId or Registered Email.");
+        }
+        
+        String content = "<config><user "+accountType+" /><client type=\"PC\" version=\""+FetionClient.PROTOCOL_VERSION+"\" platform=\"W5.1\" /><servers version=\"0\" /><service-no version=\"0\" /><parameters version=\"0\" /><hints version=\"0\" /><http-applications version=\"0\" /><client-config version=\"0\" /><services version=\"0\" /></config>";
         OutputStream out = conn.getOutputStream();
         out.write(content.getBytes());
         out.flush();

@@ -63,13 +63,13 @@ import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.sipc.SipcMessage;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
+import net.solosky.maplefetion.util.AccountValidator;
 import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
 import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.ThreadTimer;
-import net.solosky.maplefetion.util.Validator;
 import net.solosky.maplefetion.util.VerifyImageFetcher;
 
 import org.apache.log4j.Logger;
@@ -159,14 +159,14 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 详细的构造函数
-	 * @param mobileNo			手机号
+	 * @param account			手机号/飞信号/Email
 	 * @param password			用户密码
 	 * @param notifyListener	通知监听器
 	 * @param transferFactory	传输工厂
 	 * @param fetionStore		分析存储对象
 	 * @param loginListener		登录监听器
 	 */
-	public FetionClient(long mobileNo,
+	public FetionClient(String account,
 						String password, 
 						NotifyEventListener notifyEventListener,
 						TransferFactory transferFactory,
@@ -174,7 +174,7 @@ public class FetionClient implements FetionContext
 						FetionTimer timer,
 						FetionExecutor executor)
 	{
-		this(new User(mobileNo, password, "fetion.com.cn"),
+		this(new User(account, password, "fetion.com.cn"),
 				notifyEventListener,
 				transferFactory,
 				fetionStore, 
@@ -185,15 +185,15 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 使用默认的传输模式和存储模式构造
-	 * @param mobileNo			手机号码
+	 * @param account			手机号/飞信号/Email
 	 * @param password			密码
 	 * @param notifyListener	通知监听器
 	 */
-	public FetionClient(long mobileNo, 
+	public FetionClient(String account, 
 						String password, 
 						NotifyEventListener notifyEventListener)
 	{
-		this(new User(mobileNo, password, "fetion.com.cn"), 
+		this(new User(account, password, "fetion.com.cn"), 
 				notifyEventListener, 
 				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
@@ -203,12 +203,12 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 简单的构造函数
-	 * @param mobile	用户手机号码
+	 * @param account			手机号/飞信号/Email
 	 * @param password	用户密码
 	 */
-	public FetionClient(long mobile, String pass)
+	public FetionClient(String account, String password)
 	{
-		this(mobile, pass, null);
+		this(account, password, null);
 	}
 	
 	
@@ -471,6 +471,7 @@ public class FetionClient implements FetionContext
     public VerifyImage fetchVerifyImage()
     {
     	String picUrl = this.localeSetting.getNodeText("/config/servers/get-pic-code");
+    	if(picUrl==null) picUrl = FetionConfig.getString("server.verify-pic-uri");
     	return VerifyImageFetcher.fetch(picUrl);
     }
     
@@ -720,7 +721,7 @@ public class FetionClient implements FetionContext
 	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
 		//先判断是否是合法的移动号码
-		if(!Validator.validateMobile(mobile)){
+		if(!AccountValidator.validateMobile(mobile)){
 			if(listener!=null){
 				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
 			}
@@ -805,12 +806,13 @@ public class FetionClient implements FetionContext
 	 *   至于飞信为啥不允许用户输入一些描述信息，可能是考虑到防止用户被骚扰吧。
 	 *</pre>
 	 */
-	public void addBuddy(long serviceId, Cord cord, String desc, int promptId, ActionEventListener listener)
+	public void addBuddy(String account, Cord cord, String desc, int promptId, ActionEventListener listener)
 	{
-		if(Validator.validateMobile(serviceId)){
-			this.dialogFactory.getServerDialog().addBuddy("tel:"+Long.toString(serviceId), cord, desc, promptId, listener);
-		}else if(Validator.validateFetionId((int)(serviceId))){
-			this.dialogFactory.getServerDialog().addBuddy("sip:"+Long.toString(serviceId), cord, desc, promptId, listener);
+		AccountValidator validator = new AccountValidator(account);
+		if(validator.isValidMobile()){
+			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, cord, desc, promptId, listener);
+		}else if(validator.isValidFetionId()){
+			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, cord, desc, promptId, listener);
 		}else{
 			if(listener!=null){
 				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));

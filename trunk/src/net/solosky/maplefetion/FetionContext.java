@@ -107,7 +107,7 @@ public interface FetionContext
 	
 	/**
 	 * 处理不可恢复的异常的回调方法
-	 * 通常这个方法是为Client处理异常准备的
+	 * 通常这个方法是为Client处理不可恢复的异常准备的
 	 * @param exception
 	 */
 	public void handleException(FetionException exception);

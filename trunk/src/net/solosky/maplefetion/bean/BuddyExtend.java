@@ -41,7 +41,6 @@ public class BuddyExtend
 	private String city;
 	private Date birth;
 	private String blood;
-	private String email;
 	private String occupation;
 	private String hobby;
 	private String lunarAnimal;
@@ -116,20 +115,6 @@ public class BuddyExtend
     public void setBlood(String blood)
     {
     	this.blood = blood;
-    }
-	/**
-     * @return the email
-     */
-    public String getEmail()
-    {
-    	return email;
-    }
-	/**
-     * @param email the email to set
-     */
-    public void setEmail(String email)
-    {
-    	this.email = email;
     }
 	/**
      * @return the occupation

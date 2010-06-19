@@ -50,7 +50,7 @@ public class FetionGateway implements Gateway, NotifyEventListener
 	
 	public FetionGateway(long mobile, String pass)
 	{
-		this.client = new FetionClient(mobile, pass, this);
+		this.client = new FetionClient(Long.toString(mobile), pass, this);
 	}
 	/* (non-Javadoc)
      * @see net.solosky.maplesms.gateway.Gateway#login()

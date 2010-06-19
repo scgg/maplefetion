@@ -70,6 +70,10 @@ public abstract class MutiConnectionTransferFactory implements TransferFactory
     	Transfer transfer   = null;
     	String sipcProxy    = this.context.getLocaleSetting().getNodeText("/config/servers/sipc-proxy");
     	String sipcSslProxy = this.context.getLocaleSetting().getNodeText("/config/servers/sipc-ssl-proxy");
+    	
+    	if(sipcProxy==null)    sipcProxy    = FetionConfig.getString("server.sipc-proxy");
+    	if(sipcSslProxy==null) sipcSslProxy = FetionConfig.getString("server.sipc-ssl-proxy");
+    	
     	transfer = this.tryCreateTransfer(sipcProxy);
     	//尝试建立sipc-proxy-ssl连接
     	if(transfer==null) 
@@ -77,7 +81,7 @@ public abstract class MutiConnectionTransferFactory implements TransferFactory
         
     	if(transfer==null) {
     		//仍然建立失败，抛出异常
-    		throw new TransferException("Cannot create Default transfer..");
+    		throw new TransferException("Couldn't create default transfer..");
     	}else {
     		//建立成功
     		this.localport = this.getLocalPort(transfer); 

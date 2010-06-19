@@ -64,6 +64,7 @@ public class HttpTransferFactory implements TransferFactory
     {
 	    String pragma = "xz4BBcV"+UUID.randomUUID().toString();
 	    String httpTunnel = this.context.getLocaleSetting().getNodeText("/config/servers/http-tunnel");
+	    if(httpTunnel==null) httpTunnel = FetionConfig.getString("server.http-tunnel");
 	    return new HttpTransfer(httpTunnel, this.context.getFetionUser().getSsic(), pragma);
     }
 

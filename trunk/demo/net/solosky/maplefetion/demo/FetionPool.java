@@ -187,7 +187,7 @@ public class FetionPool
      */
     private void add(String mobile, String password)
     {
-    	FetionClient client = new FetionClient(Long.parseLong(mobile), password);
+    	FetionClient client = new FetionClient(mobile, password);
     	FetionPoolListener listener = new FetionPoolListener(client);
     	client.setNotifyEventListener(listener);
     	client.setFetionExecutor(this.shareExecutor);

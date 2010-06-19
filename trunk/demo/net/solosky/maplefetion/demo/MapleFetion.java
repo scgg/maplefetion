@@ -111,13 +111,13 @@ public class MapleFetion extends NotifyEventAdapter
 	 
 	 /**
 	  * 默认构造函数
-	  * @param mobile
+	  * @param serviceId
 	  * @param pass
 	  */
 	
-	public MapleFetion(long mobile, String pass)
+	public MapleFetion(String serviceId, String pass)
 	{
-		this.client = new FetionClient(mobile, pass,
+		this.client = new FetionClient(serviceId, pass,
 				this, new AutoTransferFactory(),
 				new SimpleFetionStore(), 
 				new ThreadTimer(),
@@ -139,26 +139,26 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public static void main(String[] args) throws Exception
 	{
-		long mobile    = 0;
+		String serviceId    = null;
 		String password = null;
 		int loginPresence = Presence.ONLINE;
 		if(args.length>=2) {
-			mobile   = Long.parseLong(args[0]);
+			serviceId   = args[0];
 			password = args[1];
 			if(args.length>=3)
 				loginPresence = "Y".equals(args[3]) ? Presence.HIDEN : Presence.ONLINE;
 		}else {
-			System.out.println("提示：你可以直接在命令行后加 '手机号 密码' 快速登录（不含引号）");
+			System.out.println("提示：你可以直接在命令行后加 '手机号/飞信号 密码' 快速登录（不含引号）");
     		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
-    		System.out.print("请输入手机号:");
-    		mobile = Long.parseLong(reader.readLine());
+    		System.out.print("请输入手机号/飞信号:");
+    		serviceId = reader.readLine();
     		System.out.print("请输入密码:");
     		password = reader.readLine();
     		System.out.print("是否隐身登录(Y/N):");
     		loginPresence = "Y".equals(reader.readLine().toUpperCase()) ? Presence.HIDEN : Presence.ONLINE;
 		}
 		
-		MapleFetion demo = new MapleFetion(mobile, password);
+		MapleFetion demo = new MapleFetion(serviceId, password);
 		demo.welcome();
 		demo.login(loginPresence);
 	}
@@ -559,7 +559,7 @@ public class MapleFetion extends NotifyEventAdapter
         	    System.out.println("国家:"+extend.getNation());
         	    System.out.println("省份:"+extend.getProvince());
         	    System.out.println("城市:"+extend.getCity());
-        	    System.out.println("EMAIL:"+extend.getEmail());
+        	    System.out.println("EMAIL:"+fbuddy.getEmail());
     	    }
     	    System.out.println("----------------------------------");
 	    }
@@ -739,7 +739,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void add(String mobile)
 	    {
-	    	client.addBuddy(Long.parseLong(mobile), null, client.getFetionUser().getNickName(), 0 ,  new ActionEventListener() {
+	    	client.addBuddy(mobile, null, client.getFetionUser().getNickName(), 0 ,  new ActionEventListener() {
                 public void fireEevent(ActionEvent event)
  				{
  					if(event.getEventType()==ActionEventType.SUCCESS){

@@ -51,6 +51,10 @@ public class FetionBuddy extends Buddy
 	protected String impresa;
 	
 	/**
+	 * 好友邮件
+	 */
+	protected String email;
+	/**
 	 * 级别
 	 */
 	protected int level;
@@ -165,6 +169,24 @@ public class FetionBuddy extends Buddy
     {
     	return smsPolicy;
     }
+    
+    
+
+	/**
+	 * @return the email
+	 */
+	public String getEmail()
+	{
+		return email;
+	}
+
+	/**
+	 * @param email the email to set
+	 */
+	public void setEmail(String email)
+	{
+		this.email = email;
+	}
 
 	/**
      * 返回可以显示的名字

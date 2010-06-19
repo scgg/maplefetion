@@ -52,7 +52,6 @@ import org.jdom.Element;
  */
 public class SSISignV2 implements SSISign
 {
-	private User user;
 	private LocaleSetting localeSetting;
 	private static Logger logger = Logger.getLogger(SSISignV2.class);
 	
@@ -86,23 +85,28 @@ public class SSISignV2 implements SSISign
 	
 	/**
 	 * 生成URL
-	 * @param mobileNo
-	 * @param pass
+	 * @param user
 	 * @param pid
 	 * @param pic
 	 * @return
 	 */
-	private String buildUrl(long mobileNo, String pass, String pid, String pic)
+	private String buildUrl(User user, String pid, String pic)
 	{
 		String v2 = this.localeSetting.getNodeText("/config/servers/ssi-app-sign-in-v2");
-		if(v2==null)	throw new IllegalStateException("couldn't find ssi-app-sign-in-v2 in LocaleSetting...");
+		if(v2==null)	v2 = FetionConfig.getString("server.ssi-sign-in-v2");
 		
 		StringBuffer b = new StringBuffer();
 		b.append(v2);
 		b.append("?");
-		b.append("mobileno="+Long.toString(mobileNo));
+		if(user.getMobile()>0){
+			b.append("mobileno="+Long.toString(user.getMobile()));
+		}else if(user.getFetionId()>0){
+			b.append("sid="+Integer.toString(user.getFetionId()));
+		}else{
+			throw new IllegalStateException("couldn't find valid mobile or fetionId to sign in..");
+		}
 		b.append("&domains=fetion.com.cn%3bm161.com.cn%3bwww.ikuwa.cn");
-		b.append("&digest="+(new PasswordEncrypter().encrypt(pass)));		//就是用以前写的密码加密工具，我在这里很郁闷。。
+		b.append("&digest="+(new PasswordEncrypter().encrypt(user.getPassword())));		//就是用以前写的密码加密工具，我在这里很郁闷。。
 		if(pid!=null) {		//这两个字段是用于验证码验证的
 			b.append("&pid="+pid);
 			b.append("&pic="+pic);
@@ -120,10 +124,10 @@ public class SSISignV2 implements SSISign
 	 * @throws IOException
 	 * @throws ParseException 
 	 */
-	private LoginState signIn(long mobileNo, String pass, String pid, String pic)
+	private LoginState signIn(User user, String pid, String pic)
 	{
 		LoginState state = null;
-		String url = this.buildUrl(mobileNo, pass, pid, pic);
+		String url = this.buildUrl(user, pid, pic);
 		try {
 	        HttpsURLConnection conn = (HttpsURLConnection) this.getConnection(url);
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
@@ -174,12 +178,12 @@ public class SSISignV2 implements SSISign
 	        	Element userEl = root.getChild("user");
 	        	String uri = userEl.getAttributeValue("uri");
 	        	String uid = userEl.getAttributeValue("user-id");
-	        	this.user.setSsic(ssic);
-	        	this.user.setUri(uri);
-	        	BeanHelper.setValue(this.user, "userId", (Integer.parseInt(uid)));
+	        	user.setSsic(ssic);
+	        	user.setUri(uri);
+	        	BeanHelper.setValue(user, "userId", (Integer.parseInt(uid)));
 	        	
 	        	logger.debug("SSISignIn: ssic = "+ssic);
-	        	this.user.setSsic(ssic);
+	        	user.setSsic(ssic);
 	        	break;
 	        	
 	        	default:
@@ -203,8 +207,7 @@ public class SSISignV2 implements SSISign
     @Override
     public LoginState signIn(User user)
     {
-    	this.user = user;
-	    return this.signIn(user.getMobile(), user.getPassword(), null, null);
+	    return this.signIn(user, null, null);
     }
 
 	/* (non-Javadoc)
@@ -213,8 +216,7 @@ public class SSISignV2 implements SSISign
     @Override
     public LoginState signIn(User user, VerifyImage img)
     {
-    	this.user = user;
-	    return this.signIn(user.getMobile(), user.getPassword(), img.getImageId(), img.getVerifyCode());
+	    return this.signIn(user, img.getImageId(), img.getVerifyCode());
     }
 
 	/* (non-Javadoc)
