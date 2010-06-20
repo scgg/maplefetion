@@ -45,7 +45,12 @@ import net.solosky.maplefetion.sipc.SipcStatus;
 import org.apache.log4j.Logger;
 
 /**
- *
+ * 所有回复处理器的基类
+ * 
+ * 提供了回复的处理的模板，根据不同回复状态来回调不同的处理函数
+ * 子类可以重载自己所需要处理的状态回调来完成不同的处理逻辑
+ * 默认1xx，2xx的回复状态返回的是成功事件
+ * 4xx，5xx的回复返回的是失败事件
  *
  * @author solosky <solosky772@qq.com>
  */
@@ -134,6 +139,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     		case SipcStatus.NOT_FOUND:       return this.doNotFound(response);
     		case SipcStatus.TA_EXIST:        return this.doTaExsit(response);
     		case SipcStatus.NO_SUBSCRIPTION: return this.doNoSubscription(response);
+    		case SipcStatus.TIME_OUT:        return this.doTimeout(response);
     		default:	
 				logger.warn("Unhandled sipc response status, default make action fail. status="
 						+response.getStatusCode()+", response="+response);
@@ -173,5 +179,10 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     //522
     protected ActionEvent doNoSubscription(SipcResponse response) throws FetionException{
     	return new FailureEvent(FailureType.SIPC_FAIL);
+    }
+    
+    //504
+    protected ActionEvent doTimeout(SipcResponse response) throws FetionException{
+    	return new TimeoutEvent();
     }
 }

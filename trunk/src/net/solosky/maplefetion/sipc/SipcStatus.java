@@ -45,4 +45,5 @@ public interface SipcStatus
 	public static final int SERVER_UNAVAILABLE = 503;	// 服务暂时不可用
 	public static final int TA_EXIST = 521;				//对方已经存在
 	public static final int NO_SUBSCRIPTION = 522;		//没有定义
+	public static final int TIME_OUT = 504;				//超时
 }
