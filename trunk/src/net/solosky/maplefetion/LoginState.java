@@ -34,7 +34,6 @@ package net.solosky.maplefetion;
  */
 public enum LoginState {
 	//操作状态
-	NETWORK_CHECK_DOING(0x101),		//检查网络是否畅通
 	SEETING_LOAD_DOING(0x102),		//加载自适应配置
 	SSI_SIGN_IN_DOING(0x103),		//SSI登录
 	SIPC_REGISTER_DOING(0x104),		//注册SIPC服务器
@@ -53,7 +52,6 @@ public enum LoginState {
 	
 	
 	//操作失败状态
-	NETWORK_UNAVAILABLE(0x401),		//未连接上网络
 	SETTING_LOAD_FAIL(0x402),		//加载自适应配置失败
 	SSI_NEED_VERIFY(0x403),			//SSI需要图片验证
 	SSI_VERIFY_FAIL(0x404),			//图片验证失败

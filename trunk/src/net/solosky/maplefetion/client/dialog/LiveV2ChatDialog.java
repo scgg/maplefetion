@@ -469,6 +469,6 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     public String toString()
     {
     	return "[LiveV2ChatDialog - " +
-    			"MainBuddy= "+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
+    			"MainBuddy="+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
 }

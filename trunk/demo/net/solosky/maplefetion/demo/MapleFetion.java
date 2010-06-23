@@ -118,7 +118,8 @@ public class MapleFetion extends NotifyEventAdapter
 	public MapleFetion(String serviceId, String pass)
 	{
 		this.client = new FetionClient(serviceId, pass,
-				this, new AutoTransferFactory(),
+				this, 
+				new AutoTransferFactory(),
 				new SimpleFetionStore(), 
 				new ThreadTimer(),
 				new SingleExecutor());
@@ -169,8 +170,7 @@ public class MapleFetion extends NotifyEventAdapter
     public void loginStateChanged(LoginState state)
     {
 	    switch (state)
-        {
-	    	
+        {	
         case	SEETING_LOAD_DOING:		//加载自适应配置
         	println("获取自适应系统配置...");
 	    	break;
@@ -1147,10 +1147,17 @@ public class MapleFetion extends NotifyEventAdapter
     public void prompt()
     {
     	try {
-    	if(this.activeChatDialog!=null && this.activeChatDialog.getState()==DialogState.OPENED)
-			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion^["+this.activeChatDialog.getMainBuddy().getDisplayName()+"]>>");
-		else
+    	if(this.activeChatDialog!=null){
+    		DialogState state = this.activeChatDialog.getState();
+    		if(state==DialogState.CREATED|| state==DialogState.OPENNING|| state==DialogState.OPENED){
+    			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion^["+this.activeChatDialog.getMainBuddy().getDisplayName()+"]>>");
+    		}else{
+    			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion>>");
+    		}
+    	}else{
 			writer.append(this.client.getFetionUser().getDisplayName()+"@maplefetion>>");
+    	}
+    	
     	writer.flush();
     	}catch (Exception e) {
     		e.printStackTrace();

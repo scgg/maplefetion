@@ -285,7 +285,7 @@ public class LiveV1ChatDialog extends ChatDialog
 	public String toString()
     {
     	return "[LiveV1ChatDialog - " +
-    			"MainBuddy= "+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
+    			"MainBuddy="+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
 	
 	/**

@@ -204,6 +204,7 @@ public class ChatDialogProxy implements DialogListener
 		    		this.proxyChatDialog.getState()==DialogState.FAILED) {
 		    		try {
 		                this.proxyChatDialog = this.fetionContext.getDialogFactory().createChatDialog(this.mainBuddy);
+		                this.proxyChatDialog.setDialogListener(this);
 	                } catch (DialogException e) {
 	                	logger.warn("Create ChatDialog failed.", e);
 		               listener.fireEevent(new SystemErrorEvent(e));

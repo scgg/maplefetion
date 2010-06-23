@@ -129,7 +129,7 @@ public class BasicChatDialog extends ChatDialog
     public String toString()
     {
     	return "[BasicChatDialog - " +
-		"MainBuddy= "+ mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
+		"MainBuddy="+ mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
 
 }
