@@ -149,7 +149,6 @@ public class LoginWork implements Runnable
     
     
     ////////////////////////////////////////////////////////////////////
-    
     /**
      * 更新自适应配置
      */
@@ -301,10 +300,16 @@ public class LoginWork implements Runnable
 	        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS);
 	        
 	        return true;
-        } catch (Exception e) {
+    	} catch (TransferException e) {
+			this.state = LoginState.SIPC_CONNECT_FAIL;
+			return false;
+		} catch (RequestTimeoutException e) {
+			this.state = LoginState.SIPC_TIMEOUT;
+			return false;
+		}catch (Exception e) {
         	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
         	logger.fatal("get contacts info failed.", e); 
-        	this.updateLoginState(LoginState.OHTER_ERROR);
+        	this.updateLoginState(LoginState.GET_CONTACTS_INFO_FAIL);
         	return false;
         }
     	
@@ -359,11 +364,16 @@ public class LoginWork implements Runnable
 	        }
 	        
 	    	this.updateLoginState(LoginState.GET_GROUPS_INFO_SUCCESS);
-	        return true;
+	        return true; 
+        } catch (TransferException e) {
+			this.state = LoginState.SIPC_CONNECT_FAIL;
+			return false;
+		} catch (RequestTimeoutException e) {
+			this.state = LoginState.SIPC_TIMEOUT;
+			return false;
         } catch (Exception e) {
-        	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
         	logger.fatal("get groups info failed.", e); 
-        	this.updateLoginState(LoginState.OHTER_ERROR);
+        	this.updateLoginState(LoginState.GET_GROUPS_INFO_FAIL);
         	return false;
         }
     }
@@ -383,9 +393,15 @@ public class LoginWork implements Runnable
 	        
 	        this.updateLoginState(LoginState.GROUPS_REGISTER_SUCCESS);
 	        return true;
+		} catch (TransferException e) {
+				this.state = LoginState.SIPC_CONNECT_FAIL;
+				return false;
+		} catch (RequestTimeoutException e) {
+				this.state = LoginState.SIPC_TIMEOUT;
+				return false;
         } catch (Exception e) {
         	logger.fatal("open group dialogs failed.", e);
-        	this.updateLoginState(LoginState.OHTER_ERROR);
+        	this.updateLoginState(LoginState.GROUPS_REGISTER_FAIL);
         	return false;
         }
     }

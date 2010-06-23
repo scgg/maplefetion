@@ -34,6 +34,8 @@ import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.chain.AbstractProcessor;
+import net.solosky.maplefetion.client.ResponseHandler;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.sipc.SipcHeader;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
@@ -171,7 +173,7 @@ public class TransferService extends AbstractProcessor
      * @see net.solosky.maplefetion.chain.AbstractProcessor#stopProcessor()
      */
     @Override
-    public void stopProcessor() throws FetionException
+    public void stopProcessor(FetionException ex) throws FetionException
     {
     	//停止超时检查定时任务
     	this.sipcTimeoutCheckTask.cancel();
@@ -181,8 +183,17 @@ public class TransferService extends AbstractProcessor
     		Iterator<SipcRequest> it = this.requestQueue.iterator();
         	while(it.hasNext()) {
         		SipcRequest request = it.next();
-        		if(request.getResponseHandler()!=null) {
-        			request.getResponseHandler().timeout(request);
+        		ResponseHandler handler = request.getResponseHandler();
+        		if(handler!=null) {
+        			if(ex==null){
+        				handler.timeout(request);
+        			}else if(ex instanceof TransferException){
+        				handler.ioerror(request);
+        			}else if(ex instanceof SystemException){
+        				handler.syserror(request, ex.getCause());
+        			}else{
+        				handler.timeout(request);
+        			}
         		}
         	}
     	}

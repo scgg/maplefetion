@@ -247,8 +247,18 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
 							@Override
                             public void ioerror(SipcRequest request)
                             {
-								logger.warn("ContactDetailRequest error ...");
+								logger.warn("ContactDetailRequest io error ...");
                             }
+
+							/* (non-Javadoc)
+							 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest, java.lang.Throwable)
+							 */
+							@Override
+							public void syserror(SipcRequest request,
+									Throwable throwable)
+							{
+								logger.warn("ContactDetailRequest system error ...");
+							}
     					};
     					//消息回复收到后就会自动调用这个处理器
     					request.setResponseHandler(handler);

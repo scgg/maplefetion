@@ -208,7 +208,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     {
     	if(e instanceof TransferException) {
         	try {
-	            this.processorChain.stopProcessorChain();
+	            this.processorChain.stopProcessorChain(e);
             } catch (FetionException fe) {
             	logger.warn("closeProcessorChain failed.", fe);
             }

@@ -407,7 +407,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     	//主要处理传输异常
     	if(e instanceof TransferException || e instanceof SystemException) {
     		try {
-    			this.processorChain.stopProcessorChain();
+    			this.processorChain.stopProcessorChain(e);
 	            this.context.getDialogFactory().closeDialog(this);
             } catch (FetionException e1) {
             	logger.warn("close LiveV2ChatDialog failed.", e1);
@@ -469,7 +469,6 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     public String toString()
     {
     	return "[LiveV2ChatDialog - " +
-    			"Transfer=" +((Transfer) processorChain.getProcessor(Transfer.class.getName())).getTransferName()+
-    			", MainBuddy= "+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
+    			"MainBuddy= "+mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
 }

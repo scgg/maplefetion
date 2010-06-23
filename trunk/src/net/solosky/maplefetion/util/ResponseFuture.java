@@ -202,4 +202,13 @@ public class ResponseFuture implements ResponseHandler
     	this.setResponseError();
     }
 
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest, java.lang.Throwable)
+	 */
+	@Override
+	public void syserror(SipcRequest request, Throwable throwable)
+	{
+		this.setResponseError();
+	}
+
 }

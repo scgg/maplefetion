@@ -139,6 +139,16 @@ public abstract class AbstractProcessor implements Processor
     	//不做任何事情，子类可以覆盖
     }
 
+    
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.chain.Processor#stopProcessor(net.solosky.maplefetion.FetionException)
+	 */
+	@Override
+	public void stopProcessor(FetionException exception) throws FetionException
+	{
+		this.stopProcessor();
+	}
+
 	/**
 	 * 这个方法实现了处理前面转发过来的对象，具体的交给子类去完成，并且如果子类方法返回真才进行下一个处理
 	 */

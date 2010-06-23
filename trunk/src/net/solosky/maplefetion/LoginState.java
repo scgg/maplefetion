@@ -51,6 +51,7 @@ public enum LoginState {
 	GET_GROUPS_INFO_SUCCESS(0x205),	//获取群消息
 	GROUPS_REGISTER_SUCCESS(0x206),	//注册群成功
 	
+	
 	//操作失败状态
 	NETWORK_UNAVAILABLE(0x401),		//未连接上网络
 	SETTING_LOAD_FAIL(0x402),		//加载自适应配置失败
@@ -59,6 +60,10 @@ public enum LoginState {
 	SSI_AUTH_FAIL(0x405),			//SSI验证失败
 	SSI_ACCOUNT_SUSPEND(0x406),		//用户停机
 	SSI_ACCOUNT_NOT_FOUND(0x407),	//无效的手机号或者飞信
+	GET_CONTACTS_INFO_FAIL(0x408),	//获取联系人信息失败
+	GET_GROUPS_INFO_FAIL(0x409),	//获取群信息失败
+	GROUPS_REGISTER_FAIL(0x40A),	//注册群失败
+	
 	
 	SSI_CONNECT_FAIL(0x601),			//SSI连接失败
 	SIPC_CONNECT_FAIL(0x602),			//SIPC服务器连接失败
@@ -66,7 +71,6 @@ public enum LoginState {
 	SIPC_TIMEOUT(604),					//SIPC服务器注册超时
 	
 	OHTER_ERROR(0x701),					//其他未知错误
-	LOGIN_TIMEOUT(0x702),				//登陆超时
 	
 	LOGIN_SUCCESS(0x200)				//登录成功
 	;

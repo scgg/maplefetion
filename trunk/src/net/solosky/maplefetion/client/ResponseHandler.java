@@ -56,4 +56,11 @@ public interface ResponseHandler
 	 * @throws FetionException
 	 */
 	public void ioerror(SipcRequest  request);
+	
+	/**
+	 * 系统内部错误
+	 * @param request
+	 * @param throwable 
+	 */
+	public void syserror(SipcRequest request, Throwable throwable);
 }

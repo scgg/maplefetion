@@ -101,4 +101,10 @@ public interface Processor
 	 * @throws FetionException
 	 */
 	public void stopProcessor() throws FetionException;
+	
+	/**
+	 * 以一个异常停止处理器，应该根据这个异常进行不同的判断
+	 * @param exception
+	 */
+	public void stopProcessor(FetionException exception) throws FetionException;
 }

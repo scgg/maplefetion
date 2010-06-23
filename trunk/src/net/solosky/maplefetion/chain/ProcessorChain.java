@@ -195,6 +195,21 @@ public class ProcessorChain
 	}
 	
 	/**
+	 * 停止处理链
+	 * @throws FetionException
+	 */
+	public void stopProcessorChain(FetionException ex) throws FetionException
+	{
+		if(!this.isChainClosed) {
+    		this.isChainClosed = true;
+    		Iterator<Processor> it = this.iterator();
+    		while(it.hasNext()) {
+    			it.next().stopProcessor(ex);
+    			}
+    		}
+	}
+	
+	/**
 	 * 返回指定名字的处理器
 	 * @param name
 	 * @return

@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.client.dialog;
 
+import org.apache.log4j.Logger;
+
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.event.ActionEvent;
@@ -161,17 +163,22 @@ public abstract class Dialog
 	public void openDialog(final ActionEventListener listener)
 	{
 		
+		final Dialog dialog = this;
 		Runnable r = new Runnable() {
 			public void run() {
 				try {
-					  openDialog();
-		              listener.fireEevent(new SuccessEvent());
+					  Logger.getLogger(Dialog.class).debug("Openning Dialog in Executor pool:"+dialog.toString());
+					  dialog.openDialog();
+					  Logger.getLogger(Dialog.class).debug("Opened Dialog in Executor pool:"+dialog.toString());
+					  if(listener!=null) listener.fireEevent(new SuccessEvent());
 	                } catch (TransferException e) {
-	                	 listener.fireEevent(new TransferErrorEvent());
+	                	if(listener!=null) listener.fireEevent(new TransferErrorEvent());
 	                } catch (RequestTimeoutException e) {
-	                	listener.fireEevent(new TimeoutEvent());
+	                	if(listener!=null) listener.fireEevent(new TimeoutEvent());
 	                } catch (DialogException e) {
-	                	listener.fireEevent(new SystemErrorEvent(e));
+	                	if(listener!=null) listener.fireEevent(new SystemErrorEvent(e));
+	                }catch(Throwable t){
+	                	if(listener!=null) listener.fireEevent(new SystemErrorEvent(t));
 	                }
 			}
 		};
@@ -184,9 +191,12 @@ public abstract class Dialog
 	 */
 	public void closeDialog(final ActionEventListener listener)
 	{
+		final Dialog dialog = this;
 		Runnable r = new Runnable() {
 			public void run() {
-				closeDialog();
+				Logger.getLogger(Dialog.class).debug("Closing Dialog in Executor pool:"+dialog.toString());
+				dialog.closeDialog();
+				Logger.getLogger(Dialog.class).debug("Closed Dialog in Executor pool:"+dialog.toString());
 				listener.fireEevent(new SuccessEvent());
 			}
 		};

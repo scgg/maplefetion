@@ -115,7 +115,17 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     }
     
     
-    /**
+    
+    /* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest)
+	 */
+	@Override
+	public void syserror(SipcRequest request, Throwable t)
+	{
+		this.fireEvent(new SystemErrorEvent(t));
+	}
+
+	/**
      * 触发操作事件
      */
     private void fireEvent(ActionEvent event)

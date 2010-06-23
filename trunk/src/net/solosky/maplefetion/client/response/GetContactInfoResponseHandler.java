@@ -96,6 +96,13 @@ public class GetContactInfoResponseHandler implements ResponseHandler
     @Override
     public void ioerror(SipcRequest request)
     {
-	    
     }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest)
+	 */
+	@Override
+	public void syserror(SipcRequest request, Throwable t)
+	{
+	}
 }
