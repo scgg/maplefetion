@@ -324,7 +324,8 @@ public class FetionClient implements FetionContext
      * 设置通知监听器
      * @param notifyListener
      */
-	public void setNotifyEventListener(NotifyEventListener notifyEventListener) {
+	public void setNotifyEventListener(NotifyEventListener notifyEventListener)
+	{
 		this.notifyEventListener = notifyEventListener;
 	}
 	
@@ -354,7 +355,15 @@ public class FetionClient implements FetionContext
     {
     	this.timer = timer;
     }
-
+    
+	/**
+	 * 设置传输工厂
+	 * @param transferFactory the transferFactory to set
+	 */
+	public void setTransferFactory(TransferFactory transferFactory)
+	{
+		this.transferFactory = transferFactory;
+	}
 
 	/**
      * @return the proxyFactory
