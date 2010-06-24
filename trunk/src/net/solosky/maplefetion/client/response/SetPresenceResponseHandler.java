@@ -27,10 +27,12 @@ package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.util.BeanHelper;
 
 /**
  *
@@ -65,7 +67,8 @@ public class SetPresenceResponseHandler extends AbstractResponseHandler
 	protected ActionEvent doActionOK(SipcResponse response)
 			throws FetionException
 	{
-		this.context.getFetionUser().getPresence().setValue(presence);
+		Presence prensence = this.context.getFetionUser().getPresence();
+		BeanHelper.setValue(prensence, "value", this.presence);
 		return super.doActionOK(response);
 	}
 

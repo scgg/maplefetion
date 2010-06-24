@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<map class="net.solosky.maplefetion.bean.Presence">
+	<field xml="value" bean="value" type="java.lang.Integer" readonly="false" />
+	<field xml="desc" bean="desc" type="java.lang.String" readonly="false" />
+	<field xml="device-id" bean="clientId" type="java.lang.String" readonly="false" />
+	<field xml="device-type" bean="clientType" type="java.lang.String" readonly="false" />
+	<field xml="device-caps" bean="clientCaps" type="java.lang.String" readonly="false"/>
+</map>

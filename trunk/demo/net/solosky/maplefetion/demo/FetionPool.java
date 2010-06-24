@@ -32,11 +32,13 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.concurrent.Executors;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.event.NotifyEvent;
+import net.solosky.maplefetion.net.mina.MinaTransferFactory;
 import net.solosky.maplefetion.util.SharedExecutor;
 import net.solosky.maplefetion.util.SharedTimer;
 
@@ -52,6 +54,11 @@ public class FetionPool
 	 * 飞信实例列表
 	 */
 	private ArrayList<FetionClient> clientList;
+	
+	/**
+	 * 共享的传输工厂
+	 */
+	private MinaTransferFactory transferFactory;
 	
 	/**
 	 * 共享的timer
@@ -80,6 +87,7 @@ public class FetionPool
 		this.sharedTimer = new SharedTimer();
 		this.shareExecutor = new SharedExecutor();
 		this.clientList = new ArrayList<FetionClient>();
+		this.transferFactory = new MinaTransferFactory(Executors.newCachedThreadPool());
 	}
 	
 	
@@ -96,8 +104,6 @@ public class FetionPool
     					client.logout();
     				}
     			}
-    			//等待10秒，因为退出是异步的。。
-    			Thread.sleep(10000);
     			this.sharedTimer.reallyStopTimer();
     			this.shareExecutor.reallyStopExecutor();
     			break;
@@ -192,6 +198,7 @@ public class FetionPool
     	client.setNotifyEventListener(listener);
     	client.setFetionExecutor(this.shareExecutor);
     	client.setFetionTimer(this.sharedTimer);
+    	client.setTransferFactory(this.transferFactory);
     	this.clientList.add(client);
     	println("已经添加 "+mobile +"..");
     }

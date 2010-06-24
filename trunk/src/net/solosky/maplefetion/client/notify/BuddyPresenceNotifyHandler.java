@@ -81,11 +81,9 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
 				//状态改变
         	    if(basic!=null) {
             	    int oldpresense = buddy.getPresence().getValue(); 
-            	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));    
+            	    int curpresense = Integer.parseInt(basic.getAttributeValue("value"));  
+            	    BeanHelper.toBean(Presence.class, buddy.getPresence(), basic);
             	    if(oldpresense!=curpresense) {
-            	    	//更新状态
-            	    	buddy.getPresence().setValue(curpresense);
-            	    	
             	    	//注意，如果好友上线了，并且当前打开了手机聊天对话框，需要关闭这个手机聊天对话框
             	    	if(curpresense == Presence.AWAY || curpresense==Presence.BUSY || curpresense==Presence.ONLINE ) {
             	    		ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(buddy);
@@ -111,7 +109,7 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
         	    	}
         	    }
         	    
-        	    logger.debug("PresenceChanged:"+buddy.getDisplayName()+" [presence="+buddy.getPresence().getValue()+"]");
+        	    logger.debug("PresenceChanged:"+buddy.toString()+" - "+buddy.getPresence());
         	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
     	    }else {
     	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+uri);

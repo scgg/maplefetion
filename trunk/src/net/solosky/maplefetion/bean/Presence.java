@@ -45,6 +45,11 @@ public class Presence
 	private int value;
 	
 	/**
+	 * 状态的描述
+	 */
+	private String desc;
+	
+	/**
 	 * 客户端类型
 	 */
 	private String clientType;
@@ -77,16 +82,6 @@ public class Presence
     	return value;
     }
 
-
-	/**
-     * @param value the value to set
-     */
-    public void setValue(int value)
-    {
-    	this.value = value;
-    }
-
-
 	/**
      * @return the clientType
      */
@@ -94,16 +89,6 @@ public class Presence
     {
     	return clientType;
     }
-
-
-	/**
-     * @param clientType the clientType to set
-     */
-    public void setClientType(String clientType)
-    {
-    	this.clientType = clientType;
-    }
-
 
 	/**
      * @return the clientId
@@ -115,15 +100,6 @@ public class Presence
 
 
 	/**
-     * @param clientId the clientId to set
-     */
-    public void setClientId(String clientId)
-    {
-    	this.clientId = clientId;
-    }
-
-
-	/**
      * @return the clientCaps
      */
     public String getClientCaps()
@@ -131,17 +107,26 @@ public class Presence
     	return clientCaps;
     }
 
+    /**
+	 * @return the desc
+	 */
+	public String getDesc()
+	{
+		return desc;
+	}
+
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString()
+	{
+		return "Presence [value=" + value + ", desc=" + desc + ", clientId="
+				+ clientId + "]";
+	}
+
 
 	/**
-     * @param clientCaps the clientCaps to set
-     */
-    public void setClientCaps(String clientCaps)
-    {
-    	this.clientCaps = clientCaps;
-    }
-    
-    
-    /**
      * 检查是否是合法的presence
      * @param presence
      * @return

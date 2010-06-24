@@ -365,6 +365,17 @@ public class FetionClient implements FetionContext
 		this.transferFactory = transferFactory;
 	}
 
+	
+	/**
+	 * 设置飞信存储对象
+	 * @param store the store to set
+	 */
+	public void setFetionStore(FetionStore store)
+	{
+		this.store = store;
+	}
+
+
 	/**
      * @return the proxyFactory
      */
@@ -519,6 +530,7 @@ public class FetionClient implements FetionContext
 
 	/**
      * 退出登录
+     * 注意这个方法是同步的
      */
     public void logout()
     {
