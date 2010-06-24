@@ -75,8 +75,12 @@ public class LocaleSetting
 	 */
 	public String getNodeText(String path)
 	{
-		Element el = XMLHelper.find(this.document.getRootElement(), path);
-		return el!=null?el.getText():null;
+		if(this.document!=null){
+			Element el = XMLHelper.find(this.document.getRootElement(), path);
+			return el!=null?el.getText():null;
+		}else{
+			return null;
+		}
 	}
 	
 	/**
