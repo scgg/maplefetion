@@ -26,6 +26,7 @@
 package net.solosky.maplefetion.sipc;
 
 import net.solosky.maplefetion.client.ResponseHandler;
+import net.solosky.maplefetion.util.TimeHelper;
 
 /**
 *
@@ -79,7 +80,7 @@ public class SipcRequest extends SipcOutMessage
 	{
 		this.method = method;
 		this.domain = domain;
-		this.aliveTime = ((int) System.currentTimeMillis()/1000)+60;	//存活时间为发出去后的60秒
+		this.aliveTime = TimeHelper.nowTimeUnixStamp()+60;				//存活时间为发出去后的60秒
 		this.retryTimes = 0;											//重发次数重置为0,最多只能重发3次。。。
 		this.needReplyTimes = 1 ;
 		this.replyTimes =0;

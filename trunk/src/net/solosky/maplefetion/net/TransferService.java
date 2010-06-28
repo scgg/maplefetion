@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.net;
 
+import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.Queue;
@@ -42,6 +43,7 @@ import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.SliceSipcResponseHelper;
+import net.solosky.maplefetion.util.TimeHelper;
 
 import org.apache.log4j.Logger;
 
@@ -207,8 +209,10 @@ public class TransferService extends AbstractProcessor
     public void startProcessor() throws FetionException
     {
     	this.sipcTimeoutCheckTask = new SipMessageTimeOutCheckTask();
+    	int checkTimeoutInterval  = FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000;
+    	int checkTimeoutDelay     = 50*100;
 	    this.context.getFetionTimer().scheduleTask(
-	    						this.sipcTimeoutCheckTask, 50*1000, 60*1000);
+	    						this.sipcTimeoutCheckTask, checkTimeoutDelay, checkTimeoutInterval);
     }
     
 
@@ -290,42 +294,50 @@ public class TransferService extends AbstractProcessor
 	 */
 	private void checkTimeOutRequest() throws FetionException
 	{
-		SipcRequest out = null;
-		int curtime = (int) System.currentTimeMillis() / 1000;
-		int maxTryTimes = FetionConfig
-		        .getInteger("fetion.sip.default-retry-times");
-		int aliveTimes = FetionConfig
-		        .getInteger("fetion.sip.default-alive-time");
+		int curTime     = TimeHelper.nowTimeUnixStamp();
+		int maxTryTimes = FetionConfig.getInteger("fetion.sip.default-retry-times");
+		int aliveTime   = FetionConfig.getInteger("fetion.sip.default-alive-time");
 
+		//这里需要同步了。。 
 		synchronized (this.requestQueue) {
 			
-			// 如果队列为空就不需要查找了
-			if (this.requestQueue.size() == 0)
-				return;
+			//感觉JAVA集合中的队列怪怪的，特别是命名，peek poll如果不看注释根本不知道是什么含义，接口不明确啊，能望文生义那种接口最好
+			//比如getFrist() getLast() addFirst() addLast() peekFirst() peekLast()...
+			//更无语的是，如果队列为空调用peek()居然会抛异常，因为这个原因不得不在遍历队列的时候判断下队列的大小..
+			//所以这里采用的是集合的遍历方式，更加简洁，代码也更加优美点..
 			
-			// 从队列的头部开始查找，如果查到一个包存活时间还没有超过当前时间，就不在查找，因为队列中包的时间是按时间先后顺序存放的
-			while (true) {
-				out = this.requestQueue.peek();
-				if (out.getAliveTime() > curtime) {
-					return; // 当前包还处于存活期内，退出查找
-				} else {
-					// 当前这个包是超时的包
-					if (out.getRetryTimes() < maxTryTimes) {
-						// 如果小于重发次数，就重发这个包
-						logger.debug("Request was timeout, now sending it again... Request="+out);
-						this.requestQueue.poll();
-						out.incRetryTimes();
-						out.setAliveTime(((int) System.currentTimeMillis() / 1000) + aliveTimes);
-						// 重新发送这个包
-						this.processOutcoming(out);
-					} else { // 这个包已经超过重发次数，通知对话对象，发生了超时异常
-						logger.warn("A request was sent three times, handle this timeout exception...");
-						this.handleRequestTimeout(out);
-					}
+			ArrayList<SipcRequest> timeoutList = new ArrayList<SipcRequest>();		//超时的包的列表
+			Iterator<SipcRequest> it = this.requestQueue.iterator();
+			
+			//首先把超时的包找出来
+			while(it.hasNext()){
+				SipcRequest request = it.next(); 
+				if(request.getAliveTime()<curTime){				//超过了存活期，
+					//因为这里如果判断超时并重发，这个包会重新添加到队列中，当前迭代的列表会增加元素，迭代器就会抛出更改异常
+					//所以这里重新建立了一个超时列表，并把超时的包放入列表中，在当前迭代结束后才处理超时包
+					it.remove();							//先从队列中移除
+					timeoutList.add(request);				//添加到重发包列表
+				}else{
+					//未超过存活期，啥也不干
 				}
 			}
-        }
-		
+			
+			//遍历超时包列表，并根据条件判断是否重发或者通知超时
+			it = timeoutList.iterator();
+			while(it.hasNext()){
+				SipcRequest request = it.next();
+				if(request.getRetryTimes()<maxTryTimes){		//重发次数未超过指定的次数，重新发送这个包
+					logger.debug("Request was timeout, now sending it again... Request="+request);
+					request.incRetryTimes();					//递增重试次数
+					request.setAliveTime(curTime+aliveTime);	//更新存活时间
+					this.processOutcoming(request);				// 重新发送这个包
+				}else{											//这个包已经超过重发次数，通知超时
+					logger.warn("A request was sent three times, handle this timeout exception...Request="+request);
+					this.handleRequestTimeout(request);
+				}
+			
+			}
+		}
 	}
 
 	/**
