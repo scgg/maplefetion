@@ -27,6 +27,7 @@ package net.solosky.maplefetion;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.bean.Buddy;
@@ -35,6 +36,7 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
+import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.LoginException;
@@ -956,5 +958,66 @@ public class FetionClient implements FetionContext
 		this.user.setImpresa(impresa);
 		this.setPersonalInfo(listener);
 	}
-
+	
+	/**
+	 * 获取定时短信列表
+	 * 注意：在登录的过程中并没有获取定时短信这一步，所以在这里需要手动的进行获取短信列表
+	 * @param listener
+	 */
+	public void getScheduleSMSList(final ActionEventListener listener)
+	{
+		//获取定时短信列表是分两步完成的，首先要获取定时短信列表，然后获取定时列表的详细信息
+		//为了简化用户操作，这里把这两步合成一步来完成
+		ActionEventListener tmpListener = new ActionEventListener() {
+			public void fireEevent(ActionEvent event)
+			{
+				if(event.getEventType()==ActionEventType.SUCCESS){
+					Collection<ScheduleSMS> list = getFetionStore().getScheduleSMSList();
+					if(list.size()>0){
+						getServerDialog().getScheduleSMSInfo(list, listener);
+					}else{
+						listener.fireEevent(event);
+					}
+				}else{
+					listener.fireEevent(event);
+				}
+			}
+		};
+		this.getServerDialog().getScheduleSMSList(tmpListener);
+	}
+	
+	/**
+	 * 创建定时短信
+	 * @param message		定时短信内容
+	 * @param sendDate		发送时间
+	 * @param receiverList	短信的接收者列表
+	 * @param listener		操作监听器
+	 */
+	public void createScheduleSMS(Message message, Date sendDate, Collection<Buddy> receiverList, ActionEventListener listener)
+	{
+		ScheduleSMS sc = new ScheduleSMS(-1, message, sendDate,  receiverList);
+		this.getServerDialog().createScheduleSMS(sc, listener);
+	}
+	
+	/**
+	 * 批量删除定时短信
+	 * @param sclist	定时短信列表
+	 * @param listener
+	 */
+	public void deleteScheduleSMS(Collection<ScheduleSMS> sclist, ActionEventListener listener)
+	{
+		this.getServerDialog().deleteScheduleSMS(sclist, listener);
+	}
+	
+	/**
+	 * 删除一条定时短信
+	 * @param scheduleSMS	定时短信
+	 * @param listener
+	 */
+	public void deleteScheduleSMS(ScheduleSMS scheduleSMS, ActionEventListener listener)
+	{
+		ArrayList<ScheduleSMS> list = new ArrayList<ScheduleSMS>();
+		list.add(scheduleSMS);
+		this.getServerDialog().deleteScheduleSMS(list, listener);
+	}
 }

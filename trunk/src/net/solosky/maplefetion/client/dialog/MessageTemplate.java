@@ -65,4 +65,9 @@ public class MessageTemplate
 	public static final String TMPL_SUBSCRIBE_GROUP_NOPTIFY = "<args><subscription><groups><group uri=\"{uri}\" /></groups><presence><basic attributes=\"all\" /><member attributes=\"identity\" /><management attributes=\"all\" /></presence></subscription></args>";
 	public static final String TMPL_GROUP_KEEP_LIVE = "<is-composing><state>keep-alive</state></is-composing>";
 	public static final String TMPL_GROUP_SET_PRESENCE ="<args><groups><group uri=\"{uri}\"><presence><basic value=\"{presence}\" client-type=\"PC\" /></presence></group></groups></args>";
+
+	public static final String TMPL_GET_SCHEDULE_SMS_LIST = "<args><schedule-sms-list version=\"{version}\" /></args>";
+	public static final String TMPL_GET_SCHEDULE_SMS_INFO = "<args><schedule-sms-list>{scheduleSMSList}</schedule-sms-list></args>";
+	public static final String TMPL_CREATE_SCHEDULE_SMS = "<args><schedule-sms send-time=\"{sendDate}\"><message>{message}</message><receivers>{receiverList}</receivers></schedule-sms></args>";
+	public static final String TMPL_DELETE_SCHEDULE_SMS = "<args><schedule-sms-list>{scheduleSMSList}</schedule-sms-list></args>";
 }

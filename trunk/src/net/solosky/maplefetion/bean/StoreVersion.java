@@ -38,6 +38,7 @@ public class StoreVersion
 	private int contactVersion;
 	private int groupVersion;
 	private int permissionVersion;
+	private int scheduleSMSVersion;
 	
 	public StoreVersion()
 	{
@@ -47,6 +48,7 @@ public class StoreVersion
 		this.contactVersion       = 0;
 		this.groupVersion         = 0;
 		this.personalVersion      = 0;
+		this.scheduleSMSVersion   = 0;
 	}
 	/**
      * @return the localeSettingVersion
@@ -132,6 +134,18 @@ public class StoreVersion
     {
     	this.permissionVersion = permissionVersion;
     }
-	
-	
+	/**
+	 * @return the scheduleSMSVersion
+	 */
+	public int getScheduleSMSVersion()
+	{
+		return scheduleSMSVersion;
+	}
+	/**
+	 * @param scheduleSMSVersion the scheduleSMSVersion to set
+	 */
+	public void setScheduleSMSVersion(int scheduleSMSVersion)
+	{
+		this.scheduleSMSVersion = scheduleSMSVersion;
+	}
 }

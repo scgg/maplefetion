@@ -39,6 +39,7 @@ import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.chain.ProcessorChain;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.ServerMessageDispatcher;
@@ -46,9 +47,11 @@ import net.solosky.maplefetion.client.response.AddBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AgreeApplicationResponseHandler;
 import net.solosky.maplefetion.client.response.CreateCordResponseHandler;
+import net.solosky.maplefetion.client.response.CreateScheduleSMSResponseHandler;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteCordResponseHandler;
+import net.solosky.maplefetion.client.response.DeleteScheduleSMSResponseHandler;
 import net.solosky.maplefetion.client.response.FindBuddyByMobileResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactDetailResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactListResponseHandler;
@@ -57,6 +60,8 @@ import net.solosky.maplefetion.client.response.GetGroupListResponseHandler;
 import net.solosky.maplefetion.client.response.GetGroupsInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
 import net.solosky.maplefetion.client.response.GetPersonalInfoResponseHandler;
+import net.solosky.maplefetion.client.response.GetScheduleSMSInfoResponseHandler;
+import net.solosky.maplefetion.client.response.GetScheduleSMSListResponseHandler;
 import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.client.response.ServerRegisterResponseHandler;
 import net.solosky.maplefetion.client.response.SetBuddyInfoResponseHandler;
@@ -699,4 +704,56 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		this.process(request);
 	}
 	
+	/**
+	 * 获取定时短信列表
+	 * @param listener
+	 */
+	public void getScheduleSMSList(ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createGetScheduleSMSListRequest(
+				this.context.getFetionStore().getStoreVersion().getScheduleSMSVersion());
+		request.setResponseHandler(new GetScheduleSMSListResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	/**
+	 * 获取定时短信的详细信息
+	 * @param sclist		定时短信列表
+	 * @param listener		
+	 */
+	public void getScheduleSMSInfo(Collection<ScheduleSMS> sclist, ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createGetScheduleSMSInfo(sclist);
+		request.setResponseHandler(new GetScheduleSMSInfoResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	/**
+	 * 创建新的定时短信
+	 * @param scheduleSMS 定时短信对象
+	 * @param listener
+	 */
+	public void createScheduleSMS(ScheduleSMS scheduleSMS, ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createCreateScheduleSMSRequest(
+				scheduleSMS.getSendDate(), scheduleSMS.getMessage(), scheduleSMS.getReciverList());
+		request.setResponseHandler(new CreateScheduleSMSResponseHandler(context, this, listener, scheduleSMS));
+		this.process(request);
+	}
+	
+	/**
+	 *删除定时短信
+	 * @param sclist	定时短信列表
+	 * @param listener
+	 */
+	public void deleteScheduleSMS(Collection<ScheduleSMS> sclist, ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createDeleteScheduleSMSRequest(sclist);
+		request.setResponseHandler(new DeleteScheduleSMSResponseHandler(context, this, listener));
+		this.process(request);
+	}
 }

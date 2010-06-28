@@ -26,7 +26,9 @@
 
 package net.solosky.maplefetion.client.dialog;
 
+import java.text.SimpleDateFormat;
 import java.util.Collection;
+import java.util.Date;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.FetionConfig;
@@ -34,6 +36,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.net.Port;
 import net.solosky.maplefetion.sipc.SipcBody;
@@ -743,6 +746,94 @@ public class MessageFactory
     	return req;
     }
     
+    
+    /////////////////////////////////////定时短信////////////////////////////////////////////
+    /**
+     * 获取定时短信列表
+     */
+    public SipcRequest createGetScheduleSMSListRequest(int localVersion)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "SSGetScheduleSmsList");
+    	
+    	String body = MessageTemplate.TMPL_GET_SCHEDULE_SMS_LIST;
+    	body = body.replace("{version}", Integer.toString(localVersion));
+    	req.setBody(new SipcBody(body));
+    	
+    	return req;
+    }
+    
+    /**
+     * 获取定时短信的详细信息
+     */
+    public SipcRequest createGetScheduleSMSInfo(Collection<ScheduleSMS> scheduleSMSList)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "SSGetScheduleSms");
+    	
+    	String body = MessageTemplate.TMPL_DELETE_SCHEDULE_SMS;
+    	
+    	String scheduleSMSTmpl = "<schedule-sms id=\"{id}\" />";
+    	StringBuffer buffer = new StringBuffer();
+    	Iterator<ScheduleSMS> it = scheduleSMSList.iterator();
+    	while(it.hasNext()){
+    		ScheduleSMS s = it.next();
+    		buffer.append(scheduleSMSTmpl.replace("{id}", Integer.toString(s.getId())));
+    	}
+    	body = body.replace("{scheduleSMSList}", buffer.toString());
+    	
+    	req.setBody(new SipcBody(body));
+    	return req;
+    }
+    
+    /**
+     * 创建定时短信
+     */
+    public SipcRequest createCreateScheduleSMSRequest(Date sendDate, Message message, Collection<Buddy> receiverList)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "SSSetScheduleCatSms");
+    	
+    	String body = MessageTemplate.TMPL_CREATE_SCHEDULE_SMS;
+    	SimpleDateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
+    	body = body.replace("{sendDate}", df.format(sendDate));
+    	body = body.replace("{message}", message.getText());
+    	
+    	String receiverTmpl = "<receiver uri=\"{uri}\" />";
+    	StringBuffer buffer = new StringBuffer();
+    	Iterator<Buddy> it = receiverList.iterator();
+    	while(it.hasNext()){
+    		Buddy b = it.next();
+    		buffer.append(receiverTmpl.replace("{uri}", b.getUri()));
+    	}
+    	body = body.replace("{receiverList}", buffer.toString());
+    	
+    	req.setBody(new SipcBody(body));
+    	return req;
+    }
+    
+    /**
+     * 删除定时短信
+     */
+    public SipcRequest createDeleteScheduleSMSRequest(Collection<ScheduleSMS> scheduleSMSList)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "SSDeleteScheduleSms");
+    	
+    	String body = MessageTemplate.TMPL_DELETE_SCHEDULE_SMS;
+    	
+    	String scheduleSMSTmpl = "<schedule-sms id=\"{id}\" />";
+    	StringBuffer buffer = new StringBuffer();
+    	Iterator<ScheduleSMS> it = scheduleSMSList.iterator();
+    	while(it.hasNext()){
+    		ScheduleSMS s = it.next();
+    		buffer.append(scheduleSMSTmpl.replace("{id}", Integer.toString(s.getId())));
+    	}
+    	body = body.replace("{scheduleSMSList}", buffer.toString());
+    	
+    	req.setBody(new SipcBody(body));
+    	return req;
+    }
     ///////////////////////////////////////收据///////////////////////////////////////////////
     
     /**

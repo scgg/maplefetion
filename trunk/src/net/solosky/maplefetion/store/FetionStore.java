@@ -32,6 +32,7 @@ import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Relation;
+import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.StoreVersion;
 
@@ -209,5 +210,30 @@ public interface FetionStore
      * @return
      */
     public Member getGroupMember(Group group, String uri);
+    
+    /**
+     * 返回所有的定时短信列表
+     * @return
+     */
+    public Collection<ScheduleSMS> getScheduleSMSList();
+    
+    /**
+     * 根据定时短信的ID返回定时短信对象
+     * @param scId
+     * @return
+     */
+    public ScheduleSMS getScheduleSMS(int scId);
+    
+    /**
+     * 添加定时短信到列表
+     * @param scheduleSMS 定时短信对象
+     */
+    public void addScheduleSMS(ScheduleSMS scheduleSMS);
+    
+    /**
+     * 删除定时短信列表
+     * @param scheduleSMS
+     */
+    public void deleteScheduleSMS(ScheduleSMS scheduleSMS);
 
 }

@@ -35,6 +35,7 @@ import net.solosky.maplefetion.bean.Cord;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Relation;
+import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.bean.User;
 
@@ -69,6 +70,11 @@ public class SimpleFetionStore implements FetionStore
 	private Hashtable<String, Hashtable<String, Member>> groupMemberList;
 	
 	/**
+	 * 定时短信列表
+	 */
+	private ArrayList<ScheduleSMS> scheduleSMSList;
+	
+	/**
 	 * 存储版本
 	 */
 	private StoreVersion storeVersion;
@@ -84,6 +90,7 @@ public class SimpleFetionStore implements FetionStore
 		this.groupList = new Hashtable<String, Group>();
 		this.groupMemberList = new Hashtable<String, Hashtable<String,Member>>();
 		this.storeVersion = new StoreVersion();
+		this.scheduleSMSList = new ArrayList<ScheduleSMS>();
 	}
 	
 	/* (non-Javadoc)
@@ -144,12 +151,16 @@ public class SimpleFetionStore implements FetionStore
 		ArrayList<Buddy> list = new ArrayList<Buddy>();
 		Iterator<Buddy> it = this.buddyList.values().iterator();
 		Buddy buddy = null;
-		String  buddyCordId = null;
+		String [] buddyCordIds = null;
 		while(it.hasNext()) {
 			buddy = it.next();
-			buddyCordId = buddy.getCordId();
-			if(buddyCordId!=null && buddyCordId.indexOf(Integer.toString(cord.getId()))!=-1) {
-				list.add(buddy);
+			if(buddy.getCordId()!=null){
+				buddyCordIds = buddy.getCordId().split(";");
+				for(String cid : buddyCordIds){
+					if(cid.equals(Integer.toString(cord.getId()))){
+						list.add(buddy);
+					}
+				}
 			}
 		}
 		return list;
@@ -380,4 +391,47 @@ public class SimpleFetionStore implements FetionStore
     	}
     	return null;
     }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.store.FetionStore#addScheduleSMS(net.solosky.maplefetion.bean.ScheduleSMS)
+	 */
+	@Override
+	public void addScheduleSMS(ScheduleSMS scheduleSMS)
+	{
+		this.scheduleSMSList.add(scheduleSMS);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.store.FetionStore#deleteScheduleSMS(net.solosky.maplefetion.bean.ScheduleSMS)
+	 */
+	@Override
+	public void deleteScheduleSMS(ScheduleSMS scheduleSMS)
+	{
+		this.scheduleSMSList.remove(scheduleSMS);
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.store.FetionStore#getScheduleSMSList()
+	 */
+	@Override
+	public Collection<ScheduleSMS> getScheduleSMSList()
+	{
+		return this.scheduleSMSList;
+	}
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.store.FetionStore#getScheduleSMS(int)
+	 */
+	@Override
+	public ScheduleSMS getScheduleSMS(int scId)
+	{
+		Iterator<ScheduleSMS> it = this.scheduleSMSList.iterator();
+		while(it.hasNext()){
+			ScheduleSMS sc = it.next();
+			if(sc.getId()==scId){
+				return sc;
+			}
+		}
+		return null;
+	}
 }
