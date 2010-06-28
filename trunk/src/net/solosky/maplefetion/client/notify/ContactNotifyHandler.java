@@ -151,8 +151,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
         	dialog.process(request);
     	}
     	//通知监听器
-    	if(this.context.getNotifyEventListener()!=null)
-    		context.getNotifyEventListener().fireEvent(new BuddyApplicationEvent( buddy, desc));
+    	this.tryFireNotifyEvent(new BuddyApplicationEvent( buddy, desc));
 		logger.debug("Recived a buddy application:"+desc);
     }
     
@@ -178,16 +177,12 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     				
     				//因为这里是手机好友，没有详细信息，故不再获取详细信息
     				logger.debug("Mobile buddy agreed your buddy request:"+buddy.getFetionId());
-    				if(this.context.getNotifyEventListener()!=null)
-    					context.getNotifyEventListener()
-    					.fireEvent(new BuddyConfirmedEvent(buddy, true));		//通知监听器
+    				this.tryFireNotifyEvent(new BuddyConfirmedEvent(buddy, true));		//通知监听器
     				
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				if(this.context.getNotifyEventListener()!=null)
-    					context.getNotifyEventListener()
-    					.fireEvent(new BuddyConfirmedEvent(buddy, false));	//通知监听器
+    				this.tryFireNotifyEvent(new BuddyConfirmedEvent(buddy, false));	//通知监听器
     				
     			}else {}
 
@@ -233,9 +228,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		    				}
     		    				
     		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
-    		    				if(context.getNotifyEventListener()!=null)
-    		    					context.getNotifyEventListener()
-    		    					.fireEvent(new BuddyConfirmedEvent(buddy, true));			//通知监听器
+    		    				tryFireNotifyEvent(new BuddyConfirmedEvent(buddy, true));			//通知监听器
     						}
 
 							@Override
@@ -266,9 +259,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     					dialog.process(request);
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
-    				if(this.context.getNotifyEventListener()!=null)
-    					context.getNotifyEventListener()
-    					.fireEvent(new BuddyConfirmedEvent( buddy, false));	//通知监听器
+    				this.tryFireNotifyEvent(new BuddyConfirmedEvent( buddy, false));	//通知监听器
     			}else {}
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));

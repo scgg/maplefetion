@@ -127,7 +127,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    //通知消息监听器
 	    ChatDialogProxy chatDialogProxy = this.context.getChatDialogProxyFactoy().create(from);
 	    if(chatDialogProxy!=null && this.context.getNotifyEventListener()!=null) {
-	    	this.context.getNotifyEventListener().fireEvent(new BuddyMessageEvent(from, chatDialogProxy, msg));
+	    	this.tryFireNotifyEvent(new BuddyMessageEvent(from, chatDialogProxy, msg));
 	    	
 	    }
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
@@ -139,8 +139,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     private void systemMessageReceived(SipcNotify notify)
     {
     	logger.debug("Recived a system message:"+notify.getBody().toSendString());
-    	if(this.context.getNotifyEventListener()!=null)
-    		this.context.getNotifyEventListener().fireEvent(new SystemMessageEvent(notify.getBody().toSendString()));
+    	this.tryFireNotifyEvent(new SystemMessageEvent(notify.getBody().toSendString()));
     }
     
     /**
@@ -160,8 +159,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    GroupDialog groupDialog = this.context.getDialogFactory().findGroupDialog(group);
 	    
 	    if(group!=null && member!=null && groupDialog!=null&&this.context.getNotifyEventListener()!=null) {
-	    	this.context.getNotifyEventListener()
-	    	.fireEvent(new GroupMessageEvent(group, member, Message.parse(body), groupDialog));
+	    	this.tryFireNotifyEvent(new GroupMessageEvent(group, member, Message.parse(body), groupDialog));
 	    	
 	    	logger.debug("Received a group message:[ Group="+group.getName()+", from="+member.getDisplayName()+", msg="+body );
 	    }

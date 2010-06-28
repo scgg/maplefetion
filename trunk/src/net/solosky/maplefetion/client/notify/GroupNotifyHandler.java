@@ -82,9 +82,8 @@ public class GroupNotifyHandler extends AbstractNotifyHandler
     		Element el = (Element) it.next();
     		Group group = this.context.getFetionStore().getGroup(el.getAttributeValue("uri"));
     		if(group!=null) {
-    			group.setName(el.getAttributeValue("name"));
-    			group.setBulletin(el.getAttributeValue("bulletin"));
-    			group.setIntro(el.getAttributeValue("introduce"));
+    			//群信息
+    			BeanHelper.toBean(Group.class, group, el);
     			
     			//成员
     			List members = el.getChildren("member");

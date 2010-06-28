@@ -93,8 +93,7 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
             	    	}
             	    	
             	    	//通知监听器，好友状态已经改变
-            	    	if(this.context.getNotifyEventListener()!=null)
-            	    		this.context.getNotifyEventListener().fireEvent(new BuddyPresenceEvent(buddy));
+            	    	this.tryFireNotifyEvent(new BuddyPresenceEvent(buddy));
             	    }
         	    }
         	    

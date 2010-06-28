@@ -42,7 +42,7 @@ public class GroupPresenceNotifyHandler extends AbstractNotifyHandler
     @Override
     public void handle(SipcNotify notify) throws FetionException
     {
-	    
+    	logger.info("Got a group prensence notify, ignore it .");
     }
 
 }

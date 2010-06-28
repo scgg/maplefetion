@@ -44,7 +44,7 @@ public class SystemNotifyHandler extends AbstractNotifyHandler
 	@Override
 	public void handle(SipcNotify notify) throws FetionException
 	{
-		//TODO ..
+		logger.info("Got a system notify, ignore it .");
 	}
 
 }

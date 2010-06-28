@@ -26,8 +26,10 @@
 package net.solosky.maplefetion.client.notify;
 
 import net.solosky.maplefetion.FetionContext;
+import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.client.NotifyHandler;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.NotifyEvent;
 
 import org.apache.log4j.Logger;
 
@@ -71,5 +73,22 @@ public abstract class AbstractNotifyHandler implements NotifyHandler
 	public void setDailog(Dialog dialog)
 	{
 		this.dialog = dialog;
+	}
+	
+	/**
+	 * 尝试触发通知事件
+	 * 捕获所有触发事件的异常，防止异常传递到最顶层而使系统错误
+	 * @param event
+	 */
+	protected void tryFireNotifyEvent(NotifyEvent event)
+	{
+		NotifyEventListener listener = this.context.getNotifyEventListener();
+		if(listener!=null){
+			try {
+				listener.fireEvent(event);
+			} catch (Throwable e) {
+				logger.warn("Fire NotifyEvent error.", e);
+			}
+		}
 	}
 }
