@@ -429,17 +429,17 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * 添加好友
 	 * 注意：无论是添加飞信好友还是手机好友，都可以使用这个方法，这个方法会自动判断
 	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
+	 * @param localName	设置好友的备注
 	 * @param cord		添加好友的分组，如为null，添加到默认分组
 	 * @param desc 		“我是xx” xx：名字
 	 * @param promptId	提示信息编号
-	 * @return
 	 * @throws TransferException 
 	 * @throws Exception 
 	 */
-	public void addBuddy(final String uri, final Cord cord,final String desc, int promptId, final ActionEventListener listener)
+	public void addBuddy(final String uri,String localName, final Cord cord, final String desc, int promptId, final ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cord!=null?cord.getId():-1, desc);
+		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cord!=null?cord.getId():-1, desc, localName);
 		
 		//这里需要建立一个新的监听器进行适配，因为返回的结果可能要进行另外一个操作才能确定操作是否完成
 		ActionEventListener tmpListener = new ActionEventListener(){

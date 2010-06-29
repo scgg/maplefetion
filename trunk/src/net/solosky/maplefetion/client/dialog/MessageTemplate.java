@@ -44,7 +44,7 @@ public class MessageTemplate
 	public static final String TMPL_FETION_SHOW_1 = "<is-composing><state>fetion-show:";
 	public static final String TMPL_FETION_SHOW_2 = "0x000101010000010001000000000000010000000</state></is-composing>";
 	public static final String TMPL_INVATE_BUDDY = "<args><contacts><contact uri=\"{uri}\" /></contacts></args>";
-	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" desc=\"{desc}\" expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" /></buddies></contacts></args>";
+	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" {localName} desc=\"{desc}\" expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" /></buddies></contacts></args>";
 	public static final String TMPL_ADD_MOBILE_BUDDY = "<args><contacts><mobile-buddies><mobile-buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" desc=\"{desc}\" invite=\"0\" addbuddy-phrase-id=\"0\" /></mobile-buddies></contacts></args>";
 	public static final String TMPL_DELETE_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" /></buddies></contacts></args>";
 	public static final String TMPL_DELETE_MOBILE_BUDDY = "<args><contacts><mobile-buddies><mobile-buddy uri=\"{uri}\" /></mobile-buddies></contacts></args>";

@@ -805,11 +805,13 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
-	 * 添加飞信好友
+	 * 添加好友
 	 * @param seviceId		手机号码或者飞信号码
+	 * @param localName		添加好友后显示的本地名称，如果为null,默认显示好友的昵称
 	 * @param cord			好友添加到分组的编号，如果为null，添加到默认分组
 	 * @param desc			对自己的说明 ，如 xxx，在对方飞信好友里就会收到：我是xxxx
 	 * @param promptId		提示的信息编号,见下面的说明。如果不清楚，请直接传递0
+	 * @param localName
 	 * @param listener		结果监听器
 	 * 
 	 * <pre>
@@ -830,18 +832,28 @@ public class FetionClient implements FetionContext
 	 *   至于飞信为啥不允许用户输入一些描述信息，可能是考虑到防止用户被骚扰吧。
 	 *</pre>
 	 */
-	public void addBuddy(String account, Cord cord, String desc, int promptId, ActionEventListener listener)
+	public void addBuddy(String account, String localName, Cord cord, String desc, int promptId, ActionEventListener listener)
 	{
 		AccountValidator validator = new AccountValidator(account);
 		if(validator.isValidMobile()){
-			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, cord, desc, promptId, listener);
+			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, localName, cord, desc, promptId,  listener);
 		}else if(validator.isValidFetionId()){
-			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, cord, desc, promptId, listener);
+			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, localName, cord, desc, promptId, listener);
 		}else{
 			if(listener!=null){
 				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
 			}
 		}
+	}
+	
+	/**
+	 * 添加好友的简单接口
+	 * @param account	手机号码或者飞信号码
+	 * @param listener	结果监听器
+	 */
+	public void addBuddy(String account, ActionEventListener listener)
+	{
+		this.addBuddy(account, null, null, this.user.getDisplayName(), 0, listener);
 	}
 	
 	/**

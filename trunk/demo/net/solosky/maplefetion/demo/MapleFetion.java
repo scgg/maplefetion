@@ -739,7 +739,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void add(String mobile)
 	    {
-	    	client.addBuddy(mobile, null, client.getFetionUser().getNickName(), 0 ,  new ActionEventListener() {
+	    	client.addBuddy(mobile, new ActionEventListener() {
                 public void fireEevent(ActionEvent event)
  				{
  					if(event.getEventType()==ActionEventType.SUCCESS){

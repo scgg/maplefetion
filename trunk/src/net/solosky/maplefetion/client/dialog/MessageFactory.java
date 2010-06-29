@@ -355,7 +355,7 @@ public class MessageFactory
      * @param desc
      * @return
      */
-    public SipcRequest createAddBuddyRequest(String uri, int promptId, int cordId, String desc)
+    public SipcRequest createAddBuddyRequest(String uri, int promptId, int cordId, String desc, String localName)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	String body = MessageTemplate.TMPL_ADD_BUDDY;
@@ -363,6 +363,7 @@ public class MessageFactory
     	body = body.replace("{promptId}", Integer.toString(promptId));
     	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
     	body = body.replace("{desc}", desc);
+    	body = body.replace("{localName}", localName!=null?"local-name=\""+localName+"\"":"");
     	
     	req.addHeader(SipcHeader.EVENT,"AddBuddy");
     	req.setBody(new SipcBody(body));
