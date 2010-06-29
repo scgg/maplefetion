@@ -109,7 +109,7 @@ public class FetionClient implements FetionContext
 	private DialogFactory dialogFactory;
 	
 	/**
-	 * 单线程执行器
+	 * 线程执行池
 	 */
 	private FetionExecutor executor;
 	

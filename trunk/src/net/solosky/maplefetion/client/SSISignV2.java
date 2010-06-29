@@ -130,6 +130,7 @@ public class SSISignV2 implements SSISign
 		String url = this.buildUrl(user, pid, pic);
 		try {
 	        HttpsURLConnection conn = (HttpsURLConnection) this.getConnection(url);
+	        conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
 	        int status = conn.getResponseCode();
 	        switch(status) {

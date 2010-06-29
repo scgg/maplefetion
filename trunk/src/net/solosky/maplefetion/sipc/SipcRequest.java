@@ -81,7 +81,7 @@ public class SipcRequest extends SipcOutMessage
 		this.method = method;
 		this.domain = domain;
 		this.aliveTime = TimeHelper.nowTimeUnixStamp()+60;				//存活时间为发出去后的60秒
-		this.retryTimes = 0;											//重发次数重置为0,最多只能重发3次。。。
+		this.retryTimes = 0;											//超时重发次数重置为0,可以在fetion.sip.default-retry-times配置
 		this.needReplyTimes = 1 ;
 		this.replyTimes =0;
 	}	
