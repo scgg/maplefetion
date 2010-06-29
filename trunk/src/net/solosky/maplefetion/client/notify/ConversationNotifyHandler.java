@@ -29,6 +29,7 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.client.dialog.MutipartyDialog;
 import net.solosky.maplefetion.sipc.SipcNotify;
+import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -89,6 +90,11 @@ public class ConversationNotifyHandler extends AbstractNotifyHandler
     		Element member = event.getChild("member");
     		String uri = member.getAttributeValue("uri");
     		Buddy buddy = this.context.getFetionStore().getBuddyByUri(uri);
+    		//如果好友不存在，可能用户已经删除了该好友，这里新建一个临时好友对象
+    		//仅是为了作为参数传递个对话来判断那个好友离开了对话,因为对话保留了一个好友的引用
+    		if(buddy!=null){
+    			buddy = UriHelper.createBuddy(uri);
+    		}
     		cd.buddyLeft(buddy);
     		
     		logger.debug("Buddy left this dialog:"+uri);
