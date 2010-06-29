@@ -96,8 +96,10 @@ public class CrushBuilder
 	public void dumpSipcMessage(SipcMessage message)
 	{
 		buffer.append("-------------------------------SipcMessage----------------------------------\r\n");
-		buffer.append("Class:"+message.getClass().getSimpleName()+"\r\n");
+		buffer.append("Class:"+message.getClass().toString()+"\r\n");
+		buffer.append("----------\r\n");
 		buffer.append(message.toSendString());
+		buffer.append("\r\n");
 	}
 	
 	/**
@@ -107,6 +109,7 @@ public class CrushBuilder
 	{
 		buffer.append("=============================MapleFetion CrushReport=================================\r\n");
 		buffer.append("if you saw this report, FetionClient maybe crushed by some exceptions.\r\n");
+		buffer.append("Please send this crush log to <solosky772@qq.com> to find and fix bugs, thank you sincerely.\r\n");
 		buffer.append("Date:"+(new Date()).toString());
 		buffer.append("\r\n");
 	}
@@ -250,6 +253,19 @@ public class CrushBuilder
 		cb.buildHeader();
 		cb.dumpVersion();
 		cb.dumpConfig();
+		dumpObjectArray(cb, args);
+		cb.buildFooter();
+		
+		return cb.toString();
+	}
+	
+	/**
+	 * 递归的打印数组对象
+	 * @param cb
+	 * @param args
+	 */
+	private static void dumpObjectArray(CrushBuilder cb, Object[] args)
+	{
 		for(Object o:args) {
 			if(o instanceof SipcMessage) {
 				cb.dumpSipcMessage((SipcMessage) o);
@@ -257,14 +273,12 @@ public class CrushBuilder
 				cb.dumpException((Throwable) o);
 			}else if(o instanceof String) {
 				cb.dumpString((String) o);
-			}else {
+			}else if(o.getClass().isArray()){
+				dumpObjectArray(cb, (Object[]) o);
+			}else{
 				cb.dumpObject(o);
 			}
 		}
-		
-		cb.buildFooter();
-		
-		return cb.toString();
 	}
 	
 	/**

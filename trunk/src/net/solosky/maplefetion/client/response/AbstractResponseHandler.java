@@ -92,7 +92,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
 			throw e;							//重新抛出已知异常
 		} catch(Throwable t){
 			this.fireEvent(new SystemErrorEvent(t));
-			throw new SystemException(t);		//包装下未知异常为系统异常，重新抛出
+			throw new SystemException(t, response.getRequest(), response);		//包装下未知异常为系统异常，重新抛出
 		}
     }
 

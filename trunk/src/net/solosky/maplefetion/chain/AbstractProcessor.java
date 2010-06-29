@@ -136,9 +136,8 @@ public abstract class AbstractProcessor implements Processor
     @Override
     public void stopProcessor() throws FetionException
     {
-    	//不做任何事情，子类可以覆盖
+    	this.stopProcessor(null);
     }
-
     
 	/* (non-Javadoc)
 	 * @see net.solosky.maplefetion.chain.Processor#stopProcessor(net.solosky.maplefetion.FetionException)
@@ -146,7 +145,7 @@ public abstract class AbstractProcessor implements Processor
 	@Override
 	public void stopProcessor(FetionException exception) throws FetionException
 	{
-		this.stopProcessor();
+		//DONothing
 	}
 
 	/**

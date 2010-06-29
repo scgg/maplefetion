@@ -458,14 +458,14 @@ public class FetionClient implements FetionContext
     			logger.fatal("Unknown registration exception", exception);
     		}
 		}else if(exception instanceof SystemException){		//系统错误
-			logger.fatal("System error. Please email the crush report or the system log to the project owner and wait for bug fix, thank you.", exception);
+			logger.fatal("System error. Please email the crush report file or the system log file to the project owner to find and fix bugs,  thank you sincerely.", exception);
 			this.state = ClientState.SYSTEM_ERROR;
 			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
     	}else if(exception instanceof LoginException){		//登录错误
     		logger.fatal("Login error. state="+((LoginException)exception).getState().name());
     		this.state = ClientState.LOGIN_ERROR;
     	}else {
-    		logger.fatal("Unknown error. Please email the crush report or the system log to the project owner and wait for bug fix, thank you.", exception);
+    		logger.fatal("System error. Please email the crush report file or the system log file to the project owner to find and fix bugs,  thank you sincerely", exception);
     		this.state = ClientState.SYSTEM_ERROR;			//其他错误
     		CrushBuilder.handleCrushReport(exception);
     	}
