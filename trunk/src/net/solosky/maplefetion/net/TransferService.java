@@ -95,7 +95,7 @@ public class TransferService extends AbstractProcessor
 	 * 处理接受的包 在已发送队列中查找相对应的发出包，然后放入接受包中
 	 */
 	@Override
-	protected boolean doProcessIncoming(Object o) throws FetionException
+	protected Object doProcessIncoming(Object o) throws FetionException
 	{
 		//-_-!!! , 好吧，我承认这里判断逻辑有点乱。。
 		if (o instanceof SipcResponse) {
@@ -114,31 +114,25 @@ public class TransferService extends AbstractProcessor
 					SipcResponse some = helper.getFullSipcResponse();
 					this.handleFullResponse(some);
 					
-					//这里遇到点麻烦了，因为这里改变了请求的对象，如果直接返回true，那前一个处理器仍然处理的是原来那个请求
-					//所以这里直接返回false,让基类的processImcoming不再传到下一个处理器，在这里调用下一个处理器，
-					//是设计问题，应该一个处理器是应该是对一个对象的加工，也就是说前一个处理的对对象加工后再返回新对象交给下一个处理器处理
-					//是一个输入和输出的关系，设计的时候没有考虑到这个问题，等待下一个版本重构。。。先暂时就这样了吧。。
-					if(this.previousProcessor!=null)
-						this.previousProcessor.processIncoming(some);
-					return false;
+					return some;	//返回新的完整的请求
 				}else{
-					return false;
+					return null;	//分块回复还没接收完，返回null停止处理链
 				}
 			}else if(response.getStatusCode()==SipcStatus.PARTIAL){	//可能是第一次收到的分块回复
 				helper = new SliceSipcResponseHelper(response);
 				synchronized (slicedResponseQueue) {
 					slicedResponseQueue.add(helper);
 				}
-				return false;
+				return null;		//第一个分块回复，返回null停止处理链
 			}else{	//不是分块回复的对象就直接进行下一步操作
 				this.handleFullResponse(response);
-				return true;
+				return response;
 			}
 		}else if(o instanceof SipcNotify){
 			this.handleFullNotify((SipcNotify) o);
-			return true;
+			return (SipcNotify) o;	
 		}else{
-			return false;
+			return null;	//未知类型，一般不会发生。。
 		}
 	}
 
@@ -146,7 +140,7 @@ public class TransferService extends AbstractProcessor
 	 * 处理发送的包 如果这个包需要回复，就把这个包加入到已发送的队列中，然后隔一段时间后检查是否超时
 	 */
 	@Override
-	protected boolean doProcessOutcoming(Object o) throws FetionException
+	protected Object doProcessOutcoming(Object o) throws FetionException
 	{
 		if (o instanceof SipcRequest) {
 			SipcRequest request = (SipcRequest) o;
@@ -157,7 +151,7 @@ public class TransferService extends AbstractProcessor
 				}
 			}
 		}
-		return true;
+		return super.doProcessOutcoming(o);
 	}
 
 	/*

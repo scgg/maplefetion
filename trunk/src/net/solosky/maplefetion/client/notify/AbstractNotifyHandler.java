@@ -82,6 +82,7 @@ public abstract class AbstractNotifyHandler implements NotifyHandler
 	 */
 	protected void tryFireNotifyEvent(NotifyEvent event)
 	{
+		logger.debug("FireNotifyEvent:"+event);
 		NotifyEventListener listener = this.context.getNotifyEventListener();
 		if(listener!=null){
 			try {

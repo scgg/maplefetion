@@ -100,7 +100,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 	 * 处理接收的包 循环所有的处理器，判断是否可以接受，如果可以就交给分发器分发
 	 */
 	@Override
-	protected boolean doProcessIncoming(Object o) throws FetionException
+	protected Object doProcessIncoming(Object o) throws FetionException
 	{
 		try {
     		SipcInMessage in = (SipcInMessage) o;
@@ -115,7 +115,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 			this.exceptionHandler.handleException(e);
 		}
 
-		return true;
+		return super.doProcessIncoming(o);
 	}
 
 	/**

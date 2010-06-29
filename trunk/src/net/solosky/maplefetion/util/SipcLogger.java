@@ -149,28 +149,28 @@ public class SipcLogger extends AbstractProcessor
      * @see net.solosky.maplefetion.chain.AbstractProcessor#doProcessIncoming(java.lang.Object)
      */
     @Override
-    protected boolean doProcessIncoming(Object o) throws FetionException
+    protected Object doProcessIncoming(Object o) throws FetionException
     {
 	    try {
 	        this.logMessage((SipcInMessage) o);
         } catch (IOException e) {
 	      throw new ProcessorException(e);
         }
-        return true;
+        return super.doProcessIncoming(o);
     }
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.chain.AbstractProcessor#doProcessOutcoming(java.lang.Object)
      */
     @Override
-    protected boolean doProcessOutcoming(Object o) throws FetionException
+    protected Object doProcessOutcoming(Object o) throws FetionException
     {
     	 try {
  	        this.logMessage((SipcOutMessage) o);
          } catch (IOException e) {
         	 throw new ProcessorException(e);
          }
-         return true;
+         return super.doProcessOutcoming(o);
     }
 
 }

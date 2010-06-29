@@ -51,23 +51,23 @@ public abstract class AbstractProcessor implements Processor
 	/**
 	 * 子类处理前面转发的对象
 	 * @param o		对象
-	 * @return		如果为真就交给后面的处理器，否则停止处理链
+	 * @return		返回处理后的对象，如果为null,停止处理链
 	 * @throws FetionException
 	 */
-	protected boolean doProcessIncoming(Object o) throws FetionException
+	protected Object doProcessIncoming(Object o) throws FetionException
 	{
-		return true;
+		return o;
 	}
 	
 	/**
 	 * 子类处理后面转发的对象
 	 * @param o		对象
-	 * @return		如果为真就交给前面的处理器，否则停止处理链
+	 * @return		返回处理后的对象，如果为null,停止处理链
 	 * @throws FetionException
 	 */
-	protected boolean doProcessOutcoming(Object o) throws FetionException
+	protected Object doProcessOutcoming(Object o) throws FetionException
 	{
-		return true;
+		return o;
 	}
 	
 	
@@ -155,7 +155,7 @@ public abstract class AbstractProcessor implements Processor
     @Override
     public void processIncoming(Object o) throws FetionException
     {
-	    if(this.doProcessIncoming(o) && this.previousProcessor!=null)
+	    if(this.doProcessIncoming(o)!=null && this.previousProcessor!=null)
 	    	this.previousProcessor.processIncoming(o);
     }
 
@@ -165,7 +165,7 @@ public abstract class AbstractProcessor implements Processor
     @Override
     public void processOutcoming(Object o) throws FetionException
     {
-    	if(this.doProcessOutcoming(o) && this.nextProcessor!=null)
+    	if(this.doProcessOutcoming(o)!=null && this.nextProcessor!=null)
     		this.nextProcessor.processOutcoming(o);
     }
 }
