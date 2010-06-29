@@ -76,69 +76,76 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
     	Element result = XMLHelper.build(response.getBody().toSendString());
     	Element contacts = result.getChild("contacts");
     	
-    	//分组列表
-    	Element buddyLists = contacts.getChild("buddy-lists");
-    	if(buddyLists!=null) {
-        	List list = contacts.getChild("buddy-lists").getChildren();
-        	Iterator it = list.iterator();
-        	while(it.hasNext()) {
-        		Element e = (Element) it.next();
-        		store.addCord(new Cord(Integer.parseInt(e.getAttributeValue("id")), e.getAttributeValue("name")));
-        	}
-    	}else {
-    		logger.debug("No buddy-lists defined in the contact list.");
-    	}
-    	
-    	
-    	//飞信好友列表
-    	Element buddies = contacts.getChild("buddies");
-    	if(buddies!=null) {
-    		List list = buddies.getChildren();
-    		Iterator it = list.iterator();
-        	while(it.hasNext()) {
-        		Element e = (Element) it.next();
-        		Buddy b = new FetionBuddy();
-        		BeanHelper.toBean(FetionBuddy.class, b, e);
-        		store.addBuddy(b);
-        	}
-    	}else {
-    		logger.debug("No fetion buddies defined in the contact list..");
-    	}
-    	
-    	// 飞信手机好友列表
-    	Element mobileBuddies = contacts.getChild("mobile-buddies");
-    	if(mobileBuddies!=null) {
-        	List list = mobileBuddies.getChildren();
-        	Iterator it = list.iterator();
-        	while(it.hasNext()) {
-        		Element e = (Element) it.next();
-        		Buddy b = new MobileBuddy();
-        		BeanHelper.toBean(MobileBuddy.class, b, e);
-        		store.addBuddy(b);
-        	}
-    	}else {
-    		logger.debug("No mobile buddies defined in the contact list..");
-    	}
-    	
-    	//处理 chat-friend..
-    	//这个chat-friend具体是什么含义我也没搞得太清楚，目前猜测里面的名单可能和用户是陌生人关系
-    	Element chatFriends = contacts.getChild("chat-friends");
-    	if(chatFriends!=null){
-    		List list = chatFriends.getChildren();
-    		Iterator it = list.iterator();
-    		while(it.hasNext()){
-    			Element e = (Element) it.next();
-    			Buddy b = new FetionBuddy();
-        		BeanHelper.toBean(FetionBuddy.class, b, e);
-        		BeanHelper.setValue(b, "relation", Relation.STRANGER);
-        		store.addBuddy(b);
-    		}
-    	}
-    	
-    	//TODO 处理allowList...
-		return super.doActionOK(response);
+    	//一定要对飞信列表加锁，防止其他飞信操作获取到空的数据
+    	synchronized(store){
+    		
+    		//先清除飞信存储对象的所有数据
+    		store.clearBuddyList();
+    		store.clearCordList();
+    		
+	    	//分组列表
+	    	Element buddyLists = contacts.getChild("buddy-lists");
+	    	if(buddyLists!=null) {
+	        	List list = contacts.getChild("buddy-lists").getChildren();
+	        	Iterator it = list.iterator();
+	        	while(it.hasNext()) {
+	        		Element e = (Element) it.next();
+	        		store.addCord(new Cord(Integer.parseInt(e.getAttributeValue("id")), e.getAttributeValue("name")));
+	        	}
+	    	}else {
+	    		logger.debug("No buddy-lists defined in the contact list.");
+	    	}
+	    	
+	    	
+	    	//飞信好友列表
+	    	Element buddies = contacts.getChild("buddies");
+	    	if(buddies!=null) {
+	    		List list = buddies.getChildren();
+	    		Iterator it = list.iterator();
+	        	while(it.hasNext()) {
+	        		Element e = (Element) it.next();
+	        		Buddy b = new FetionBuddy();
+	        		BeanHelper.toBean(FetionBuddy.class, b, e);
+	        		store.addBuddy(b);
+	        	}
+	    	}else {
+	    		logger.debug("No fetion buddies defined in the contact list..");
+	    	}
+	    	
+	    	// 飞信手机好友列表
+	    	Element mobileBuddies = contacts.getChild("mobile-buddies");
+	    	if(mobileBuddies!=null) {
+	        	List list = mobileBuddies.getChildren();
+	        	Iterator it = list.iterator();
+	        	while(it.hasNext()) {
+	        		Element e = (Element) it.next();
+	        		Buddy b = new MobileBuddy();
+	        		BeanHelper.toBean(MobileBuddy.class, b, e);
+	        		store.addBuddy(b);
+	        	}
+	    	}else {
+	    		logger.debug("No mobile buddies defined in the contact list..");
+	    	}
+	    	
+	    	//处理 chat-friend..
+	    	//这个chat-friend具体是什么含义我也没搞得太清楚，目前猜测里面的名单可能和用户是陌生人关系
+	    	Element chatFriends = contacts.getChild("chat-friends");
+	    	if(chatFriends!=null){
+	    		List list = chatFriends.getChildren();
+	    		Iterator it = list.iterator();
+	    		while(it.hasNext()){
+	    			Element e = (Element) it.next();
+	    			Buddy b = new FetionBuddy();
+	        		BeanHelper.toBean(FetionBuddy.class, b, e);
+	        		BeanHelper.setValue(b, "relation", Relation.STRANGER);
+	        		store.addBuddy(b);
+	    		}
+	    	}
+	    	
+	    	//TODO 处理allowList...
+			return super.doActionOK(response);
+		}
 	}
-    
     
 
 }

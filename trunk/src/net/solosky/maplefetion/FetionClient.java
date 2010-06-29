@@ -43,6 +43,7 @@ import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
 import net.solosky.maplefetion.client.RegistrationException;
 import net.solosky.maplefetion.client.SystemException;
+import net.solosky.maplefetion.client.UpdateBuddyListWork;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
@@ -1019,5 +1020,14 @@ public class FetionClient implements FetionContext
 		ArrayList<ScheduleSMS> list = new ArrayList<ScheduleSMS>();
 		list.add(scheduleSMS);
 		this.getServerDialog().deleteScheduleSMS(list, listener);
+	}
+	
+	/**
+	 * 强制更新好友列表，这个方法会清空本地的好友列表，并从服务器上获取最新的好友列表和好友信息
+	 * @param listener
+	 */
+	public void updateBuddyList(ActionEventListener listener)
+	{
+		this.getFetionExecutor().submitTask( new UpdateBuddyListWork(this, listener));
 	}
 }
