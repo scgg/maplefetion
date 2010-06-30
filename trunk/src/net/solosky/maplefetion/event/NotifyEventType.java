@@ -32,13 +32,44 @@ package net.solosky.maplefetion.event;
  * @author solosky <solosky772@qq.com>
  */
 public enum NotifyEventType {
-	LOGIN_STATE,		//登录状态发生变化
-	CLIENT_STATE,		//客户端状态发生变化
-	BUDDY_MESSAGE,		//好友消息
-	GROUP_MESSAGE,		//群消息
-	SYSTEM_MESSAGE, 	//系统消息
-	BUDDY_APPLICAION,	//添加好友请求
-	BUDDY_CONFIRMED,	//对方回复了添加好友的请求
-	BUDDY_PRESENCE,			//对方状态发生改变
+	/**
+	 * 登录状态发生变化
+	 */
+	LOGIN_STATE,
+	
+	/**
+	 * 客户端状态发生变化
+	 */
+	CLIENT_STATE,
+	
+	/**
+	 * 好友消息
+	 */
+	BUDDY_MESSAGE,
+	
+	/**
+	 * 群消息
+	 */
+	GROUP_MESSAGE,
+	
+	/**
+	 * 系统消息
+	 */
+	SYSTEM_MESSAGE,
+	
+	/**
+	 * 添加好友请求
+	 */
+	BUDDY_APPLICAION,
+	
+	/**
+	 * 对方回复了添加好友的请求
+	 */
+	BUDDY_CONFIRMED,
+	
+	/**
+	 * 对方状态发生改变
+	 */
+	BUDDY_PRESENCE,	
 	
 }

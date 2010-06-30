@@ -29,7 +29,7 @@ import net.solosky.maplefetion.FetionException;
 
 /**
  *
- * 对话框一场
+ * 对话框异常
  *
  * @author solosky <solosky772@qq.com>
  */

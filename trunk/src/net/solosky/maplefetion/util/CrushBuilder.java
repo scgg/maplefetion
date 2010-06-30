@@ -108,10 +108,17 @@ public class CrushBuilder
 	public void buildHeader()
 	{
 		buffer.append("=============================MapleFetion CrushReport=================================\r\n");
-		buffer.append("if you saw this report, FetionClient maybe crushed by some exceptions.\r\n");
-		buffer.append("Please send this crush log to <solosky772@qq.com> to find and fix bugs, thank you sincerely.\r\n");
-		buffer.append("Date:"+(new Date()).toString());
+		buffer.append("Thank you for working with MapleFetion!!! ");
+		buffer.append("ProjectHome : http://maplefetion.googlecode.com ");
+		buffer.append("Author      : solosky <solosky772@qq.com> ");
+		buffer.append("AuthorBlog  : http://www.solosky.net ");
+		buffer.append("-------------------------------------------------------------------------------------\r\n");
 		buffer.append("\r\n");
+		buffer.append("Ops, if you saw this report, FetionClient was crushed by some exceptions. Sorry for that.\r\n");
+		buffer.append("Please Email this crush file or log file to author to find and fix bugs, thank you sincerely.\r\n");
+		buffer.append("\r\n");
+		buffer.append("CrushedDate:"+(new Date()).toString());
+		buffer.append("\r\n\r\n");
 	}
 	
 	/**

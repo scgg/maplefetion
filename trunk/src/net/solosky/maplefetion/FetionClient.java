@@ -23,6 +23,12 @@
  * Created  : 2010-1-10
  * License  : Apache License 2.0 
  */
+/**
+ * 
+ */
+/**
+ * 
+ */
 package net.solosky.maplefetion;
 
 import java.util.ArrayList;
@@ -747,7 +753,7 @@ public class FetionClient implements FetionContext
 		//先判断是否是合法的移动号码
 		if(!AccountValidator.validateMobile(mobile)){
 			if(listener!=null){
-				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_ACCOUNT));
 			}
 		}
 		
@@ -841,7 +847,7 @@ public class FetionClient implements FetionContext
 			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, localName, cord, desc, promptId, listener);
 		}else{
 			if(listener!=null){
-				listener.fireEevent(new FailureEvent(FailureType.INVALID_CMCC_MOBILE));
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_ACCOUNT));
 			}
 		}
 	}

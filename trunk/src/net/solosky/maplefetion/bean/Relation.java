@@ -34,10 +34,29 @@ import net.solosky.maplefetion.util.ParseException;
  * @author solosky <solosky772@qq.com>
  */
 public enum Relation {
+	/**
+	 * 发出了添加好友请求，但对方没有确认
+	 */
 	UNCONFIRMED(0),
+	
+	/**
+	 * 已经是好友
+	 */
 	BUDDY(1),
+	
+	/**
+	 * 对方拒绝了你添加好友的请求
+	 */
 	DECLINED(2),
+	
+	/**
+	 * 陌生人
+	 */
 	STRANGER(3),
+	
+	/**
+	 * 黑名单
+	 */
 	BANNED(4);
 	
 	/**

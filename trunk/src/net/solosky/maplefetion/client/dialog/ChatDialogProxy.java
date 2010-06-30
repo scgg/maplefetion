@@ -44,6 +44,8 @@ import org.apache.log4j.Logger;
 /**
  *
  * 聊天对话框代理类
+ * 
+ * <pre>
  * 因为一个对话的状态发生改变可能是用户主动发生如用户主动关闭对话，
  * 也可能是客户端内部改变，如用户下线了对话框就会关闭
  * 当使用者使用FetionClient，持有一个聊天对话对象的状态的时候就不确定，
@@ -51,7 +53,7 @@ import org.apache.log4j.Logger;
  * 比如发消息只能在对话框打开的状态发送，其他状态发送就会抛出异常，这给使用者造成了很大的负担，因为需要维护一个对话
  * 聊天对话框代理类可以负责维护一个可持续的对话，当对话框被关闭的时候重新建立一个新的对话，
  * 并且在当对话框没有建立成功的时候可以缓存发送的消息，等待对话框建立之后再发送
- *
+ * </pre>
  * @author solosky <solosky772@qq.com>
  */
 public class ChatDialogProxy implements DialogListener

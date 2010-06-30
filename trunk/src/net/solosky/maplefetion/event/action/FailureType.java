@@ -75,7 +75,7 @@ public enum FailureType {
 	UNKNOWN_FAIL,		
 	
 	/**
-	 * 不是移动的号码
+	 * 无效的账号
 	 */
-	INVALID_CMCC_MOBILE,
+	INVALID_ACCOUNT,
 }

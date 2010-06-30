@@ -166,7 +166,8 @@ public class FetionRobot implements SMSListener
     public static void main(String[] args)
     {
     	FetionRobot sms = new FetionRobot();
-    	sms.registerGateway(new FetionGateway(159000000,"pass"));
+    	//sms.registerGateway(new FetionGateway(159000000,"pass"));
+    	sms.registerGateway(new FetionGateway(15982070573L,"xu1234"));
     	sms.registerApp(new HelloApp());
     	sms.registerApp(new WeatherApp());
     	sms.start();

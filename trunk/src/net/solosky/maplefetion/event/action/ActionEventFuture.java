@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.event.action;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
@@ -61,7 +62,7 @@ public class ActionEventFuture implements ActionEventListener
 	 * 等待操作结果<br />
 	 * 事实上这个操作不会一直等待，因为传输层如果在请求发出的后的指定时间内没有收到回复，<br />
 	 * 并且重发过一定次数后仍没有收到回复，就会抛出请求超时异常<br />
-	 * 
+	 * 为了防止出现无限期等待，这里还是设置了一个默认的超时值，为SIPC信令包存活时间*SIPC默认重发次数<br />
 	 * 建议使用这个方法等待操作结果
 	 * 
 	 * @throws InterruptedException 	如果等待过程被中断就抛出中断异常
@@ -71,7 +72,8 @@ public class ActionEventFuture implements ActionEventListener
 	 */
 	public ActionEvent waitActionEventWithException() throws RequestTimeoutException, InterruptedException, TransferException, SystemException
 	{
-		return this.waitActionEventWithException(0);
+		long maxWaitingTime = FetionConfig.getInteger("fetion.sip.default-alive-time")*FetionConfig.getInteger("fetion.sip.default-retry-times")*1000;
+		return this.waitActionEventWithException(maxWaitingTime);
 	}
 	/**
 	 * 在指定的时间内等待操作结果，
@@ -153,7 +155,8 @@ public class ActionEventFuture implements ActionEventListener
 	 */
 	public ActionEvent waitActionEventWithoutException()
 	{
-		return this.waitActionEventWithoutException(0);
+		long maxWaitingTime = FetionConfig.getInteger("fetion.sip.default-alive-time")*FetionConfig.getInteger("fetion.sip.default-retry-times")*1000;
+		return this.waitActionEventWithoutException(maxWaitingTime);
 	}
 	
 	/**

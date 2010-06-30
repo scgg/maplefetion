@@ -38,7 +38,6 @@ import java.util.Hashtable;
  */
 public class DialogSession
 {
-	public static final String KEY_FIND_BUDDY_BY_MOBILE_RESULT = "FIND_BUDDY_BY_MOBILE_RESULT";
 	private Hashtable<String, Object> hashTable;
 	
 	/**

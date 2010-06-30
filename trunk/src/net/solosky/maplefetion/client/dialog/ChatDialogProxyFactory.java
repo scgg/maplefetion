@@ -33,6 +33,8 @@ import net.solosky.maplefetion.bean.Buddy;
 /**
  *
  * 聊天代理对话工厂
+ * 
+ * 管理金额创建代理工厂
  *
  * @author solosky <solosky772@qq.com>
  */

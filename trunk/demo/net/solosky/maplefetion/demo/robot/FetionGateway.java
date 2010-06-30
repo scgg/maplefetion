@@ -27,6 +27,7 @@ package net.solosky.maplefetion.demo.robot;
 
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.NotifyEventAdapter;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
@@ -42,7 +43,7 @@ import net.solosky.maplefetion.event.action.ActionEventListener;
  *
  * @author solosky <solosky772@qq.com>
  */
-public class FetionGateway implements Gateway, NotifyEventListener
+public class FetionGateway extends NotifyEventAdapter implements Gateway
 {
 
 	private FetionClient client;
@@ -129,12 +130,14 @@ public class FetionGateway implements Gateway, NotifyEventListener
     	return "[Fetion user="+this.client.getFetionUser().getDisplayName()+", uri="+this.client.getFetionUser().getUri()+"]";
     }
 	/* (non-Javadoc)
-	 * @see net.solosky.maplefetion.NotifyEventListener#fireEvent(net.solosky.maplefetion.event.NotifyEvent)
+	 * @see net.solosky.maplefetion.NotifyEventAdapter#buddyMessageRecived(net.solosky.maplefetion.bean.Buddy, net.solosky.maplefetion.bean.Message, net.solosky.maplefetion.client.dialog.ChatDialogProxy)
 	 */
 	@Override
-	public void fireEvent(NotifyEvent event)
+	protected void buddyMessageRecived(Buddy from, Message message,
+			ChatDialogProxy dialog)
 	{
-		println(event.toString());
+		this.listener.smsRecived(from.getUri(), message.getText(), this);
 	}
-
+    
+    
 }

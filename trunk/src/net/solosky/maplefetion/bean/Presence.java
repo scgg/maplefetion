@@ -33,10 +33,29 @@ package net.solosky.maplefetion.bean;
  */
 public class Presence
 {
+	/**
+	 * 在线状态
+	 */
 	public static final int ONLINE = 400;
+	
+	/**
+	 * 离线状态，和隐身状态是一个值
+	 */
 	public static final int OFFLINE = 000;
+	
+	/**
+	 * 忙碌状态
+	 */
 	public static final int BUSY = 600;
+	
+	/**
+	 * 离开状态
+	 */
 	public static final int AWAY = 100;
+	
+	/**
+	 * 隐身状态，和离线状态是一个值
+	 */
 	public static final int HIDEN = 000;
 	
 	/**

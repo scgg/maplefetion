@@ -32,9 +32,27 @@ package net.solosky.maplefetion.event;
  * @author solosky <solosky772@qq.com>
  */
 public enum ActionEventType {
-	SUCCESS,			//成功
-	FAILURE,			//失败
-	TRANSFER_ERROR,		//网络错误
-	TIMEOUT,			//操作超时
-	SYSTEM_ERROR,		//系统错误
+	/**
+	 * 操作成功
+	 */
+	SUCCESS,
+	
+	/**
+	 * 操作失败
+	 */
+	FAILURE,
+	
+	/**
+	 * 网络错误
+	 */
+	TRANSFER_ERROR,
+	/**
+	 * 操作超时
+	 */
+	TIMEOUT,
+	
+	/**
+	 * 系统错误
+	 */
+	SYSTEM_ERROR,
 }
