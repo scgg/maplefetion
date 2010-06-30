@@ -40,6 +40,7 @@ import org.apache.log4j.DailyRollingFileAppender;
 import org.apache.log4j.Level;
 import org.apache.log4j.Logger;
 import org.apache.log4j.PatternLayout;
+import org.apache.log4j.PropertyConfigurator;
 import org.apache.log4j.xml.DOMConfigurator;
 
 /**
@@ -182,12 +183,19 @@ public class FetionConfig
 	public static void configLog4j()
 	{
 		// 检查用户是否配置log4j.xml，如果配置了使用用户定义的log4j.xml加载日志配置，以下的配置均无效
-		String xml = getString("system.log4j.xml");
+		String xml = getString("log.log4j.xml");
 		if(xml!=null && xml.length()>0) {
 			DOMConfigurator.configure(xml);
 			return;
 		}
-
+		
+		// 检查用户是否配置log4j.properties，如果配置了使用用户定义的log4j.properties加载日志配置，以下的配置均无效
+		String props = getString("log.log4j.properties");
+		if(props!=null && props.length()>0) {
+			PropertyConfigurator.configure(props);
+			return;
+		}
+		
 		// 动态的配置日志记录器
 		Logger root = Logger.getRootLogger();
 		// 是否开启调试模式

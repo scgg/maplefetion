@@ -165,13 +165,16 @@ public class FetionRobot implements SMSListener
     
     public static void main(String[] args)
     {
-    	FetionRobot sms = new FetionRobot();
-    	//sms.registerGateway(new FetionGateway(159000000,"pass"));
-    	sms.registerGateway(new FetionGateway(15982070573L,"xu1234"));
-    	sms.registerApp(new HelloApp());
-    	sms.registerApp(new WeatherApp());
-    	sms.start();
-    	sms.readCmd();
+    	if(args.length>=2){
+	    	FetionRobot sms = new FetionRobot();
+	    	sms.registerGateway(new FetionGateway(Long.parseLong(args[0]),args[1]));
+	    	sms.registerApp(new HelloApp());
+	    	sms.registerApp(new WeatherApp());
+	    	sms.start();
+	    	sms.readCmd();
+    	}else{
+    		System.out.println("参数不正确， 请使用 java net.solosky.maplefetion.demo.robot.FetionRobot 机器人手机号 密码");
+    	}
     }
 
 }

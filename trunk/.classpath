@@ -2,7 +2,6 @@
 <classpath>
 	<classpathentry kind="src" path="src"/>
 	<classpathentry kind="src" path="demo"/>
-	<classpathentry kind="src" path="test"/>
 	<classpathentry kind="lib" path="lib/log4j-1.2.15.jar"/>
 	<classpathentry kind="lib" path="lib/jdom.jar"/>
 	<classpathentry kind="lib" path="lib/mina-core-2.0.0-RC1.jar" sourcepath="C:/Documents and Settings/Administrator/桌面/mina-2.0.0-RC1/src/mina-core/src/main/java"/>
