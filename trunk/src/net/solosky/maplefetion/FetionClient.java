@@ -32,6 +32,7 @@
 package net.solosky.maplefetion;
 
 import java.util.ArrayList;
+import java.util.Calendar;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
@@ -45,6 +46,7 @@ import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
+import net.solosky.maplefetion.client.GetScheduleListWork;
 import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
 import net.solosky.maplefetion.client.RegistrationException;
@@ -985,37 +987,31 @@ public class FetionClient implements FetionContext
 	 */
 	public void getScheduleSMSList(final ActionEventListener listener)
 	{
-		//获取定时短信列表是分两步完成的，首先要获取定时短信列表，然后获取定时列表的详细信息
-		//为了简化用户操作，这里把这两步合成一步来完成
-		ActionEventListener tmpListener = new ActionEventListener() {
-			public void fireEevent(ActionEvent event)
-			{
-				if(event.getEventType()==ActionEventType.SUCCESS){
-					Collection<ScheduleSMS> list = getFetionStore().getScheduleSMSList();
-					if(list.size()>0){
-						getServerDialog().getScheduleSMSInfo(list, listener);
-					}else{
-						listener.fireEevent(event);
-					}
-				}else{
-					listener.fireEevent(event);
-				}
-			}
-		};
-		this.getServerDialog().getScheduleSMSList(tmpListener);
+		this.executor.submitTask(new GetScheduleListWork(this, listener));
 	}
 	
 	/**
 	 * 创建定时短信
 	 * @param message		定时短信内容
-	 * @param sendDate		发送时间
+	 * @param sendDate		发送时间	，有效时间是在当前时间后11分钟到一年以内，否则会返回错误
 	 * @param receiverList	短信的接收者列表
 	 * @param listener		操作监听器
 	 */
 	public void createScheduleSMS(Message message, Date sendDate, Collection<Buddy> receiverList, ActionEventListener listener)
 	{
-		ScheduleSMS sc = new ScheduleSMS(-1, message, sendDate,  receiverList);
-		this.getServerDialog().createScheduleSMS(sc, listener);
+		//检查定时短信的定时时间，最短时间是 当前时间+11分钟-一年后当前时间
+		//比如当前时间是 2007.7.1 22:56 有效的时间是 2010.7.1 23:07 - 2011.7.1 22:56，在这个时间之内的才是有效时间，
+		Calendar calMin = Calendar.getInstance();
+		calMin.add(Calendar.MINUTE, 11);
+		Calendar calMax = Calendar.getInstance();
+		calMax.add(Calendar.YEAR, 1);
+		//判断是否在有效的范围内，如果不再则返回发送时间错误
+		if( sendDate.after(calMin.getTime()) && sendDate.before(calMax.getTime())){
+			ScheduleSMS sc = new ScheduleSMS(-1, message, sendDate,  receiverList);
+			this.getServerDialog().createScheduleSMS(sc, listener);
+		}else{
+			if(listener!=null)	listener.fireEevent(new FailureEvent(FailureType.INVALID_SEND_DATE));
+		}
 	}
 	
 	/**

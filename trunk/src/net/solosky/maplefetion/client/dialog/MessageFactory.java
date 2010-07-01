@@ -30,6 +30,8 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
+import java.util.Locale;
+import java.util.TimeZone;
 
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.bean.Buddy;
@@ -797,6 +799,7 @@ public class MessageFactory
     	
     	String body = MessageTemplate.TMPL_CREATE_SCHEDULE_SMS;
     	SimpleDateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
+    	df.setTimeZone(TimeZone.getTimeZone("GMT 0"));
     	body = body.replace("{sendDate}", df.format(sendDate));
     	body = body.replace("{message}", message.getText());
     	

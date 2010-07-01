@@ -150,6 +150,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     		case SipcStatus.TA_EXIST:        return this.doTaExsit(response);
     		case SipcStatus.NO_SUBSCRIPTION: return this.doNoSubscription(response);
     		case SipcStatus.TIME_OUT:        return this.doTimeout(response);
+    		case SipcStatus.BUSY_HERE:       return this.doBusyHere(response);
     		default:	
 				logger.warn("Unhandled sipc response status, default make action fail. status="
 						+response.getStatusCode()+", response="+response);
@@ -157,7 +158,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     	}
     }
     
-    //100
+	//100
     protected ActionEvent doTrying(SipcResponse response) throws FetionException {
     	return new SuccessEvent();
     }
@@ -176,10 +177,16 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     protected ActionEvent doNotAuthorized(SipcResponse response) throws FetionException{
     	return new FailureEvent(FailureType.SIPC_FAIL);
     }
+    
     //404
     protected ActionEvent doNotFound(SipcResponse response) throws FetionException{
     	return new FailureEvent(FailureType.SIPC_FAIL);
     }
+    
+    //486
+    protected ActionEvent doBusyHere(SipcResponse response) throws FetionException{
+    	return new FailureEvent(FailureType.SIPC_FAIL);
+	}
     
     //521
     protected ActionEvent doTaExsit(SipcResponse response) throws FetionException{

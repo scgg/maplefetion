@@ -30,6 +30,7 @@ import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.List;
+import java.util.TimeZone;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
@@ -81,6 +82,7 @@ public class GetScheduleSMSInfoResponseHandler extends AbstractResponseHandler
 		Iterator it = sclist.iterator();
 		FetionStore store = this.context.getFetionStore();
 		SimpleDateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
+		df.setTimeZone(TimeZone.getTimeZone("GMT 0"));
 		while(it.hasNext()){
 			Element e = (Element) it.next();
 			int scId = Integer.parseInt(e.getAttributeValue("id"));

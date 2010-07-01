@@ -41,6 +41,7 @@ public interface SipcStatus
 	
 	public static final int NOT_AUTHORIZED = 401;		//需要验证
 	public static final int NOT_FOUND = 404;			//未找到
+	public static final int BUSY_HERE = 486;			//暂时不清除含义
 	
 	public static final int SERVER_UNAVAILABLE = 503;	// 服务暂时不可用
 	public static final int TA_EXIST = 521;				//对方已经存在

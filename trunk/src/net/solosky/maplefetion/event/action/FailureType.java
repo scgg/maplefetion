@@ -70,12 +70,17 @@ public enum FailureType {
 	BUDDY_EXISTS,
 	
 	/**
-	 * 未知错误
-	 */
-	UNKNOWN_FAIL,		
-	
-	/**
 	 * 无效的账号
 	 */
 	INVALID_ACCOUNT,
+	
+	/**
+	 * 定时短信定时时间不正确
+	 */
+	INVALID_SEND_DATE,
+	
+	/**
+	 * 未知错误
+	 */
+	UNKNOWN_FAIL,	
 }

@@ -33,8 +33,11 @@ import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.XMLHelper;
 
 /**
@@ -71,7 +74,7 @@ public class CreateScheduleSMSResponseHandler extends  AbstractResponseHandler
 			throws FetionException
 	{
 		Element root = XMLHelper.build(response.getBody().toSendString());
-		Element scel = XMLHelper.find(root, "/results/schedule-sms-list/schedule-sms");
+		Element scel = XMLHelper.find(root, "/results/schedule-sms");
 		
 		if(scel!=null){
 			int scId = Integer.parseInt(scel.getAttributeValue("id"));
@@ -87,4 +90,23 @@ public class CreateScheduleSMSResponseHandler extends  AbstractResponseHandler
 		
 		return super.doActionOK(response);
 	}
+
+	@Override
+	protected ActionEvent doBusyHere(SipcResponse response) throws FetionException {
+		Element root = XMLHelper.build(response.getBody().toSendString());
+		Element error = XMLHelper.find(root, "/results/error");
+		String reason = error.getAttributeValue("reason");
+		if(reason!=null){
+			if(reason.equals("sms-send-time-range-out")){
+				return new FailureEvent(FailureType.INVALID_SEND_DATE);
+			}else{
+				logger.warn("Unkown createScheduleSMS error reason:"+reason);
+				return super.doBusyHere(response);
+			}
+		}else{
+			return super.doBusyHere(response);
+		}
+	}
+	
+	
 }
