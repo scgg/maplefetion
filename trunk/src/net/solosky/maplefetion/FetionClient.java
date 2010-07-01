@@ -1037,6 +1037,23 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
+	 * 验证定时短信列表，删除掉已经发送的定时短信
+	 */
+	public void invalidateScheduleSMSList()
+	{
+		synchronized (this.store) {
+			Iterator <ScheduleSMS> it = this.store.getScheduleSMSList().iterator();
+			Date nowDate = new Date();
+			while(it.hasNext()){
+				ScheduleSMS sc = it.next();
+				if(nowDate.after(sc.getSendDate())){		//如果当前时间大于定时短信发送时间，删除这个定时短信
+					it.remove();
+				}
+			}
+		}
+	}
+	
+	/**
 	 * 强制更新好友列表，这个方法会清空本地的好友列表，并从服务器上获取最新的好友列表和好友信息
 	 * @param listener
 	 */
