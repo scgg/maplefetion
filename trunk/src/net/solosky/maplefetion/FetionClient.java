@@ -938,13 +938,17 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
-	 * 删除一个分组
+	 * 删除一个分组,删除分组之前请先把属于这个分组的好友移至其他分组再删除这个分组
 	 * @param cord		分组对象
 	 * @param listener
 	 */
 	public void deleteCord(Cord cord, ActionEventListener listener)
 	{
-		this.dialogFactory.getServerDialog().deleteCord(cord, listener);
+		if(this.store.getBuddyListByCord(cord).size()>0 && listener!=null){
+			listener.fireEevent(new FailureEvent(FailureType.CORD_NOT_EMPTY));
+		}else{
+			this.dialogFactory.getServerDialog().deleteCord(cord, listener);
+		}
 	}
 	
 	/**
@@ -1005,7 +1009,7 @@ public class FetionClient implements FetionContext
 		calMin.add(Calendar.MINUTE, 11);
 		Calendar calMax = Calendar.getInstance();
 		calMax.add(Calendar.YEAR, 1);
-		//判断是否在有效的范围内，如果不再则返回发送时间错误
+		//判断是否在有效的范围内，如果不在这个范围内则返回发送时间错误
 		if( sendDate.after(calMin.getTime()) && sendDate.before(calMax.getTime())){
 			ScheduleSMS sc = new ScheduleSMS(-1, message, sendDate,  receiverList);
 			this.getServerDialog().createScheduleSMS(sc, listener);

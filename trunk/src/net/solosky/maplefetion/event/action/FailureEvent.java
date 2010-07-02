@@ -43,7 +43,7 @@ public class FailureEvent extends ActionEvent
 	private FailureType failureType;
 	
 	/**
-	 * 以一个回复构造成功事件
+	 * 以一个回复构造失败事件
 	 * @param response
 	 */
 	public FailureEvent(FailureType type)

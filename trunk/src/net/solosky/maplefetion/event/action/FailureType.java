@@ -80,6 +80,11 @@ public enum FailureType {
 	INVALID_SEND_DATE,
 	
 	/**
+	 * 删除好友分组时，好友列表不为空
+	 */
+	CORD_NOT_EMPTY,
+	
+	/**
 	 * 未知错误
 	 */
 	UNKNOWN_FAIL,	
