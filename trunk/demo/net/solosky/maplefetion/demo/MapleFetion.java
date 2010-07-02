@@ -823,8 +823,14 @@ public class MapleFetion extends NotifyEventAdapter
 	    {
 	    	Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(this.activeChatDialog==null) {
-                this.activeChatDialog = this.client.getChatDialogProxy(buddy);
-                println("提示：你现在可以和 "+ buddy.getDisplayName()+" 聊天了。");
+                try {
+	                this.activeChatDialog = this.client.getChatDialogProxy(buddy);
+	                println("提示：你现在可以和 "+ buddy.getDisplayName()+" 聊天了。");
+                } catch (DialogException e) {
+	              println("创建对话框失败:"+e);
+                }
+	    	}else {
+	    		
 	    	}
 	    }
 	    

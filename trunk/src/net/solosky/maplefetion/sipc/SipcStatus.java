@@ -40,6 +40,7 @@ public interface SipcStatus
 	public static final int SEND_SMS_OK = 280;			//发送手机短信成功
 	
 	public static final int NOT_AUTHORIZED = 401;		//需要验证
+	public static final int FORBIDDEN = 403;			//操作被阻止
 	public static final int NOT_FOUND = 404;			//未找到
 	public static final int BUSY_HERE = 486;			//暂时不清除含义
 	

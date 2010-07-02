@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.client.response;
 
+import org.jdom.Element;
+
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.client.dialog.Dialog;
@@ -34,6 +36,7 @@ import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.util.XMLHelper;
 
 /**
  *
@@ -85,4 +88,26 @@ public class SendChatMessageResponseHandler extends AbstractResponseHandler
 	{
 		return new FailureEvent(FailureType.USER_NOT_FOUND);
 	}
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doForbidden(net.solosky.maplefetion.sipc.SipcResponse)
+     */
+    @Override
+    protected ActionEvent doForbidden(SipcResponse response)
+            throws FetionException
+    {
+    	Element root =  XMLHelper.build(response.getBody().toSendString());
+    	Element error = XMLHelper.find(root, "/results/error");
+    	if(error!=null) {
+        	String reason = error.getAttributeValue("reason");
+        	if("receiver is in the BlackList of sender".equals(reason)) {
+        		return new FailureEvent(FailureType.BUDDY_BLOCKED);
+        	}else {
+        		logger.warn("Uknown SendChatMessage fail reason:"+reason);
+        		return super.doForbidden(response);
+        	}
+    	}else {
+    		return super.doForbidden(response);	
+    	}
+    }
 }

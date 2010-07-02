@@ -55,6 +55,9 @@ public class MessageTemplate
 	public static final String TMPL_SET_BUDDY_CORD = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" /></buddies></contacts></args>";
 	public static final String TMPL_SET_PRESENCE = "<args><presence><basic value=\"{presence}\" /></presence></args>";
 	
+	public static final String TMPL_ADD_TO_BLACKLIST = "<args><contacts><blacklist><blocked uri=\"{uri}\" /></blacklist></contacts></args>";
+	public static final String TMPL_REMOVE_FROM_BLACKLIST = "<args><contacts><blacklist><blocked uri=\"{uri}\" /></blacklist></contacts></args>";
+	
 	public static final String TMPL_CREATE_CORD = "<args><contacts><buddy-lists><buddy-list name=\"{title}\" /></buddy-lists></contacts></args>";
 	public static final String TMPL_DELETE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" /></buddy-lists></contacts></args>";
 	public static final String TMPL_UPDATE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" name=\"{title}\"/></buddy-lists></contacts></args>";

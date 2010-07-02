@@ -70,6 +70,11 @@ public enum FailureType {
 	BUDDY_EXISTS,
 	
 	/**
+	 * 好友在黑名单中
+	 */
+	BUDDY_BLOCKED,
+	
+	/**
 	 * 无效的账号
 	 */
 	INVALID_ACCOUNT,
@@ -83,6 +88,16 @@ public enum FailureType {
 	 * 删除好友分组时，好友列表不为空
 	 */
 	CORD_NOT_EMPTY,
+	
+	/**
+	 * 将好友添加到黑名单时，该好友已经在黑名单中
+	 */
+	BUDDY_IN_BLACKLIST,
+	
+	/**
+	 * 从黑名单中删除时，该好友不再黑名单中
+	 */
+	BUDDY_NOT_IN_BLACKLIST,
 	
 	/**
 	 * 未知错误

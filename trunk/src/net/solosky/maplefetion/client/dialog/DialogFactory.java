@@ -34,6 +34,7 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.sipc.SipcNotify;
@@ -120,6 +121,9 @@ public class DialogFactory
 	public synchronized ChatDialog createChatDialog(Buddy buddy)
 	        throws DialogException
 	{
+		if(buddy.getRelation()==Relation.BANNED) {
+			throw new DialogException("Buddy "+buddy+" was in blacklist, you couldn't send chat message to this buddy.");
+		}
 		ChatDialog dialog = this.findChatDialog(buddy);
 		if (dialog != null && dialog.getState()!=DialogState.CLOSED && dialog.getState()!=DialogState.FAILED)
 			return dialog;

@@ -38,6 +38,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.net.Port;
@@ -274,7 +275,11 @@ public class MessageFactory
     		Buddy b = it.next();
     		String t = contactTemplate;
     		if(b instanceof FetionBuddy) {
-    			t = contactTemplate.replace("{type}", "3");
+    			if(b.getRelation()==Relation.BANNED) {
+    				t = contactTemplate.replace("{type}", "5");
+    			}else {
+    				t = contactTemplate.replace("{type}", "3");
+    			}
     		}else {
     			t = contactTemplate.replace("{type}", "2");
     		}
@@ -836,6 +841,29 @@ public class MessageFactory
     	body = body.replace("{scheduleSMSList}", buffer.toString());
     	
     	req.setBody(new SipcBody(body));
+    	return req;
+    }
+    
+    
+    /**
+     * 将好友移到黑名单中
+     */
+    public SipcRequest createAddBuddyToBlackList(String uri)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "AddToBlacklist");
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_ADD_TO_BLACKLIST.replace("{uri}", uri)));
+    	return req;
+    }
+    
+    /**
+     * 将好友从黑名单移除
+     */
+    public SipcRequest createRemoveBuddyFromBlackList(String uri)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
+    	req.addHeader(SipcHeader.EVENT, "RemoveFromBlacklist");
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_REMOVE_FROM_BLACKLIST.replace("{uri}", uri)));
     	return req;
     }
     ///////////////////////////////////////收据///////////////////////////////////////////////

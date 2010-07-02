@@ -73,13 +73,17 @@ public class GetScheduleSMSListResponseHandler extends AbstractResponseHandler
 		List sclist = XMLHelper.findAll(root, "/results/schedule-sms-list/*schedule-sms");
 		Iterator it = sclist.iterator();
 		FetionStore store = this.context.getFetionStore();
-		while(it.hasNext()){
-			Element e = (Element) it.next();
-			//这里的 定时短信只有ID，如果需要定时短信的详细信息还需要发出另外的请求
-			//真搞不懂为什么不把定时短信的详细直接返回，非得要发另外一个请求，很无语。。
-			ScheduleSMS sc = new ScheduleSMS(Integer.parseInt(e.getAttributeValue("id")), null, null, null);
-			store.addScheduleSMS(sc);
-		}
+		
+		synchronized (store) {
+			while(it.hasNext()){
+				Element e = (Element) it.next();
+				//这里的 定时短信只有ID，如果需要定时短信的详细信息还需要发出另外的请求
+				//真搞不懂为什么不把定时短信的详细直接返回，非得要发另外一个请求，很无语。。
+				ScheduleSMS sc = new ScheduleSMS(Integer.parseInt(e.getAttributeValue("id")), null, null, null);
+				store.addScheduleSMS(sc);
+			}
+        }
+		
 		return super.doActionOK(response);
 	}
 }

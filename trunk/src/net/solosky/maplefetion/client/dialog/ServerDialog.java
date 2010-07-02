@@ -44,6 +44,7 @@ import net.solosky.maplefetion.chain.ProcessorChain;
 import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.ServerMessageDispatcher;
 import net.solosky.maplefetion.client.response.AddBuddyResponseHandler;
+import net.solosky.maplefetion.client.response.AddBuddyToBlackListResponseHandler;
 import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AgreeApplicationResponseHandler;
 import net.solosky.maplefetion.client.response.CreateCordResponseHandler;
@@ -62,6 +63,7 @@ import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
 import net.solosky.maplefetion.client.response.GetPersonalInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetScheduleSMSInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetScheduleSMSListResponseHandler;
+import net.solosky.maplefetion.client.response.RemoveBuddyFromBlackListResponseHandler;
 import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.client.response.ServerRegisterResponseHandler;
 import net.solosky.maplefetion.client.response.SetBuddyInfoResponseHandler;
@@ -754,6 +756,32 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createDeleteScheduleSMSRequest(sclist);
 		request.setResponseHandler(new DeleteScheduleSMSResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	/**
+	 * 把当前好友添加到黑名单中
+	 * @param buddy		需添加到黑名单的好友
+	 * @param listener
+	 */
+	public void addBuddyToBlackList(Buddy buddy, ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createAddBuddyToBlackList(buddy.getUri());
+		request.setResponseHandler(new AddBuddyToBlackListResponseHandler(context, this, listener));
+		this.process(request);
+	}
+	
+	/**
+	 * 从黑名单中移除好友
+	 * @param buddy		需从黑名单中移除的好友
+	 * @param listener
+	 */
+	public void removeBuddyFromBlackList(Buddy buddy, ActionEventListener listener)
+	{
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createRemoveBuddyFromBlackList(buddy.getUri());
+		request.setResponseHandler(new RemoveBuddyFromBlackListResponseHandler(context, this, listener));
 		this.process(request);
 	}
 }

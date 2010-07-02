@@ -142,6 +142,21 @@ public class GetContactListResponseHandler extends AbstractResponseHandler
 	    		}
 	    	}
 	    	
+	    	//处理Blacklist
+	    	Element blackLists = contacts.getChild("blacklist");
+	    	if(blackLists!=null) {
+	    		List list = blackLists.getChildren();
+	    		Iterator it = list.iterator();
+	    		while(it.hasNext()){
+	    			Element e = (Element) it.next();
+	    			String uri = e.getAttributeValue("uri");
+	    			Buddy b = store.getBuddyByUri(uri);
+	    			if(b!=null) {
+	    				BeanHelper.setValue(b, "relation", Relation.BANNED);
+	    			}
+	    		}
+	    	}
+	    	
 	    	//TODO 处理allowList...
 			return super.doActionOK(response);
 		}

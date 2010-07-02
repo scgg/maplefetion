@@ -43,6 +43,7 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
+import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
@@ -528,15 +529,12 @@ public class FetionClient implements FetionContext
     /**
      * 返回聊天对话代理
      * @param buddy		对应的好友
-     * @return		如果找到，返回聊天对话代理，出现错误，或者不存在，返回null
+     * @return		如果找到，返回聊天对话代理
+     * @throws DialogException 如果对话框建立失败则抛出
      */
-    public ChatDialogProxy getChatDialogProxy(Buddy buddy)
+    public ChatDialogProxy getChatDialogProxy(Buddy buddy) throws DialogException
     {
-    	try {
-	        return this.proxyFactory.create(buddy);
-        } catch (DialogException e) {
-	       return null;
-        }
+        return this.proxyFactory.create(buddy);
     }
 
 	/**
@@ -615,17 +613,21 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 发送聊天消息，如果好友不在线将会发送到手机
-	 * @param toBuddy  发送聊天消息的好友
+	 * @param toBuddy  发送聊天消息的好友,如果好友在黑名单里，则发送失败
 	 * @param message  需发送的消息
 	 * @param listener 操作结果监听器
 	 */
 	public void sendChatMessage(final Buddy toBuddy, final Message message, ActionEventListener listener)
 	{
-		try {
-			ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
-			proxy.sendChatMessage(message, listener);
-		} catch (DialogException e) {
-			listener.fireEevent(new SystemErrorEvent(e));
+		if(toBuddy.getRelation()==Relation.BANNED) {
+			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_BLOCKED));
+		}else {
+    		try {
+    			ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
+    			proxy.sendChatMessage(message, listener);
+    		} catch (DialogException e) {
+    			listener.fireEevent(new SystemErrorEvent(e));
+    		}
 		}
 	}
 	
@@ -650,7 +652,11 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendSMSMessage(Buddy toBuddy, Message message, ActionEventListener listener)
 	{
-		this.dialogFactory.getServerDialog().sendSMSMessage(toBuddy, message, listener);
+		if(toBuddy.getRelation()==Relation.BANNED) {
+			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_BLOCKED));
+		}else {
+			this.dialogFactory.getServerDialog().sendSMSMessage(toBuddy, message, listener);
+		}
 	}
 	
 	/**
@@ -1064,5 +1070,36 @@ public class FetionClient implements FetionContext
 	public void updateBuddyList(ActionEventListener listener)
 	{
 		this.getFetionExecutor().submitTask( new UpdateBuddyListWork(this, listener));
+	}
+	
+	
+	/**
+	 * 将好友添加到黑名单，也就是无法发送消息给在黑名单的好友
+	 * 添加之后和该好友的关系变为Relation.BANNED.
+	 * @param buddy			需添加到黑名单的好友
+	 * @param listener
+	 */
+	public void addBuddyToBlackList(Buddy buddy, ActionEventListener listener)
+	{
+		if(buddy.getRelation()==Relation.BANNED) {
+			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_IN_BLACKLIST));
+		}else {
+			this.getServerDialog().addBuddyToBlackList(buddy, listener);
+		}
+	}
+	
+	/**
+	 * 将好友从黑名单中删除
+	 * 删除好友的关系变为Relation.BUDDY
+	 * @param buddy		需从黑名单中删除的好友
+	 * @param listener
+	 */
+	public void removeBuddyFromBlackList(Buddy buddy, ActionEventListener listener)
+	{
+		if(buddy.getRelation()!=Relation.BANNED) {
+			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_NOT_IN_BLACKLIST));
+		}else {
+			this.getServerDialog().removeBuddyFromBlackList(buddy, listener);
+		}
 	}
 }
