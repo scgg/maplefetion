@@ -2,6 +2,7 @@
 <project name="MapleFetion" default="compile" basedir="." xmlns:artifact="antlib:org.apache.maven.artifact.ant">
 
     <property name="src.dir"   value="src"   />
+    <property name="demo.dir"   value="demo"   />
     <property name="build.dir" value="build" />
     <property name="dist.dir"  value="dist"  />
     <property name="lib.dir"   value="lib"   />
@@ -32,7 +33,13 @@
     <!-- 构建JAR -->
     <target name="dist" depends="compile">
         <mkdir dir="${dist.dir}"/>
-        <jar jarfile="${dist.dir}/MapleFetion-${DSTAMP}.jar" basedir="${build.dir}"/>
+        <jar jarfile="${dist.dir}/maplefetion-${DSTAMP}.jar" basedir="${build.dir}"/>
+    </target>
+
+     <!-- 构建Demo -->
+    <target name="demo" depends="compile">
+        <mkdir dir="${demo.dir}"/>
+        <jar jarfile="${dist.dir}/maplefetion-demo-${DSTAMP}.jar" basedir="${build.dir}"/>
     </target>
     
     <!-- 清除目录 -->

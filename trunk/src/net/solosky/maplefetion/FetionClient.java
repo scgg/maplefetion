@@ -107,7 +107,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 协议版本
 	 */
-	public static final String PROTOCOL_VERSION = "3.4.2229";
+	public static final String PROTOCOL_VERSION = "3.4.2463";
 	
 	/**
 	 * SIPC版本
