@@ -68,7 +68,23 @@ public class Cord
     	return title;
     }
     
-    public String toString()
+    /**
+     * @param id the id to set
+     */
+    public void setId(int id)
+    {
+    	this.id = id;
+    }
+
+	/**
+     * @param title the title to set
+     */
+    public void setTitle(String title)
+    {
+    	this.title = title;
+    }
+
+	public String toString()
     {
     	return "[Cord, id="+this.id+", title="+this.title+"]";
     }

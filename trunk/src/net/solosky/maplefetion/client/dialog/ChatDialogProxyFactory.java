@@ -76,7 +76,6 @@ public class ChatDialogProxyFactory
 		}
 	}
 	
-	
 	/**
 	 * 关闭一个对话代理对象
 	 * @param proxy

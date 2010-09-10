@@ -187,6 +187,29 @@ public class FetionBuddy extends Buddy
 	{
 		this.email = email;
 	}
+	/**
+     * @param smsPolicy the smsPolicy to set
+     */
+    public void setSmsPolicy(SMSPolicy smsPolicy)
+    {
+    	this.smsPolicy = smsPolicy;
+    }
+
+	/**
+     * @param level the level to set
+     */
+    public void setLevel(int level)
+    {
+    	this.level = level;
+    }
+
+	/**
+     * @param permission the permission to set
+     */
+    public void setPermission(Permission permission)
+    {
+    	this.permission = permission;
+    }
 
 	/**
      * 返回可以显示的名字
@@ -205,6 +228,25 @@ public class FetionBuddy extends Buddy
     		return Long.toString(getMobile());
     	return null;
     }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.bean.Person#getDisplayPresence()
+	 */
+	@Override
+	public String getDisplayPresence() {
+		if(this.getRelation()!=Relation.BUDDY){
+			return "离线";
+		}
+		if(this.getPresence().getValue()==Presence.OFFLINE){
+			if(this.getSMSPolicy().isSMSOnline()){
+				return "短信在线";
+			}else{
+				return "离线";
+			}
+		}else{
+			return Presence.presenceValueToDisplayString(this.getPresence().getValue());
+		}
+	}
 	
     
 	

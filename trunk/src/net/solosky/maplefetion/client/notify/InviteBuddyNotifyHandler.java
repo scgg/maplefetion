@@ -28,12 +28,16 @@ package net.solosky.maplefetion.client.notify;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.client.dialog.BasicChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.DialogException;
+import net.solosky.maplefetion.event.notify.InviteReceivedEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcReceipt;
+import net.solosky.maplefetion.store.FetionStore;
 
 /**
  *
@@ -69,12 +73,23 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
 		this.dialog.process(receipt);
 		
 		//检查是否发起会话的好友是否存在，如果不存在建立一个新飞信好友对象，并设置关系为陌生人关系
-		Buddy buddy = this.context.getFetionStore().getBuddyByUri(notify.getFrom());
-		if(buddy==null){
-			buddy = new FetionBuddy();
-			buddy.setUri(notify.getFrom());
-			this.context.getFetionStore().addBuddy(buddy);
+		FetionStore store = this.context.getFetionStore();
+		Buddy buddy = null;
+		synchronized(store){
+			buddy = store.getBuddyByUri(notify.getFrom());
+			if(buddy==null){
+				buddy = new FetionBuddy();
+				buddy.setUri(notify.getFrom());
+				store.addBuddy(buddy);
+			}
 		}
+		
+		//检查之前的会话中，是否有BasicChatDialog 如果有，关闭
+		ChatDialog basicDialog = context.getDialogFactory().findChatDialog(buddy);
+		if(basicDialog instanceof BasicChatDialog){
+			basicDialog.closeDialog();	//关闭并从当前对话列表中移除
+		}
+		
 		//和邀请的好友建立会话
     	final ChatDialog dialog = context.getDialogFactory().createChatDialog(notify);
     	Runnable r = new Runnable(){
@@ -91,6 +106,10 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
 			}
 		};
 		this.context.getFetionExecutor().submitTask(r);
+		
+		//通知监听器收到了一个邀请
+		ChatDialogProxy cd = this.context.getChatDialogProxyFactoy().create(buddy);
+		this.tryFireNotifyEvent(new InviteReceivedEvent(cd));
     }
 
 }

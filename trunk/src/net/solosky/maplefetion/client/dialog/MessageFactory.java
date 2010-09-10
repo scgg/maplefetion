@@ -30,7 +30,6 @@ import java.text.SimpleDateFormat;
 import java.util.Collection;
 import java.util.Date;
 import java.util.Iterator;
-import java.util.Locale;
 import java.util.TimeZone;
 
 import net.solosky.maplefetion.FetionConfig;
@@ -49,6 +48,7 @@ import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.util.AuthGenerator;
 import net.solosky.maplefetion.util.NodeBuilder;
+import net.solosky.maplefetion.util.StringHelper;
 
 /**
  *	
@@ -135,7 +135,8 @@ public class MessageFactory
     	
     	String authString = "Digest algorithm=\"SHA1-sess\",response=\""
     					+auth.getResponse()+"\",cnonce=\""+auth.getCnonce()
-    					+"\",salt=\""+auth.getSalt()+"\",ssic=\""+user.getSsic()+"\"";
+    					+"\",salt=\""+auth.getSalt()+"\"";//,ssic=\""+user.getSsic()+"\""; 
+    	//NOTE: 为了防止出现验证码，这里可以取消获取SSIC的步骤，这里就不需要传递SSIC，没有SSIC也能登录，但是必须得指定飞信号
     	
     	req.addHeader(SipcHeader.AUTHORIZATION, authString);
     	
@@ -165,10 +166,10 @@ public class MessageFactory
     	
     	req.addHeader(SipcHeader.TO, toUri);
     	//req.addHeader(SipcHeader.CONTENT_TYPE, "text/plain");text/html-fragment
-    	req.addHeader(SipcHeader.CONTENT_TYPE, "text/html-fragment");
+    	req.addHeader(SipcHeader.CONTENT_TYPE, m.getType());
     	req.addHeader(SipcHeader.EVENT, "CatMsg");
     	
-    	req.setBody(new SipcBody(m.toString()));
+    	req.setBody(new SipcBody(m.getContent()));
     	
     	return req;
     }
@@ -313,9 +314,9 @@ public class MessageFactory
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
     	req.addHeader(SipcHeader.AUTHORIZATION,"TICKS auth=\""+ticket+"\"");
     	req.addHeader(SipcHeader.SUPPORTED,"text/html-fragment");
-    	req.addHeader(SipcHeader.SUPPORTED,"multiparty");
-    	req.addHeader(SipcHeader.SUPPORTED,"nudge");
-    	req.addHeader(SipcHeader.SUPPORTED,"share-background");
+    	//req.addHeader(SipcHeader.SUPPORTED,"multiparty");
+    	//req.addHeader(SipcHeader.SUPPORTED,"nudge");
+    	//req.addHeader(SipcHeader.SUPPORTED,"share-background");
     	//req.addHeader(SipcHeader.FIELD_SUPPORTED,"fetion-show");
     	
     	return req;
@@ -369,7 +370,7 @@ public class MessageFactory
     	body = body.replace("{uri}", uri);
     	body = body.replace("{promptId}", Integer.toString(promptId));
     	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
-    	body = body.replace("{desc}", desc);
+    	body = body.replace("{desc}", StringHelper.qouteHtmlSpecialChars(desc));
     	body = body.replace("{localName}", localName!=null?"local-name=\""+localName+"\"":"");
     	
     	req.addHeader(SipcHeader.EVENT,"AddBuddy");
@@ -390,7 +391,7 @@ public class MessageFactory
     	String body = MessageTemplate.TMPL_ADD_MOBILE_BUDDY;
     	body = body.replace("{uri}", uri);
     	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
-    	body = body.replace("{desc}", desc);
+    	body = body.replace("{desc}", StringHelper.qouteHtmlSpecialChars(desc));
     	
     	req.addHeader(SipcHeader.EVENT,"AddMobileBuddy");
     	req.setBody(new SipcBody(body));
@@ -479,8 +480,8 @@ public class MessageFactory
     	
     	NodeBuilder builder = new NodeBuilder();
     	//因为用户可以改变自己的信息，这里权限改变了所以不使用BeanHelper来处理
-    	builder.add("nickname", user.getNickName());
-    	builder.add("impresa", user.getImpresa());
+    	builder.add("nickname", StringHelper.qouteHtmlSpecialChars(user.getNickName()));
+    	builder.add("impresa",  StringHelper.qouteHtmlSpecialChars(user.getImpresa()));
     	//用户扩展信息。.TODO ..
         //BeanHelper.toUpdateXML(BuddyExtend.class, this.client.getFetionUser(), builder);
     	
@@ -898,10 +899,10 @@ public class MessageFactory
     	receipt.addHeader(SipcHeader.FROM, uri);
     	receipt.addHeader(SipcHeader.SUPPORTED,"text/html-fragment");
     	receipt.addHeader(SipcHeader.SUPPORTED, "text/plain");
-    	receipt.addHeader(SipcHeader.SUPPORTED,"multiparty");
-    	receipt.addHeader(SipcHeader.SUPPORTED,"nudge");
-    	receipt.addHeader(SipcHeader.SUPPORTED,"share-background");
-    	receipt.addHeader(SipcHeader.SUPPORTED,"fetion-show");
+    	//receipt.addHeader(SipcHeader.SUPPORTED,"multiparty");
+    	//receipt.addHeader(SipcHeader.SUPPORTED,"nudge");
+    	//receipt.addHeader(SipcHeader.SUPPORTED,"share-background");
+    	//receipt.addHeader(SipcHeader.SUPPORTED,"fetion-show");
     	
     	
     	//正文是一些固定的参数
@@ -922,7 +923,7 @@ public class MessageFactory
      * 下一次CALLID
      * @return
      */
-    private int getNextCallID()
+    private synchronized int getNextCallID()
     {
     	return ++globalCallId;
     }
@@ -930,7 +931,7 @@ public class MessageFactory
     /**
      * 下一次Sequence
      */
-    private int getNextSequence()
+    private synchronized int getNextSequence()
     {
     	return ++gloalSequence;
     }

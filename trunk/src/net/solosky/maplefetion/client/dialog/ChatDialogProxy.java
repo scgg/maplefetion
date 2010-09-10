@@ -79,12 +79,6 @@ public class ChatDialogProxy implements DialogListener
 	protected ArrayList<MessageEntry> readyMessageList;
 	
 	/**
-	 * 对话框改变状态时的锁
-	 * 保证发送消息的时候对话框的状态是确定的
-	 */
-	private Object stateLock;
-	
-	/**
 	 * LOGGER
 	 */
 	private static Logger logger = Logger.getLogger(ChatDialogProxy.class);
@@ -99,7 +93,6 @@ public class ChatDialogProxy implements DialogListener
 	{
 		this.proxyChatDialog	= dialog;
 		this.fetionContext		= client;
-		this.stateLock			= new Object();
 		this.mainBuddy			= dialog.getMainBuddy();
 		this.readyMessageList	= new ArrayList<MessageEntry>();
 		
@@ -116,9 +109,8 @@ public class ChatDialogProxy implements DialogListener
 	{
 		this.fetionContext      = client;
 		this.mainBuddy          = buddy;
-		this.stateLock			= new Object();
-		this.proxyChatDialog    = client.getDialogFactory().createChatDialog(buddy);
 		this.readyMessageList   = new ArrayList<MessageEntry>();
+		this.proxyChatDialog    = this.fetionContext.getDialogFactory().findOrCreateChatDialog(buddy);
 		this.proxyChatDialog.setDialogListener(this);
 	}
 	
@@ -130,7 +122,7 @@ public class ChatDialogProxy implements DialogListener
     public void closeDialog()
     {
     	try {
-	        this.fetionContext.getDialogFactory().closeDialog(this.proxyChatDialog);
+	        this.proxyChatDialog.closeDialog();
         } catch (Exception e) {
         	logger.warn("Close Dialog Failed.",e);
         }
@@ -197,10 +189,10 @@ public class ChatDialogProxy implements DialogListener
 	{
 		//在判断对话框状态并且决定消息处理过程中，必须要进行同步，因为在判断的过程中对话框状态可能发生了改变
 		//比如在下面的判断中，对话框从正在打开状态变成了打开状态，而刚刚好判断过打开状态，导致了消息放入队列不会发送出去
-		//解决方法就是在判断消息的过程中需获取一把锁，在对话框改变状态的回调方法中也去获得一把锁，这样就可以保证一致
-		synchronized (stateLock) {
-			
-			//检查代理对话框状态,如果当前对话框为关闭或者打开失败状态，新建一个对话
+		//解决方法就是在判断消息的过程中需获取对话框的锁，在对话框改变状态的回调方法中也去获得对话框锁，这样就可以保证一致
+		
+		//检查代理对话框状态,如果当前对话框为关闭或者打开失败状态，新建一个对话
+		synchronized (this.proxyChatDialog) {
 			if( this.proxyChatDialog==null ||
 		    		this.proxyChatDialog.getState()==DialogState.CLOSED ||
 		    		this.proxyChatDialog.getState()==DialogState.FAILED) {
@@ -210,8 +202,15 @@ public class ChatDialogProxy implements DialogListener
 	                } catch (DialogException e) {
 	                	logger.warn("Create ChatDialog failed.", e);
 		               listener.fireEevent(new SystemErrorEvent(e));
+		               return;			//创建失败就需要马上返回，否则下面还会抛出一个 IllegalStateException异常
 	                }
 		    	}
+		}
+		
+		
+		//为什么这里要新建一个同步块呢？ 因为上面的代码可能更换了代理的对话，所以需要重新同步一次
+		synchronized (this.proxyChatDialog) {
+			
 			DialogState state = this.proxyChatDialog.getState();
 			
 			//如果当前对话框没有打开，异步打开这个对话框
@@ -270,8 +269,8 @@ public class ChatDialogProxy implements DialogListener
     @Override
     public void dialogStateChanged(DialogState state)
     {
-    	//同样，在改变对话框状态时，首先要获得一把锁，防止消息放入队列中而永远不会发送
-    	synchronized (stateLock) {
+    	//同样，在改变对话框状态时，首先要获得对话锁，防止消息放入队列中而永远不会发送
+    	synchronized (this.proxyChatDialog) {
     		switch(state) {
         		case OPENED: this.processReadyMessage(true);  break;
         		case FAILED: this.processReadyMessage(false); break;

@@ -54,7 +54,6 @@ public interface SSISign
 	 */
 	public LoginState signIn(User user, VerifyImage img);
 	
-
 	/**
 	 * SSI登出，这个方法可以忽略掉
 	 * @param user

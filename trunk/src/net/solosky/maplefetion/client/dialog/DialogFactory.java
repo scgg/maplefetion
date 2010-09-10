@@ -1,5 +1,5 @@
 /*
-s * Licensed to the Apache Software Foundation (ASF) under one or more
+ * Licensed to the Apache Software Foundation (ASF) under one or more
  * contributor license agreements.  See the NOTICE file distributed with
  * this work for additional information regarding copyright ownership.
  * The ASF licenses this file to You under the Apache License, Version 2.0
@@ -39,8 +39,6 @@ import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferFactory;
 import net.solosky.maplefetion.sipc.SipcNotify;
 
-import org.apache.log4j.Logger;
-
 /**
  * 
  * 对话工厂，建立三种类型的对话
@@ -74,10 +72,6 @@ public class DialogFactory
 	 */
 	private TimerTask idleDialogCheckTask;
 	
-	/**
-	 * LOGGER
-	 */
-	private static Logger logger = Logger.getLogger(DialogFactory.class);
 
 	/**
 	 * 默认构造函数
@@ -101,7 +95,7 @@ public class DialogFactory
 	 * @param user
 	 *            登录用户对象
 	 */
-	public ServerDialog createServerDialog()
+	public synchronized ServerDialog createServerDialog()
 	{
 		if(this.serverDialog==null) {
 			this.serverDialog = new ServerDialog(context);
@@ -121,8 +115,11 @@ public class DialogFactory
 	public synchronized ChatDialog createChatDialog(Buddy buddy)
 	        throws DialogException
 	{
-		if(buddy.getRelation()==Relation.BANNED) {
-			throw new DialogException("Buddy "+buddy+" was in blacklist, you couldn't send chat message to this buddy.");
+		Relation relation = buddy.getRelation();
+		if( relation==Relation.BANNED ||
+			relation==Relation.DECLINED ||
+			relation==Relation.UNCONFIRMED) {
+			throw new DialogException("Buddy relation is +"+buddy.getRelation()+", you couldn't send chat message to this buddy.");
 		}
 		ChatDialog dialog = this.findChatDialog(buddy);
 		if (dialog != null && dialog.getState()!=DialogState.CLOSED && dialog.getState()!=DialogState.FAILED)
@@ -132,8 +129,8 @@ public class DialogFactory
 		// 如果用户手机在线 或者电脑离线，将建立手机聊天对话框
 		if (presence == Presence.OFFLINE) {
 			dialog = new BasicChatDialog(this.context, buddy);
-		} else if (presence == Presence.ONLINE || presence == Presence.AWAY
-		        || presence == Presence.BUSY || presence == Presence.HIDEN) { // 如果用户电脑在线，建立在线聊天对话框
+		} else if (presence == Presence.ONLINE || presence == Presence.AWAY ||
+		            presence == Presence.BUSY   || presence == Presence.ROBOT ) { // 如果用户电脑在线，建立在线聊天对话框
 			TransferFactory factory = this.context.getTransferFactory();
 			if (factory.isMutiConnectionSupported()) {
 				dialog = new LiveV2ChatDialog(buddy, this.context);
@@ -206,6 +203,20 @@ public class DialogFactory
 		return null;
 	}
 	
+	/**
+	 * 查找对话，如果对话不存在，建立一个新的对话
+	 * @param buddy		对话的好友
+	 * @return			聊天对话
+	 * @throws DialogException
+	 */
+	public synchronized ChatDialog findOrCreateChatDialog(Buddy buddy) throws DialogException
+	{
+		ChatDialog dialog  = this.findChatDialog(buddy);
+		if(dialog==null)
+			dialog = this.createChatDialog(buddy);
+		
+		return dialog;
+	}
 	
 	/**
 	 * 返回一个聊天对话框，首先查找当前活动的聊天对话，如果找到并且没有关闭就返回这个对话
@@ -255,21 +266,17 @@ public class DialogFactory
 	{
 		return this.serverDialog;
 	}
-
+	
 	/**
-	 * 关闭聊天对话框
-	 * 
-	 * @throws DialogException
-	 * @throws TransferException
+	 * 移除对话,不会关闭对话
 	 */
-	public synchronized void closeDialog(Dialog dialog)
-	        throws TransferException, DialogException
+	public synchronized void removeDialog(Dialog dialog)
 	{
-		dialog.closeDialog();
 		if (dialog instanceof ChatDialog) {
 			this.chatDialogList.remove(dialog);
+		}else if(dialog instanceof GroupDialog){
+			this.groupDialogList.remove(dialog);
 		}
-		logger.debug("Dialog is closed by client."+dialog.toString());
 	}
 	
 	/**
@@ -279,16 +286,18 @@ public class DialogFactory
 	 */
 	public synchronized void closeAllDialog() throws TransferException, DialogException
 	{
-		Iterator<GroupDialog> git = this.groupDialogList.iterator();
+		ArrayList<GroupDialog> tmpGroupList = new ArrayList<GroupDialog>();
+		tmpGroupList.addAll(this.groupDialogList);
+		Iterator<GroupDialog> git = tmpGroupList.iterator();
 		while(git.hasNext()) {
 			git.next().closeDialog();
-			git.remove();
 		}
 		
-		Iterator<ChatDialog> cit = this.chatDialogList.iterator();
+		ArrayList<ChatDialog> tmpChatList   = new ArrayList<ChatDialog>(); 
+		tmpChatList.addAll(this.chatDialogList);
+		Iterator<ChatDialog> cit = tmpChatList.iterator();
 		while(cit.hasNext()) {
 			cit.next().closeDialog();
-			cit.remove();
 		}
 		
 		if(this.serverDialog!=null) {

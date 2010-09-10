@@ -434,4 +434,34 @@ public class SimpleFetionStore implements FetionStore
 		}
 		return null;
 	}
+
+	@Override
+	public void flushBuddy(Buddy buddy) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void flushCord(Cord cord) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void flushGroup(Group group) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void flushMemeber(Group group, Member member) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	@Override
+	public void flushStoreVersion(StoreVersion version) {
+		// TODO Auto-generated method stub
+		
+	}
 }

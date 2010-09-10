@@ -108,10 +108,10 @@ public class CrushBuilder
 	public void buildHeader()
 	{
 		buffer.append("=============================MapleFetion CrushReport=================================\r\n");
-		buffer.append("Thank you for working with MapleFetion!!! ");
-		buffer.append("ProjectHome : http://maplefetion.googlecode.com ");
-		buffer.append("Author      : solosky <solosky772@qq.com> ");
-		buffer.append("AuthorBlog  : http://www.solosky.net ");
+		buffer.append("Thank you for working with MapleFetion!!! \r\n");
+		buffer.append("ProjectHome : http://maplefetion.googlecode.com \r\n");
+		buffer.append("Author      : solosky <solosky772@qq.com> \r\n");
+		buffer.append("AuthorBlog  : http://www.solosky.net \r\n");
 		buffer.append("-------------------------------------------------------------------------------------\r\n");
 		buffer.append("\r\n");
 		buffer.append("Ops, if you saw this report, FetionClient was crushed by some exceptions. Sorry for that.\r\n");
@@ -273,17 +273,19 @@ public class CrushBuilder
 	 */
 	private static void dumpObjectArray(CrushBuilder cb, Object[] args)
 	{
-		for(Object o:args) {
-			if(o instanceof SipcMessage) {
-				cb.dumpSipcMessage((SipcMessage) o);
-			}else if(o instanceof Throwable) {
-				cb.dumpException((Throwable) o);
-			}else if(o instanceof String) {
-				cb.dumpString((String) o);
-			}else if(o.getClass().isArray()){
-				dumpObjectArray(cb, (Object[]) o);
-			}else{
-				cb.dumpObject(o);
+		if(args!=null){
+			for(Object o:args) {
+				if(o instanceof SipcMessage) {
+					cb.dumpSipcMessage((SipcMessage) o);
+				}else if(o instanceof Throwable) {
+					cb.dumpException((Throwable) o);
+				}else if(o instanceof String) {
+					cb.dumpString((String) o);
+				}else if(o.getClass().isArray()){
+					dumpObjectArray(cb, (Object[]) o);
+				}else if(o!=null){
+					cb.dumpObject(o);
+				}else{}
 			}
 		}
 	}

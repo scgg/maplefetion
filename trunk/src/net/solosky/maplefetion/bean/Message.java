@@ -25,10 +25,7 @@
  */
 package net.solosky.maplefetion.bean;
 
-import org.jdom.Element;
-
-import net.solosky.maplefetion.util.ParseException;
-import net.solosky.maplefetion.util.XMLHelper;
+import net.solosky.maplefetion.util.StringHelper;
 
 /**
  *
@@ -42,160 +39,93 @@ import net.solosky.maplefetion.util.XMLHelper;
 public class Message
 {
 	/**
-	 * 字体
+	 * 无格式文本
 	 */
-	private String font;
+	public static final String TYPE_PLAIN = "text/plain";
 	
 	/**
-	 * 颜色
+	 * HTML文本
 	 */
-	private int color;
-	
+	public static final String TYPE_HTML = "text/html-fragment";
 	/**
-	 * 大小
+	 * 消息类型
+	 *  plain 或者 html 
 	 */
-	private double size;
-	
+	private String type;
 	/**
 	 * 消息正文
 	 */
-	private String text;
+	private String content;
 	
 	/**
 	 * 默认构造函数
 	 */
 	public Message()
 	{
-		this("", "宋体", -16777216, 10.5);
+		this("",  Message.TYPE_HTML);
 	}
 	
-	/**
+	/** 
 	 * 以一个无格式的字符串构造消息
 	 */
-	public Message(String plain)
+	public Message(String content)
 	{
-		this(plain, "宋体", -16777216, 10.5);
+		this(content, Message.TYPE_HTML);
 	}
 	
 	
 	/**
 	 * 详细的构造函数
-	 * @param text
-	 * @param font
-	 * @param color
-	 * @param size
+	 * @param content 消息内容
+	 * @param type		消息类型常量，定义在Message中
 	 */
-	public Message(String text, String font, int color, double size)
+	public Message(String content, String type)
 	{
-		this.text = text;
-		this.font = font;
-		this.color = color;
-		this.size = size;
-	}
-	/**
-	 * 解析带有消息格式的字符串为消息对象
-	 * 如<Font Face='宋体' Color='-16777216' Size='10.5'>sadsads</Font>
-	 * @throws ParseException 
-	 */
-	public static Message parse(String msg) throws ParseException
-	{
-		Element root = XMLHelper.build(msg);
-		Message m = new Message();
-		if(root!=null) {
-			m.setFont( root.getAttributeValue("Face"));
-			m.setColor( Integer.parseInt(root.getAttributeValue("Color")));
-			m.setSize( Float.parseFloat(root.getAttributeValue("Size")));
-			m.setText( root.getText());
-		}
-		
-		return m;
+		this.content = content;
+		this.type    = type;
 	}
 
-	
-	/**
-	 * 包装普通的文本为消息对象
-	 * @param plain
-	 * @return
-	 */
-	public static Message wrap(String plain)
-	{
-		Message m = new Message();
-		m.setColor(-16777216);	//默认为黑色，具体是怎么定义的还得研究。。
-		m.setFont("宋体");		//默认为宋体
-		m.setSize(10.5);		//默认大小为10.5
-		m.setText(plain);		//消息文本
-		
-		return m;
-	}
-	/**
-     * @return the font
-     */
-    public String getFont()
-    {
-    	return font;
-    }
 
 	/**
-     * @param font the font to set
-     */
-    public void setFont(String font)
-    {
-    	this.font = font;
-    }
-
-	/**
-     * @return the color
-     */
-    public int getColor()
-    {
-    	return color;
-    }
-
-	/**
-     * @param color the color to set
-     */
-    public void setColor(int color)
-    {
-    	this.color = color;
-    }
-
-	/**
-     * @return the size
-     */
-    public double getSize()
-    {
-    	return size;
-    }
-
-	/**
-     * @param size the size to set
-     */
-    public void setSize(double size)
-    {
-    	this.size = size;
-    }
-
-	/**
+	 * 返回去掉文本格式的消息内容
      * @return the text
      */
     public String getText()
     {
-    	return text;
-    }
-
-	/**
-     * @param text the text to set
-     */
-    public void setText(String text)
-    {
-    	this.text = text;
+    	return type.equals(TYPE_HTML) ? StringHelper.stripHtmlSpecialChars(content) : content;
     }
     
     /**
+     * 返回消息的类型
+     * @return
+     */
+    public String getType() {
+		return type;
+	}
+
+    /**
+     * 返回消息的完整内容
+     * @return
+     */
+	public String getContent() {
+		return content;
+	}
+	
+	/**
      * ToString
      */
     public String toString()
     {
-    	return "<Font Face='"+font+"' Color='"+Integer.toString(color)+"' Size='"+Double.toString(size)+"'>"+text+"</Font>";
+    	return this.content;
+    }
+    
+    /**
+     * 使用默认的格式封装普通消息
+     * @param plain		普通文本消息
+     * @return
+     */
+    public static Message wrap(String plain)
+    {
+    	return new Message("<Font Face='宋体' Color='-16777216' Size='10'>"+plain+"</Font> ", Message.TYPE_HTML);
     }
 }

@@ -79,8 +79,8 @@ public class LiveV2MessageDispatcher extends AbstractMessageDispatcher
 			}else {
 				//TODO 
 			}
-			
-			
+		} else if(method.equals(SipcMethod.OPTION)){
+			clazz = "OptionNotifyHandler";
 		}else {
 			//TODO ..
 		}

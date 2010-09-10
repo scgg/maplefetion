@@ -81,6 +81,7 @@ public class RemoveBuddyFromBlackListResponseHandler extends AbstractResponseHan
         		Buddy buddy = store.getBuddyByUri(uri);
         		if(buddy!=null) {
         			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);	//之前是什么状态呢。。。 TODO ..先暂时设置为好友关系
+        			context.getFetionStore().flushBuddy(buddy);
         		}
         	}
     		

@@ -120,6 +120,50 @@ public class ScheduleSMS
 		return receiverList;
 	}
 
+	/**
+     * @return the receiverList
+     */
+    public Collection<Buddy> getReceiverList()
+    {
+    	return receiverList;
+    }
+
+
+	/**
+     * @param receiverList the receiverList to set
+     */
+    public void setReceiverList(Collection<Buddy> receiverList)
+    {
+    	this.receiverList = receiverList;
+    }
+
+
+	/**
+     * @param id the id to set
+     */
+    public void setId(int id)
+    {
+    	this.id = id;
+    }
+
+
+	/**
+     * @param sendDate the sendDate to set
+     */
+    public void setSendDate(Date sendDate)
+    {
+    	this.sendDate = sendDate;
+    }
+
+
+	/**
+     * @param message the message to set
+     */
+    public void setMessage(Message message)
+    {
+    	this.message = message;
+    }
+
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

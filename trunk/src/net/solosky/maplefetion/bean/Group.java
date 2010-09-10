@@ -124,9 +124,32 @@ public class Group
     {
     	this.bulletin = bulletin;
     }
-
     
-    public String toString()
+    /**
+     * @return the memberCount
+     */
+    public int getMemberCount()
+    {
+    	return memberCount;
+    }
+
+	/**
+     * @param memberCount the memberCount to set
+     */
+    public void setMemberCount(int memberCount)
+    {
+    	this.memberCount = memberCount;
+    }
+
+	/**
+     * @param uri the uri to set
+     */
+    public void setUri(String uri)
+    {
+    	this.uri = uri;
+    }
+
+	public String toString()
     {
     	return "[Group name="+this.name+", uri="+this.uri+", members="+this.memberCount+" ]";
     }

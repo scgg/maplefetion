@@ -17,64 +17,66 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.event
- * File     : NotifyEventType.java
+ * Package  : net.solosky.maplefetion.action.failure
+ * File     : RequestFailtureEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-5-11
+ * Created  : 2010-1-18
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.event;
+package net.solosky.maplefetion.event.action.failure;
+
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 
 /**
  *
- * 通知事件类型
+ *
+ * 请求失败事件，通常含有服务器返回的失败的原因
  *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public enum NotifyEventType {
+public class RequestFailureEvent extends FailureEvent{
+
 	/**
-	 * 登录状态发生变化
+	 * 请求失败的原因
 	 */
-	LOGIN_STATE,
+	private String reason;
 	
 	/**
-	 * 客户端状态发生变化
+	 * 原因详细信息的URL
 	 */
-	CLIENT_STATE,
-	
+	private String reffer;
 	/**
-	 * 好友消息
+	 * @param type
 	 */
-	BUDDY_MESSAGE,
-	
+	public RequestFailureEvent(FailureType type, String reason, String reffer) {
+		super(type);
+		this.reason = reason;
+		this.reffer = reffer;
+	}
 	/**
-	 * 群消息
+	 * @return the reason
 	 */
-	GROUP_MESSAGE,
-	
+	public String getReason() {
+		return reason;
+	}
 	/**
-	 * 系统消息
+	 * @return the reffer
 	 */
-	SYSTEM_MESSAGE,
+	public String getReffer() {
+		return reffer;
+	}
+	/* (non-Javadoc)
+	 * @see java.lang.Object#toString()
+	 */
+	@Override
+	public String toString() {
+		return "RequestFailureEvent [FailureType=" + getFailureType()
+				+ ", reason=" + reason + ", reffer=" + reffer + "]";
+	}
 	
-	/**
-	 * 添加好友请求
-	 */
-	BUDDY_APPLICAION,
 	
-	/**
-	 * 对方回复了添加好友的请求
-	 */
-	BUDDY_CONFIRMED,
 	
-	/**
-	 * 对方状态发生改变
-	 */
-	BUDDY_PRESENCE,	
-	
-	/**
-	 * 接收到了一个邀请
-	 */
-	INVITE_RECEIVED
 	
 }

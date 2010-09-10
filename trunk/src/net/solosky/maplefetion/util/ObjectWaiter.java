@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.util;
 
+import java.util.concurrent.TimeoutException;
+
 
 
 /**
@@ -179,8 +181,10 @@ public class ObjectWaiter<T>
 	{
 		if(this.exception!=null) {
 			throw this.exception;
-		}else {
+		}else if(this.target!=null) {
 			return this.target;
+		}else {
+			throw new TimeoutException();
 		}
 	}
 	

@@ -51,7 +51,7 @@ public class SipcBody
 	 */
 	public String toSendString()
 	{
-		return this.body;
+		return this.body!=null ? this.body : "" ;
 	}
 	
 	/**
@@ -60,6 +60,6 @@ public class SipcBody
 	 */
 	public int getLength()
 	{
-		return this.body.length();
+		return this.body!=null? this.body.length() : 0 ;
 	}
 }

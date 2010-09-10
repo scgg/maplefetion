@@ -175,13 +175,22 @@ public enum LoginState {
 	/**
 	 * SIPC服务器注册超时
 	 */
-	SIPC_TIMEOUT(604),
-	
+	SIPC_TIMEOUT(0x604),
 	
 	/**
-	 * 其他未知错误
+	 * SIPC服务器限制登录
 	 */
-	OHTER_ERROR(0x701),
+	SIPC_ACCOUNT_FORBIDDEN(0x605),
+	
+	/**
+	 * SIPC验证用户失败
+	 */
+	SIPC_AUTH_FAIL(0x606),
+	
+	/**
+	 * 其他未知错误 
+	 */
+	OTHER_ERROR(0x701),
 	
 	;
 	

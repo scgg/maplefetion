@@ -49,6 +49,7 @@ import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AgreeApplicationResponseHandler;
 import net.solosky.maplefetion.client.response.CreateCordResponseHandler;
 import net.solosky.maplefetion.client.response.CreateScheduleSMSResponseHandler;
+import net.solosky.maplefetion.client.response.DeclineApplicationResponseHandler;
 import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteCordResponseHandler;
@@ -139,21 +140,18 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	
 	/**
 	 * 关闭对话框
+	 * @throws Exception 
 	 */
     @Override
-    public void closeDialog()
+    protected void doCloseDialog() throws Exception
     {
     	//不需要发送任何离开消息，直接关闭对话框即可
     	this.keepAliveTask.cancel();
     	this.context.getFetionTimer().clearCanceledTask();
     	
     	//停止处理链
-    	try {
-    		if(!this.processorChain.isChainClosed())
-    			this.processorChain.stopProcessorChain();
-        } catch (FetionException e) {
-        	logger.warn("close ServerDialog failed.",e);
-        }
+		if(!this.processorChain.isChainClosed())
+			this.processorChain.stopProcessorChain();
     }
 
 	/**
@@ -161,44 +159,28 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @throws TransferException 
 	 */
     @Override
-    public void openDialog() throws DialogException, TransferException
+    protected void doOpenDialog() throws Exception
     {
-    	//检查对话状态，防止多次打开一个对话
-    	if(this.getState()==DialogState.CREATED) {
-			this.setState(DialogState.OPENNING);
-		}else {
-			return;
-		}
-    	
-    	try {
-        	//建立处理链
-        	this.buildProcessorChain();
-    		
-    		//注册定时任务
-        	this.keepAliveTask = new ServerKeepLiveTask();
-        	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
-    		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
-    		
-    		//设置对话框状态为打开状态
-    		this.setState(DialogState.OPENED);
-    		
-		} catch (FetionException fe) {
-			if(fe instanceof TransferException) {
-				throw (TransferException) fe;
-			}else {
-				throw new DialogException(fe);
-			}
-        }		
+    	//建立处理链
+    	this.buildProcessorChain();
 		
+		//注册定时任务
+    	this.keepAliveTask = new ServerKeepLiveTask();
+    	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
+		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
     }
+
     
-    
+    /**
+     * 建立处理链
+     * @throws FetionException
+     */
     public void buildProcessorChain() throws FetionException
     {
 		this.processorChain = new ProcessorChain();
 		this.processorChain.addLast(new ServerMessageDispatcher(context, this, this));						//消息分发服务
 		if(FetionConfig.getBoolean("log.sipc.enable"))
-			this.processorChain.addLast(new SipcLogger("ServerDialog-"+this.context.getFetionUser().getUserId()));									//日志记录
+			this.processorChain.addLast(new SipcLogger("ServerDialog-"+this.context.getFetionUser().getFetionId()));									//日志记录
 		this.processorChain.addLast(new TransferService(this.context));															//传输服务
 		this.processorChain.addLast(new SipcParser());															//信令解析器
 		this.processorChain.addLast(this.context.getTransferFactory().createDefaultTransfer());				//信令传输对象
@@ -539,7 +521,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		this.ensureOpened();
 		SipcRequest request = this.getMessageFactory().createDeclineApplicationRequest(buddy.getUri());
-		request.setResponseHandler(new DefaultResponseHandler(listener));
+		request.setResponseHandler(new DeclineApplicationResponseHandler(context, this, listener));
 		this.process(request);
 	}
 	

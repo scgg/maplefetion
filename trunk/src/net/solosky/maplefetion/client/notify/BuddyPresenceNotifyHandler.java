@@ -38,6 +38,7 @@ import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.event.notify.BuddyPresenceEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -71,7 +72,7 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
     	    //查找这个好友
     	    Buddy tmpBuddy = context.getFetionStore().getBuddyByUri(uri);
     	    //这里可能是用户自己
-    	    if(tmpBuddy==null && context.getFetionUser().getUri().equals(uri)) {
+    	    if(tmpBuddy==null && context.getFetionUser().getFetionId()==UriHelper.parseFetionId(uri)) {
     	    	tmpBuddy = context.getFetionUser();			
     	    }    	    
     	    
@@ -91,10 +92,11 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
             	    BeanHelper.toBean(Presence.class, buddy.getPresence(), basic);
             	    if(oldpresense!=curpresense) {
             	    	//注意，如果好友上线了，并且当前打开了手机聊天对话框，需要关闭这个手机聊天对话框
-            	    	if(curpresense == Presence.AWAY || curpresense==Presence.BUSY || curpresense==Presence.ONLINE ) {
+            	    	if(curpresense == Presence.AWAY   || curpresense == Presence.BUSY ||
+            	    	   curpresense == Presence.ONLINE || curpresense == Presence.ROBOT ) {
             	    		ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(buddy);
             	    		if(chatDialog!=null && chatDialog instanceof BasicChatDialog) {
-            	    			this.context.getDialogFactory().closeDialog(chatDialog);
+            	    			chatDialog.closeDialog();
             	    		}
             	    	}
             	    	
@@ -109,11 +111,12 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
         	    		Element extend = (Element) eit.next();
         	    		String type = extend.getAttributeValue("type");
         	    		if(type.equals("sms")) {
-        	    			buddy.getSMSPolicy().parse(extend.getText());
+								buddy.getSMSPolicy().parse(extend.getText());
         	    		}
         	    	}
         	    }
         	    
+        	    context.getFetionStore().flushBuddy(buddy);
         	    logger.debug("PresenceChanged:"+buddy.toString()+" - "+buddy.getPresence());
         	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
     	    }else if(tmpBuddy!=null && tmpBuddy instanceof MobileBuddy ) {	

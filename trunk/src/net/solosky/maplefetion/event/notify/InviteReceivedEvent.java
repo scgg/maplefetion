@@ -18,108 +18,54 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.event.notify
- * File     : BuddyMessageEvent.java
+ * File     : InviteReceivedEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-6-3
+ * Created  : InviteReceivedEvent.java
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.event.notify;
 
-import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.event.NotifyEvent;
 import net.solosky.maplefetion.event.NotifyEventType;
 
 /**
- *
- * 好友消息事件
- *
+ * 
+ * 接收到一个邀请事件
+ * 
  * @author solosky <solosky772@qq.com>
  *
- */ 
-public class BuddyMessageEvent extends NotifyEvent
+ */
+public class InviteReceivedEvent extends NotifyEvent
 {
 
-	/**
-	 * 来自好友
-	 */
-	private Buddy buddy;
-	
-	/**
-	 * 好友对话代理
-	 */
 	private ChatDialogProxy dialogProxy;
 	
 	/**
-	 * 消息对象
-	 */
-	private Message message;
-	
-	/**
-	 * @param buddy
 	 * @param dialogProxy
-	 * @param message
 	 */
-	public BuddyMessageEvent(Buddy buddy,
-			ChatDialogProxy dialogProxy, Message message)
-	{
-		this.buddy = buddy;
+	public InviteReceivedEvent(ChatDialogProxy dialogProxy) {
+		super();
 		this.dialogProxy = dialogProxy;
-		this.message = message;
 	}
-
 
 
 	/* (non-Javadoc)
 	 * @see net.solosky.maplefetion.event.NotifyEvent#getEventType()
 	 */
 	@Override
-	public NotifyEventType getEventType()
-	{
-		return NotifyEventType.BUDDY_MESSAGE;
-	}
-
-
-
-	/**
-	 * @return the buddy
-	 */
-	public Buddy getBuddy()
-	{
-		return buddy;
+	public NotifyEventType getEventType() {
+		return NotifyEventType.INVITE_RECEIVED;
 	}
 
 
 	/**
 	 * @return the dialogProxy
 	 */
-	public ChatDialogProxy getDialogProxy()
-	{
+	public ChatDialogProxy getChatDialogProxy() {
 		return dialogProxy;
 	}
-
-
-
-	/**
-	 * @return the message
-	 */
-	public Message getMessage()
-	{
-		return message;
-	}
-
-
-
-	/* (non-Javadoc)
-	 * @see java.lang.Object#toString()
-	 */
-	@Override
-	public String toString()
-	{
-		return "BuddyMessageEvent [buddy=" + buddy + ", dialogProxy="
-				+ dialogProxy + ", message=" + message + ", EventType="
-				+ getEventType() + "]";
-	}
+	
+	
 
 }

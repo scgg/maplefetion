@@ -27,11 +27,10 @@ package net.solosky.maplefetion.net;
 
 import java.net.UnknownHostException;
 
-import org.apache.log4j.Logger;
-
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
-import net.solosky.maplefetion.net.tcp.TcpTransfer;
+
+import org.apache.log4j.Logger;
 
 /**
  *

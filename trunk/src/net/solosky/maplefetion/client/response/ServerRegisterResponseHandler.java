@@ -30,6 +30,8 @@ import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 
@@ -69,9 +71,4 @@ public class ServerRegisterResponseHandler extends AbstractResponseHandler
 		return new SuccessEvent();
 		
 	}
-    
-	
-	
-    
-
 }

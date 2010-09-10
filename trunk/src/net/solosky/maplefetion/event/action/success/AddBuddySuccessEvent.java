@@ -17,47 +17,51 @@
 
  /**
  * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.bean
- * File     : MobileBuddy.java
+ * Package  : net.solosky.maplefetion.event.action.success
+ * File     : AddBuddySuccessEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-2-5
+ * Created  : 2010-6-3
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.bean;
+package net.solosky.maplefetion.event.action.success;
+
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.event.action.SuccessEvent;
 
 /**
- *
- * 手机好友，是指没有开通飞信的用户
- *
- * @author solosky <solosky772@qq.com>
- */
-public class MobileBuddy extends Buddy
-{
+*
+* 添加好友成功，返回这个好友对象
+*
+* @author solosky <solosky772@qq.com>
+*
+*/
+public class AddBuddySuccessEvent extends SuccessEvent {
 
-    @Override
-    public String getDisplayName()
-    {
-    	if(getLocalName()!=null && getLocalName().length()>0)
-    		return getLocalName();
-    	if(getFetionId()>0)
-    		return Integer.toString(getFetionId());
-    	if(getMobile()!=0)
-    		return Long.toString(getMobile());
-    	return null;
-    }
-
+	/**
+	 * 找到的好友对象
+	 */
+	private Buddy addBuddy;
+	/**
+	 * @param response
+	 */
+	public AddBuddySuccessEvent(Buddy buddy)
+	{
+		this.addBuddy = buddy;
+	}
+	/**
+	 * @return the foundBuddy
+	 */
+	public Buddy getAddBuddy()
+	{
+		return addBuddy;
+	}
 	/* (non-Javadoc)
-	 * @see net.solosky.maplefetion.bean.Person#getDisplayPresence()
+	 * @see java.lang.Object#toString()
 	 */
 	@Override
-	public String getDisplayPresence() {
-		if(this.getRelation()!=Relation.BUDDY){
-			return "离线";
-		}else{
-			return "短信在线";
-		}
+	public String toString()
+	{
+		return "FindBuddySuccessEvent [foundBuddy=" + addBuddy
+				+ ", EventType=" + getEventType() + "]";
 	}
-    
-    
-
 }

@@ -33,7 +33,6 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
@@ -47,7 +46,6 @@ import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
-import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.UriHelper;
 
 /**
@@ -91,27 +89,12 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
         FetionStore store = this.context.getFetionStore();
 	    Buddy from   = store.getBuddyByUri(notify.getFrom());
 	    String body  = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
-	    Message msg  = null;
-	    SipcHeader contentHeader = notify.getHeader(SipcHeader.CONTENT_TYPE);
-	    if(contentHeader!=null && "text/plain".equals(contentHeader.getValue())) {
-	    	msg = Message.wrap(body);
-	    }else {
-	    	try {
-	            msg = Message.parse(body);
-            } catch (ParseException e) {
-            	msg = Message.wrap(body);
-            }
-	    }
+	    Message msg  = this.parseMessage(notify);
 	    
 	    //如果好友没有找到，可能是陌生人发送的信息，
 	    if(from==null) {
 	    	//这里新建一个好友对象，并设置关系为陌生人
-	    	if(UriHelper.isMobile(notify.getFrom()))
-	    		from = new MobileBuddy();
-	    	else
-	    		from = new FetionBuddy();
-	    	
-	    	from.setUri(notify.getFrom());
+	    	from = UriHelper.createBuddy(notify.getFrom());
 	    	BeanHelper.setValue(from, "relation", Relation.STRANGER);
 	    	//添加至列表中
 	    	this.context.getFetionStore().addBuddy(from);
@@ -124,12 +107,14 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    	}
 	    }
 	   
-	    //通知消息监听器
+	    //查找这个好友的聊天代理对话
 	    ChatDialogProxy chatDialogProxy = this.context.getChatDialogProxyFactoy().create(from);
+	    
+	    //通知消息监听器
 	    if(chatDialogProxy!=null && this.context.getNotifyEventListener()!=null) {
 	    	this.tryFireNotifyEvent(new BuddyMessageEvent(from, chatDialogProxy, msg));
-	    	
 	    }
+	    
 	    logger.debug("RecivedMessage:[from="+notify.getFrom()+", message="+body+"]");
     }
     
@@ -140,6 +125,32 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
     {
     	logger.debug("Recived a system message:"+notify.getBody().toSendString());
     	this.tryFireNotifyEvent(new SystemMessageEvent(notify.getBody().toSendString()));
+    }
+    
+    /**
+     * 从一个消息通知中解析出消息
+     * @param notify
+     * @return
+     */
+    private Message parseMessage(SipcNotify notify)
+    {
+    	 String body  = notify.getBody()!=null?notify.getBody().toSendString():"";	//防止产生NULL错误
+ 	    Message msg  = null;
+ 	    SipcHeader contentHeader = notify.getHeader(SipcHeader.CONTENT_TYPE);
+ 	    if(contentHeader!=null) {
+ 	    	String value = contentHeader.getValue();
+ 	    	if(Message.TYPE_PLAIN.equals(value)){
+ 	    		msg = new Message(body, Message.TYPE_PLAIN);
+ 	    	}else if(Message.TYPE_HTML.equals(value)){
+ 	    		msg = new Message(body, Message.TYPE_HTML);
+ 	    	}else{
+ 	    		msg = new Message(body, Message.TYPE_PLAIN);
+ 	    	}
+ 	    }else {
+ 	    	msg = new Message(body, Message.TYPE_PLAIN);	//默认为普通文本
+ 	    }
+ 	    
+ 	    return msg;
     }
     
     /**
@@ -159,7 +170,7 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    GroupDialog groupDialog = this.context.getDialogFactory().findGroupDialog(group);
 	    
 	    if(group!=null && member!=null && groupDialog!=null&&this.context.getNotifyEventListener()!=null) {
-	    	this.tryFireNotifyEvent(new GroupMessageEvent(group, member, Message.parse(body), groupDialog));
+	    	this.tryFireNotifyEvent(new GroupMessageEvent(group, member, this.parseMessage(notify), groupDialog));
 	    	
 	    	logger.debug("Received a group message:[ Group="+group.getName()+", from="+member.getDisplayName()+", msg="+body );
 	    }

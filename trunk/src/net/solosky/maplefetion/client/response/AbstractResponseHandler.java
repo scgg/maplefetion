@@ -38,11 +38,15 @@ import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.event.action.TimeoutEvent;
 import net.solosky.maplefetion.event.action.TransferErrorEvent;
+import net.solosky.maplefetion.event.action.failure.RequestFailureEvent;
+import net.solosky.maplefetion.event.action.failure.SipcFailureEvent;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.sipc.SipcStatus;
+import net.solosky.maplefetion.util.XMLHelper;
 
 import org.apache.log4j.Logger;
+import org.jdom.Element;
 
 /**
  * 所有回复处理器的基类
@@ -130,8 +134,14 @@ public abstract class AbstractResponseHandler implements ResponseHandler
      */
     private void fireEvent(ActionEvent event)
     {
-    	if(this.listener!=null)
-    		this.listener.fireEevent(event);
+    	//用户设置的回调函数调用时可能会出现异常，这里捕获掉所有的异常并记录，防止异常传递到处理链而引起客户端退出
+    	if(this.listener!=null){
+	    	try {
+					this.listener.fireEevent(event);
+			} catch (Throwable e) {		
+				logger.warn("FireActionEvent error.", e );
+			}
+    }
     }
     /**
      * 处理这个回复，根据不同的状态回调不同的方法，子类可以重载这个
@@ -142,23 +152,26 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     protected ActionEvent doHandle(SipcResponse response) throws FetionException
     {
     	switch(response.getStatusCode()){
-    		case SipcStatus.TRYING:			 return this.doTrying(response);
-    		case SipcStatus.ACTION_OK:       return this.doActionOK(response);
-    		case SipcStatus.SEND_SMS_OK:     return this.doSendSMSOK(response);
-    		case SipcStatus.NOT_AUTHORIZED:  return this.doNotAuthorized(response);
-    		case SipcStatus.NOT_FOUND:       return this.doNotFound(response);
-    		case SipcStatus.TA_EXIST:        return this.doTaExsit(response);
-    		case SipcStatus.NO_SUBSCRIPTION: return this.doNoSubscription(response);
-    		case SipcStatus.TIME_OUT:        return this.doTimeout(response);
-    		case SipcStatus.BUSY_HERE:       return this.doBusyHere(response);
-    		case SipcStatus.FORBIDDEN:       return this.doForbidden(response);
+    		case SipcStatus.TRYING:			    return this.doTrying(response);
+    		case SipcStatus.ACTION_OK:          return this.doActionOK(response);
+    		case SipcStatus.SEND_SMS_OK:        return this.doSendSMSOK(response);
+    		case SipcStatus.NOT_AUTHORIZED:     return this.doNotAuthorized(response);
+    		case SipcStatus.NOT_FOUND:          return this.doNotFound(response);
+    		case SipcStatus.TA_EXIST:           return this.doTaExsit(response);
+    		case SipcStatus.NO_SUBSCRIPTION:    return this.doNoSubscription(response);
+    		case SipcStatus.TIME_OUT:           return this.doTimeout(response);
+    		case SipcStatus.BUSY_HERE:          return this.doBusyHere(response);
+    		case SipcStatus.FORBIDDEN:          return this.doForbidden(response);
+    		case SipcStatus.REQUEST_FAILURE:    return this.doRequestFailure(response);
+    		case SipcStatus.SERVER_UNAVAILABLE: return this.doServerUnavaliable(response);
+    		
     		default:	
 				logger.warn("Unhandled sipc response status, default make action fail. status="
 						+response.getStatusCode()+", response="+response);
-				return new FailureEvent(FailureType.SIPC_FAIL);
+				return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     	}
     }
-    
+
 	//100
     protected ActionEvent doTrying(SipcResponse response) throws FetionException {
     	return new SuccessEvent();
@@ -176,36 +189,58 @@ public abstract class AbstractResponseHandler implements ResponseHandler
     
     //401
     protected ActionEvent doNotAuthorized(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     }
     
     //403
     protected ActionEvent doForbidden(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     }
     
     //404
     protected ActionEvent doNotFound(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     }
     
     //486
     protected ActionEvent doBusyHere(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
+	}
+    
+    //494
+	protected ActionEvent doRequestFailure(SipcResponse response) throws FetionException {
+		if(response.getBody()!=null){
+			Element root = XMLHelper.build(response.getBody().toSendString());
+			Element reason = root.getChild("reason");
+			if(reason!=null){
+				return new RequestFailureEvent(FailureType.REQEUST_FAIL,
+						reason.getAttributeValue("text"),
+						reason.getAttributeValue("refer-url"));
+			}else{
+				return new RequestFailureEvent(FailureType.REQEUST_FAIL, null, null);
+			}
+		}else{
+			return new RequestFailureEvent(FailureType.REQEUST_FAIL, null, null);
+		}
 	}
     
     //521
     protected ActionEvent doTaExsit(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     }
     
     //522
     protected ActionEvent doNoSubscription(SipcResponse response) throws FetionException{
-    	return new FailureEvent(FailureType.SIPC_FAIL);
+    	return new SipcFailureEvent(FailureType.SIPC_FAIL, response);
     }
     
     //504
     protected ActionEvent doTimeout(SipcResponse response) throws FetionException{
     	return new TimeoutEvent();
     }
+    
+    //503
+	private ActionEvent doServerUnavaliable(SipcResponse response) {
+		return new FailureEvent(FailureType.SERVER_BUSY);
+	}
 }

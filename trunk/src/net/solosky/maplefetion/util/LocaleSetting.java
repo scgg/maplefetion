@@ -96,7 +96,7 @@ public class LocaleSetting
         HttpURLConnection conn = (HttpURLConnection) url.openConnection();
         conn.setRequestMethod("POST");
         conn.setDoOutput(true);
-        conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");
+        conn.addRequestProperty("User-Agent", "IIC2.0/PC "+FetionClient.PROTOCOL_VERSION);
         
         String accountType = null;
         if(user.getMobile()>0){

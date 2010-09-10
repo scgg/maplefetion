@@ -60,6 +60,7 @@ import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.failure.RequestFailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
@@ -133,8 +134,8 @@ public class MapleFetion extends NotifyEventAdapter
 	
 	public void login(int presence)
 	{
-		this.client.enableGroup(true);
-		this.client.login(presence, null);
+		//this.client.enableGroup(true);
+		this.client.login(presence, null, true);
 	}
 	
 	
@@ -220,7 +221,7 @@ public class MapleFetion extends NotifyEventAdapter
     	        	if(img!=null) {
     	        		saveImage(img.getImageData());
     	        		img.setVerifyCode(readLine());
-    	        		client.login(Presence.ONLINE, img);
+    	        		client.login(Presence.ONLINE, img, true);
     	        	}else {
     	        		println("刷新验证图片失败···");
     	        	}
@@ -361,7 +362,7 @@ public class MapleFetion extends NotifyEventAdapter
 					impresa = "";
 				}
 				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
-						+fomartPresence(buddy)
+						+buddy.getDisplayPresence()
 						+"\t"+impresa);
 				startId++;
 			}
@@ -740,12 +741,12 @@ public class MapleFetion extends NotifyEventAdapter
 	    public void add(String mobile)
 	    {
 	    	client.addBuddy(mobile, new ActionEventListener() {
-                public void fireEevent(ActionEvent event)
+	    	public void fireEevent(ActionEvent event)
  				{
  					if(event.getEventType()==ActionEventType.SUCCESS){
  						println("发出添加好友请求成功！请耐性地等待用户回复。");
  					}else{
- 						println("发出添加好友请求失败！");
+ 						println("发出添加好友请求失败！"+event.toString());
  					}
  				}
 	    		
@@ -870,8 +871,30 @@ public class MapleFetion extends NotifyEventAdapter
 						}else if(evt.isSendToClient()){
 							println("发送成功，消息已通过服务直接发送到对方客户端！");
 						}
+ 					}else if(event.getEventType()==ActionEventType.FAILURE){
+ 						FailureEvent evt2 = (FailureEvent) event;
+						switch(evt2.getFailureType()){
+							case BUDDY_NOT_FOUND:
+								System.out.println("发送失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+								break;
+							case USER_NOT_FOUND:
+								System.out.println("发送失败, 该用户不是移动用户。");
+								break;
+							case SIPC_FAIL:
+								System.out.println("发送失败, 服务器返回了错误的信息。");
+								break;
+							case UNKNOWN_FAIL:
+								System.out.println("发送失败, 不知道错在哪里。");
+								
+							case REQEUST_FAIL:
+								RequestFailureEvent evt3 = (RequestFailureEvent) event; 
+								System.out.println("提示:"+evt3.getReason()+", 更多信息请访问:"+evt3.getReffer());
+						
+							default:
+								println("发送消息失败！"+event.toString());
+						}
  					}else{
- 						println("发送消息失败！");
+ 						println("发送消息失败！"+event.toString());
  					}
  				}
 			});
@@ -1262,14 +1285,15 @@ public class MapleFetion extends NotifyEventAdapter
      * @see net.solosky.maplefetion.NotifyListener#buddyMessageRecived(net.solosky.maplefetion.bean.Buddy, java.lang.String, net.solosky.maplefetion.client.dialog.ChatDialog)
      */
     @Override
-    public void buddyMessageRecived(Buddy from, Message message,
-            ChatDialogProxy dialog)
+    public void buddyMessageRecived(Buddy from, Message message, ChatDialogProxy dialog)
     {
     	if(from.getRelation()==Relation.BUDDY)
     		println("[好友消息]"+from.getDisplayName()+" 说:"+message.getText());
     	else 
     		println("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());
     	prompt();
+    	//dialog.sendSMSMessage(new Message(message.getText(), Message.TYPE_PLAIN));
+    	dialog.sendChatMessage(new Message(message.getText(), Message.TYPE_PLAIN));
 	    
     }
 
@@ -1313,17 +1337,17 @@ public class MapleFetion extends NotifyEventAdapter
         case OTHER_LOGIN:
         	println("你已经从其他客户端登录。");
         	println("30秒之后重新登录..");
-        	//新建一个线程等待登录，不能在这个回调函数里做同步操作
-        	new Thread(new Runnable() {
-        		public void run() {
-        			try {
-	                    Thread.sleep(30000);
-                    } catch (InterruptedException e) {
-                    	System.out.println("重新登录等待过程被中断");
-                    }
-                    client.login();
-        		}
-        	}).start();
+//        	//新建一个线程等待登录，不能在这个回调函数里做同步操作
+//        	new Thread(new Runnable() {
+//        		public void run() {
+//        			try {
+//	                    Thread.sleep(30000);
+//                    } catch (InterruptedException e) {
+//                    	System.out.println("重新登录等待过程被中断");
+//                    }
+//                    client.login();
+//        		}
+//        	}).start();
 	        break;
         case CONNECTION_ERROR:
         	println("客户端连接异常");
@@ -1342,4 +1366,12 @@ public class MapleFetion extends NotifyEventAdapter
 	        break;
         }
     }
+
+
+	@Override
+	protected void inviteReceived(ChatDialogProxy dialog) {
+		dialog.sendChatMessage(new Message("you dbClicked me!!"));
+	}
+    
+    
 }

@@ -124,6 +124,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     					}
     				}
     			}
+    			context.getFetionStore().flushBuddy(buddy);
     		}else {
     			//这里是判断失败，说明结果有误，忽略掉，也不记录到日志
     		}
@@ -188,6 +189,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
 
         		//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
     			BeanHelper.setValue(buddy, "relation", relation);
+    			context.getFetionStore().flushBuddy(buddy);
 			}
     	}
     }
@@ -226,6 +228,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		        			    	BeanHelper.toBean(FetionBuddy.class, buddy, p);
     		        			    }
     		    				}
+    		    				context.getFetionStore().flushBuddy(buddy);
     		    				
     		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
     		    				tryFireNotifyEvent(new BuddyConfirmedEvent(buddy, true));			//通知监听器
@@ -264,6 +267,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
     			BeanHelper.setValue(buddy, "relation", relation);
+    			
+    			context.getFetionStore().flushBuddy(buddy);
     		}
     	}
     }

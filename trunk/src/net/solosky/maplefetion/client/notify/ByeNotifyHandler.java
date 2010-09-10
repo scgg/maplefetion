@@ -50,7 +50,7 @@ public class ByeNotifyHandler extends AbstractNotifyHandler
     	if(buddy!=null) {
     		ChatDialog dialog = this.context.getDialogFactory().findChatDialog(buddy);
     		if(dialog!=null && dialog.getState()!=DialogState.CLOSED) {
-    			this.context.getDialogFactory().closeDialog(dialog);
+    			dialog.closeDialog();
     		}
     	}
     }

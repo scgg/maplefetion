@@ -26,10 +26,14 @@
 package net.solosky.maplefetion.util;
 
 import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.client.dialog.DialogException;
 
 /**
  *
  *  等待好友进入对话框
+ *  
+ *  这个工具目前只能实现等待一个好友进入对话，如果同时邀请了多个好友进入对话这个工具就会判断错误
+ *  TODO 完善对同时邀请多个好友进入对话的等待操作
  *
  * @author solosky <solosky772@qq.com>
  */
@@ -57,15 +61,21 @@ public class BuddyEnterHelper
 	 * 等待好友进入对话框
 	 * @param buddy
 	 * @throws InterruptedException 
+	 * @throws InterruptedException 
 	 */
-	public void waitBuddyEnter(Buddy buddy) throws InterruptedException
+	public void waitBuddyEnter(Buddy buddy, long timeout) throws DialogException, InterruptedException
 	{
 		synchronized (lock) {
-        	while(this.curBuddy==null || !this.curBuddy.getUri().equals(buddy.getUri())) {
-        		lock.wait();
-        	}
-        	return;
-        }
+			//检查是否提前通知
+			if(this.curBuddy!=null && this.curBuddy.getUri().equals(buddy.getUri()))
+				return;
+			
+			lock.wait(timeout);
+			
+			//如果等待失败，抛出异常
+			if(this.curBuddy==null || !this.curBuddy.getUri().equals(buddy.getUri()))
+				throw new DialogException("Buddy enter dialog failed. Buddy="+buddy);
+		}
 	}
 	
 	

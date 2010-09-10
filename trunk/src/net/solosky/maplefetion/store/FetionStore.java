@@ -140,15 +140,46 @@ public interface FetionStore
     public void init(User user);
     
     /**
-     * 把信息强制刷新
+     * 强制更新所有信息
      */
     public void flush();
-    
+
     /**
      * 清除所有的信息
      */
     public void clear();
     
+    /**
+     * 更新好友对象
+     * @param buddy
+     */
+    public void flushBuddy(Buddy buddy);
+    
+    /**
+     * 更新分组对象
+     * @param cord
+     */
+    public void flushCord(Cord cord);
+    
+    /**
+     * 更新群信息
+     * @param group
+     */
+    public void flushGroup(Group group);
+    
+    /**
+     * 更新群中成员信息
+     * @param group
+     * @param member
+     */
+    public void flushMemeber(Group group, Member member);
+    
+    
+    /**
+     * 更新存储信息
+     * @param version
+     */
+    public void flushStoreVersion(StoreVersion version);
     
     /**
      * 返回所有的群列表

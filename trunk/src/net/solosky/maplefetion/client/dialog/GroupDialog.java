@@ -84,50 +84,30 @@ public class GroupDialog extends Dialog
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
+     * @see net.solosky.maplefetion.client.dialog.Dialog#doCloseDialog()
      */
     @Override
-    public void closeDialog()
+    protected void doCloseDialog() throws Exception
     {
-    	try {
-    		if(this.context.getState()==ClientState.ONLINE) {
-    			this.bye();
-    		}
-        } catch (Exception e) {
-        	Logger.getLogger(GroupDialog.class).warn("closeGroupDialog failed.",e);
-        }
+		if(this.context.getState()==ClientState.ONLINE) {
+			this.bye();
+		}
         this.keepLiveTask.cancel();
     	this.context.getFetionTimer().clearCanceledTask();
     }
     
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
+     * @see net.solosky.maplefetion.client.dialog.Dialog#doOpenDialog()
      */
     @Override
-    public void openDialog() throws TransferException, DialogException, RequestTimeoutException
+    protected void doOpenDialog() throws Exception
     {
-    	
-    	if(this.getState()!=DialogState.CREATED) {
-    		return;
-    	}
-    	
-    	try {
-    		this.setState(DialogState.OPENNING);
-    		this.invite();
-    		this.ack();
-    		this.setPresence();
-    		this.subscribeNotify();
-    		this.context.getFetionTimer().scheduleTask(this.keepLiveTask, 0, 3*60*1000);
-    		this.setState(DialogState.OPENED);
-        }catch (TransferException te) {        	//传输异常，直接抛出
-        	throw te;
-        }catch (DialogException de) {			//对话框异常，直接抛出
-			throw de;
-		}catch (RequestTimeoutException re) {	//请求超时
-			throw re;
-		}catch (InterruptedException ie) {		//等待被中断
-			throw new DialogException("Wait response interrupted.");
-        }		
+		this.invite();
+		this.ack();
+		this.setPresence();
+		this.subscribeNotify();
+		this.context.getFetionTimer().scheduleTask(this.keepLiveTask, 0, 3*60*1000);
+    		
     }
 
 	/* (non-Javadoc)

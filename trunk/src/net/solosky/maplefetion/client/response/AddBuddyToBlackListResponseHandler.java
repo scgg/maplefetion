@@ -81,6 +81,7 @@ public class AddBuddyToBlackListResponseHandler extends AbstractResponseHandler
         		Buddy buddy = store.getBuddyByUri(uri);
         		if(buddy!=null) {
         			BeanHelper.setValue(buddy, "relation", Relation.BANNED);
+        			context.getFetionStore().flushBuddy(buddy);
         		}
         	}
     		

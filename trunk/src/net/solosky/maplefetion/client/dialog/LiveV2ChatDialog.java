@@ -248,6 +248,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     {
 	    return false;
     }
+    
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionEventListener)
@@ -263,38 +264,24 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
+     * @see net.solosky.maplefetion.client.dialog.Dialog#doCloseDialog()
      */
     @Override
-    public void closeDialog()
+    protected void doCloseDialog() throws Exception
     {
-    	try {
-    		//TODO NOTE:如果发生了传输异常这里就不应该发送离开消息，否则会抛出第二个TransferException
-        	if(this.processorChain!=null && !this.processorChain.isChainClosed()) {
-        		this.bye();
-        		this.processorChain.stopProcessorChain();
-        	}
-        } catch (FetionException e) {
-        	logger.warn("closeLiveV2ChatDialog failed.", e);
-        }
-        this.setState(DialogState.CLOSED);
+		//TODO NOTE:如果发生了传输异常这里就不应该发送离开消息，否则会抛出第二个TransferException
+    	if(this.processorChain!=null && !this.processorChain.isChainClosed()) {
+    		this.bye();
+    		this.processorChain.stopProcessorChain();
+    	}
     }
 
 	/**
 	 * 打开第二版聊天对话框，这个比较麻烦
 	 */
     @Override
-    public void openDialog() throws TransferException, DialogException, RequestTimeoutException
+    protected void doOpenDialog() throws Exception
     {
-    	//检查对话状态，防止多次打开一个对话
-    	if(this.getState()==DialogState.CREATED) {
-			this.setState(DialogState.OPENNING);
-		}else {
-			return;
-		}
-    	
-    	try {
-    		this.setState(DialogState.OPENNING);
     		//首先要获取进入聊天服务器的凭证
     		String ticket = null;
     		if(this.isBeenInvited()) {
@@ -317,28 +304,11 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     		//如果是主动邀请,邀请好友进入对话框
     		if(!this.isBeenInvited())
     			this.invite();
+    		
     		//等待好友进入对话框
-    		this.buddyEnterHelper.waitBuddyEnter(this.mainBuddy);
-    		
-    		//对话框建立成功
-    		this.setState(DialogState.OPENED);
-    		
-        }catch (TransferException te) {        	//传输异常，直接抛出
-        	this.setState(DialogState.FAILED);
-        	throw te;
-        }catch (DialogException de) {			//对话框异常，直接抛出
-        	this.setState(DialogState.FAILED);
-			throw de;
-		}catch (RequestTimeoutException re) {	//请求超时
-			this.setState(DialogState.FAILED);
-			throw re;
-		}catch (InterruptedException ie) {		//等待被中断
-			this.setState(DialogState.FAILED);
-			throw new DialogException("Wait response interrupted.");
-		} catch (FetionException fe) {			//其他异常，也抛出
-			this.setState(DialogState.FAILED);
-	        throw new DialogException(fe);		
-        }
+    		int waitTimeout = FetionConfig.getInteger("fetion.dialog.wait-buddy-enter-timeout");
+    		this.buddyEnterHelper.waitBuddyEnter(this.mainBuddy, waitTimeout*1000);
+ 
     }
     
     
@@ -410,32 +380,22 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	 * 异常回调函数
 	 * 注意：这里的异常不是在调用者调用方法的时候发生的，而是在传输对象读取一个接受消息时产生的异常，是由客户端内部产生的
 	 * 比如读取数据时产生传输异常，或者处理异步通知的时发生的异常均由这个方法处理，如果调用者调用某个方法，一般只发生传输异常
-	 * 
-	 * 如：
-	 *	//首先要创建对话框
-	 * try{
-	 * 		Buddy buddy = client.getFetionStore().getBuddyByUri(uri);
-	 *  	ChatDialog dialog = client.getDialogFactory().createChatDialog(buddy);
-	 *      dialog.openDialog();
-	 *   	dialog.sendChatMessage(msg, ActionEventListener);
-	 *   	//其他操作
-	 *   }catch(TransferException e){
-	 *   	//发生了传输异常
-	 *   }finally{
-	 *   	client.getDialogFactory.closeDialog(dialog);
-	 *   }
 	 */
     @Override
     public void handleException(FetionException e)
     {
-    	//主要处理传输异常
-    	if(e instanceof TransferException || e instanceof SystemException) {
+    	//如果是网络错误，关闭这个对话，其他错误可以忽略掉
+    	if(e instanceof TransferException) {
     		try {
     			this.processorChain.stopProcessorChain(e);
-	            this.context.getDialogFactory().closeDialog(this);
+	            this.closeDialog();
+	            logger.warn("LiveV2ChatDialog connection error, closed this dialog.");
             } catch (FetionException e1) {
             	logger.warn("close LiveV2ChatDialog failed.", e1);
             }
+    	}else{
+    		//记录这个错误
+        	logger.warn("LiveV2ChatDialog exception caught, just ignore it..", e);
     	}
     	
     	//如果是系统异常，报告这个错误
@@ -471,13 +431,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
     {
     	//如果是当前对话框的所有者离开，关闭这个对话框
     	if(buddy.getUri().equals(this.mainBuddy.getUri())) {
-    		try {
-	            this.context.getDialogFactory().closeDialog(this);
-            } catch (TransferException e) {
-            	this.handleException(e);
-            } catch (DialogException e) {
-            	logger.warn("Close LiveV2ChatDialog failed.", e);
-            }
+	            this.closeDialog();
     	}else {		//移除对应离开的好友
     		Iterator<Buddy> it = this.buddyList.iterator();
 	    	while(it.hasNext()) {
@@ -489,6 +443,14 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	    	}
     	}
     }
+    
+	@Override
+	public void buddyFailed(Buddy buddy) {
+		//如果是当前对话框的所有者离开，关闭这个对话框
+    	if(buddy.getUri().equals(this.mainBuddy.getUri())) {
+	            this.closeDialog();
+    	}
+	}
     
     public String toString()
     {

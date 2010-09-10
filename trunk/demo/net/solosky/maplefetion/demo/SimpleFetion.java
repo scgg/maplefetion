@@ -9,8 +9,10 @@ import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.NotifyEvent;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
+import net.solosky.maplefetion.event.action.failure.RequestFailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
@@ -49,6 +51,67 @@ public class SimpleFetion {
 			LoginState state = client.syncLogin();
 			if(state==LoginState.LOGIN_SUCCESS){	//登录成功
 				System.out.println("登录成功，正在发送消息至 "+args[2]+",请稍候...");
+				
+				
+				client.sendChatMessage(14500000L, new Message("sss", Message.TYPE_HTML), new ActionEventListener(){
+					@Override
+					public void fireEevent(ActionEvent event) {
+						switch(event.getEventType()){
+						
+						case SUCCESS:
+							SendChatMessageSuccessEvent evt = (SendChatMessageSuccessEvent) event;
+							if(evt.isSendToMobile()){
+								System.out.println("发送成功，消息已通过短信发送到对方手机！");
+							}else if(evt.isSendToClient()){
+								System.out.println("发送成功，消息已通过服务直接发送到对方客户端！");
+							}
+							break;
+							
+						case FAILURE:
+							FailureEvent evt2 = (FailureEvent) event;
+							switch(evt2.getFailureType()){
+								case BUDDY_NOT_FOUND:
+									System.out.println("发送失败, 该用户可能不是你好友，请尝试添加该用户为好友后再发送消息。");
+									break;
+								case USER_NOT_FOUND:
+									System.out.println("发送失败, 该用户不是移动用户。");
+									break;
+								case SIPC_FAIL:
+									System.out.println("发送失败, 服务器返回了错误的信息。");
+									break;
+								case UNKNOWN_FAIL:
+									System.out.println("发送失败, 不知道错在哪里。");
+									
+								case REQEUST_FAIL:
+									RequestFailureEvent evt3 = (RequestFailureEvent) event; 
+									System.out.println("提示:"+evt3.getReason()+", 更多信息请访问:"+evt3.getReason());
+									
+								default:
+									System.out.println("发送消息失败！"+event.toString());
+							}
+							break;
+						
+						/* 以下三个错误状态是在异步发送消息的情况才会发生，
+						 * 为了方便处理，使用waitActionEventWithException()同步的情况下，这三个错误是通过异常来处理的
+						 * 也就是在waitActionEvent的时候就会判断是否出现了这三个错误，如果出现了就会抛出相应的异常
+						 * 而waitActionEventWithoutException()不会抛出异常，会把这些错误作为操作事件返回
+						 */
+						case SYSTEM_ERROR:
+							System.out.println("发送失败, 客户端内部错误。");
+							break;
+						case TIMEOUT:
+							System.out.println("发送失败, 超时");
+							break;
+						case TRANSFER_ERROR:
+							System.out.println("发送失败, 超时");
+					}
+					}
+				});
+				
+				
+				
+				
+				
 					//建立一个Future来等待操作事件
 					ActionEventFuture future = new ActionEventFuture();
 					client.sendChatMessage(Long.parseLong(args[2]),

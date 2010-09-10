@@ -56,6 +56,7 @@ public class SipcHeader
 	public final static String CONTENT_TYPE    = "C";
 	public final static String AUTHORIZATION   = "A";
 	public final static String WWWAUTHENTICATE = "W";
+	public final static String MESSAGE_ID      = "XI";
 	
 	/**
 	 * 使用给定的头和值构造消息头

@@ -103,6 +103,8 @@ public class ServerMessageDispatcher extends AbstractMessageDispatcher
 			clazz = "AckNotifyHandler";
 		}else if(method.equals(SipcMethod.OPTION)) {
 			clazz = "OptionNotifyHandler";
+		}else if(method.equals(SipcMethod.BYE)){
+			clazz = "ByeNotifyHandler";
 		}
 		// TODO ..其他通知。。。
 		

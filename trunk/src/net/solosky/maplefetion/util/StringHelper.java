@@ -18,74 +18,65 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.util
- * File     : UriHelper.java
+ * File     : StringHelper.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-1-28
+ * Created  : StringHelper.java
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.util;
 
-import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
-
 /**
- *
- *  URI工具类，帮助URI处理
- *
+ * 字符串工具类
+ * 
  * @author solosky <solosky772@qq.com>
+ *
  */
-public class UriHelper
-{
+public class StringHelper {
+
 	/**
-	 * 判断是否是群URI
+	 * 转义HTML中特殊的字符
+	 * @param html
 	 * @return
 	 */
-	public static boolean isGroup(String uri)
+	public static String qouteHtmlSpecialChars(String html)
 	{
-		return uri!=null && uri.indexOf("PG")!=-1;
-	}
-	
-	/**
-	 * 判断是否是手机号组成的ＵＲＩ
-	 * @param uri
-	 * @return
-	 */
-	public static boolean isMobile(String uri)
-	{
-		return uri!=null && uri.indexOf("tel")!=-1;
-	}
-	
-	
-	/**
-	 * 根据一个URI来创建好友对象
-	 * @param uri
-	 * @return
-	 */
-	public static Buddy createBuddy(String uri)
-	{
-		Buddy buddy = null;
-		if(isMobile(uri)) {
-			buddy = new MobileBuddy();
-		}else {
-			buddy = new FetionBuddy();
+		if(html==null)	return null;
+		String[] specialChars = { "&", "\"", "'", "<", ">"};
+		String[] qouteChars = {"&amp;", "&quot;", "&apos;", "&lt;", "&gt;"};
+		for(int i=0; i<specialChars.length; i++){
+			html = html.replace(specialChars[i], qouteChars[i]);
 		}
-		buddy.setUri(uri);
-		
-		return buddy;
+		return html;
 	}
 	
 	/**
-	 * 从一个URI解析出飞信号
-	 * @param uri
+	 * 反转义HTML中特殊的字符
+	 * @param html
 	 * @return
 	 */
-	public static int parseFetionId(String uri)
+	public static String unqouteHtmlSpecialChars(String html)
 	{
-		if(uri.startsWith("sip")) {
-			return Integer.parseInt(uri.substring(4, uri.indexOf('@')));
-    	}else{
-    		return 0;
-    	}
+		if(html==null)	return null;
+		String[] specialChars = { "&", "\"", "'", "<", ">", " "};
+		String[] qouteChars = {"&amp;", "&quot;", "&apos;", "&lt;", "&gt;", "&nbsp;"};
+		for(int i=0; i<specialChars.length; i++){
+			html = html.replace(qouteChars[i], specialChars[i]);
+		}
+		return html;
+	}
+	
+	
+	/**
+	 * 去掉HTML标签
+	 * @param html
+	 * @return
+	 */
+	public static String stripHtmlSpecialChars(String html)
+	{
+		if(html==null)	return null;
+		 html=html.replaceAll("</?[^>]+>",""); 
+		 html=html.replace("&nbsp;"," "); 
+		 
+		 return html;
 	}
 }

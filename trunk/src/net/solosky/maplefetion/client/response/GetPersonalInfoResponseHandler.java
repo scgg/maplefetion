@@ -32,6 +32,7 @@ import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -67,6 +68,13 @@ public class GetPersonalInfoResponseHandler extends AbstractResponseHandler
     	
     	user.setNickName(personal.getAttributeValue("nickname"));
     	user.setImpresa(personal.getAttributeValue("impresa"));
+    	user.setTrueName(personal.getAttributeValue("name"));
+    	
+    	int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
+    	BeanHelper.setValue(user, "userId", userId);
+    	long mobile = Long.parseLong(personal.getAttributeValue("mobile-no"));
+    	BeanHelper.setValue(user, "mobile", mobile);
+
 		return super.doActionOK(response);
 	}
     

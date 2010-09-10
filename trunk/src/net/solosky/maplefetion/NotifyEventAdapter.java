@@ -39,6 +39,7 @@ import net.solosky.maplefetion.event.notify.BuddyMessageEvent;
 import net.solosky.maplefetion.event.notify.BuddyPresenceEvent;
 import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.event.notify.GroupMessageEvent;
+import net.solosky.maplefetion.event.notify.InviteReceivedEvent;
 import net.solosky.maplefetion.event.notify.LoginStateEvent;
 import net.solosky.maplefetion.event.notify.SystemMessageEvent;
 
@@ -100,6 +101,10 @@ public class NotifyEventAdapter implements NotifyEventListener
 				SystemMessageEvent e8 = (SystemMessageEvent) event;
 				this.systemMessageRecived(e8.getSystemMessage());
 				break;
+				
+			case INVITE_RECEIVED:
+				InviteReceivedEvent e9 = (InviteReceivedEvent) event;
+				this.inviteReceived(e9.getChatDialogProxy());
 				
 				default:;
 				
@@ -175,6 +180,13 @@ public class NotifyEventAdapter implements NotifyEventListener
 	 * @param state
 	 */
 	protected void loginStateChanged(LoginState state)
+	{
+	}
+	
+	/**
+	 * 收到了一个邀请
+	 */
+	protected void inviteReceived(ChatDialogProxy dialog)
 	{
 	}
 

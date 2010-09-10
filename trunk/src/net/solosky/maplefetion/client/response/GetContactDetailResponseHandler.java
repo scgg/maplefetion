@@ -77,6 +77,7 @@ public class GetContactDetailResponseHandler extends AbstractResponseHandler
 				buddy.setExtend(extend);
 			}
 			BeanHelper.toBean(BuddyExtend.class, extend, personal);
+			context.getFetionStore().flushBuddy(buddy);
 		}
 		return super.doActionOK(response);
 	}

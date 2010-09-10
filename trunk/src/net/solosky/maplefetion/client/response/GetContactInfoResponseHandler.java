@@ -30,6 +30,7 @@ import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
@@ -68,16 +69,18 @@ public class GetContactInfoResponseHandler implements ResponseHandler
 	@Override
 	public void handle(SipcResponse response) throws FetionException
 	{
-		Element root = XMLHelper.build(response.getBody().toSendString());
-		Element contact = XMLHelper.find(root, "/results/contacts/contact");
-		if (contact != null
-		        && contact.getAttributeValue("status-code").equals("200")) {
-			String uri = contact.getAttributeValue("uri");
-			if (!uri.equals(buddy.getUri()))
-				return; // 判断获取结果的uri和需要更新的好友的uri是否相同，如果不同直接返回
-			Element personal = contact.getChild("personal");
-			if (personal != null) {
-				BeanHelper.toBean(FetionBuddy.class, this.buddy, personal);
+		if(response.getStatusCode()==SipcStatus.ACTION_OK){
+			Element root = XMLHelper.build(response.getBody().toSendString());
+			Element contact = XMLHelper.find(root, "/results/contacts/contact");
+			if (contact != null
+			        && contact.getAttributeValue("status-code").equals("200")) {
+				String uri = contact.getAttributeValue("uri");
+				if (!uri.equals(buddy.getUri()))
+					return; // 判断获取结果的uri和需要更新的好友的uri是否相同，如果不同直接返回
+				Element personal = contact.getChild("personal");
+				if (personal != null) {
+					BeanHelper.toBean(FetionBuddy.class, this.buddy, personal);
+				}
 			}
 		}
 	}

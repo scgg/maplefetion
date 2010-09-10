@@ -27,13 +27,16 @@ package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
+import net.solosky.maplefetion.event.action.success.AddBuddySuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
+import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
@@ -77,14 +80,24 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 			throws FetionException
 	{
 		//用户已经开通飞信,返回了用户的真实的uri,建立一个好友对象，并加入到好友列表中
-		FetionBuddy buddy = new FetionBuddy();
+
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
+		String uri = element.getAttributeValue("uri");
+		FetionStore store = this.context.getFetionStore();
+		
+		//如果被拒绝后，用户还可以发起添加对方的请求，这样用户可能发起了多次加好友请求
+		//所以这里做个判断，如果原来的好友存在，直接删除掉
+		Buddy buddy = store.getBuddyByUri(uri);
+		if(buddy!=null){
+			store.deleteBuddy(buddy);
+		}
+		buddy = new FetionBuddy();
 		BeanHelper.toBean(FetionBuddy.class, buddy, element);
 		
-		this.context.getFetionStore().addBuddy(buddy);
+		store.addBuddy(buddy);
 		
-		return super.doActionOK(response);
+		return new AddBuddySuccessEvent(buddy);
 	}
 
 	/* (non-Javadoc)
@@ -96,7 +109,14 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 	{
 		return new FailureEvent(FailureType.BUDDY_EXISTS);
 	}
-    
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doBusyHere(net.solosky.maplefetion.sipc.SipcResponse)
+	 */
+	@Override
+	protected ActionEvent doBusyHere(SipcResponse response)
+			throws FetionException {
+		return new FailureEvent(FailureType.ADD_BUDDY_TIMES_LIMITED);
+	}
 	
-    
 }

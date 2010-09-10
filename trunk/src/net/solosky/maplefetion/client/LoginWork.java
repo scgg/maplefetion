@@ -26,8 +26,10 @@
 package net.solosky.maplefetion.client;
 
 
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Iterator;
+import java.util.TimerTask;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionConfig;
@@ -43,9 +45,12 @@ import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
+import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.event.notify.LoginStateEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -89,6 +94,16 @@ public class LoginWork implements Runnable
 	private int presence;
 	
 	/**
+	 * 是否使用SSI登录
+	 */
+	private boolean isSSISign;
+	
+	/**
+	 * 替换SSIC的定时任务
+	 */
+	private TimerTask replaceSsicTask;
+	
+	/**
 	 * 同步登陆等待对象
 	 */
 	private ObjectWaiter<LoginState> loginWaiter;
@@ -107,9 +122,12 @@ public class LoginWork implements Runnable
 		this.presence = presence;
 		this.signAction = new SSISignV2();
 		this.loginWaiter = new ObjectWaiter<LoginState>();
+		this.replaceSsicTask = new ReplaceSSICWork();
+		this.isSSISign  = true;
 		
 		this.signAction.setLocaleSetting(this.context.getLocaleSetting());
 	}
+	
 	
 	/**
 	 * 尝试登录
@@ -118,7 +136,7 @@ public class LoginWork implements Runnable
 	{
 		this.context.updateState(ClientState.LOGGING);
 		if( this.updateSystemConfig() && 	//获取自适应配置
-			this.SSISign()  &&  			//SSI登录
+			(this.isSSISign ? this.SSISign() : true)  &&  			//SSI登录 			NOTE:去掉SSI登录的过程，也能登录，防止出现验证码
 			this.openServerDialog() && 		//服务器连接并验证
 			this.getContactsInfo()) {		//获取联系人列表和信息
 			boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enable");
@@ -142,7 +160,7 @@ public class LoginWork implements Runnable
     		this.login();
     	}catch(Throwable e) {
     		logger.fatal("Unkown login error..", e);
-    		this.updateLoginState(LoginState.OHTER_ERROR);
+    		this.updateLoginState(LoginState.OTHER_ERROR);
     		CrushBuilder.handleCrushReport(e);
     	}
     }
@@ -192,6 +210,11 @@ public class LoginWork implements Runnable
      */
     private boolean openServerDialog()
     {
+    	//判断是否有飞信号
+    	if(this.context.getFetionUser().getFetionId()==0){
+    		throw new IllegalArgumentException("Invalid fetion id. if disabled SSI sign, you must login with fetion id..");
+    	}
+    	
     	this.updateLoginState(LoginState.SIPC_REGISTER_DOING);
 		ServerDialog serverDialog = this.context.getDialogFactory().createServerDialog();
 		try {
@@ -207,24 +230,36 @@ public class LoginWork implements Runnable
 	    	//用户验证
 	    	future.clear();
 	    	serverDialog.userAuth(presence, listener);
-	    	Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+	    	ActionEvent event = future.waitActionEventWithoutException();
+	    	if(event.getEventType()==ActionEventType.SUCCESS){
+	    		state = LoginState.SIPC_REGISGER_SUCCESS;
+	    	}else if(event.getEventType()==ActionEventType.FAILURE){
+	    		FailureEvent evt = (FailureEvent) event;
+	    		FailureType type =  evt.getFailureType();
+	    		if(type==FailureType.REGISTER_FORBIDDEN){
+	    			state = LoginState.SIPC_ACCOUNT_FORBIDDEN;	//帐号限制登录，可能存在不安全因素，请修改密码后再登录
+	    		}else if(type==FailureType.AUTHORIZATION_FAIL){
+	    			state = LoginState.SIPC_AUTH_FAIL;			//登录验证失败
+	    		}else{
+	    			Dialog.assertActionEvent(event, ActionEventType.SUCCESS);
+	    		}
+	    	}
 	    	
-	    	state = LoginState.SIPC_REGISGER_SUCCESS;
 		} catch (TransferException e) {
 			logger.warn("serverDialog: failed to connect to server.", e);
 			this.state = LoginState.SIPC_CONNECT_FAIL;
 		} catch (DialogException e) {
 			logger.warn("serverDialog: login failed.", e);
-			this.state = LoginState.OHTER_ERROR;
+			this.state = LoginState.OTHER_ERROR;
 		} catch (RequestTimeoutException e) {
 			logger.warn("serverDialog: login request timeout.", e);
 			state = LoginState.SIPC_TIMEOUT;
         } catch (InterruptedException e) {
         	logger.warn("serverDialog: login thread interrupted.", e);
-        	state = LoginState.OHTER_ERROR;
+        	state = LoginState.OTHER_ERROR;
         } catch (SystemException e) {
         	logger.warn("serverDialog: login system error.", e);
-        	state = LoginState.OHTER_ERROR;
+        	state = LoginState.OTHER_ERROR;
 		}
     	this.updateLoginState(this.state);
     	
@@ -416,11 +451,15 @@ public class LoginWork implements Runnable
     		this.context.getNotifyEventListener().fireEvent(new LoginStateEvent(state));
     		
     	if(state.getValue()>0x400) {	//大于400都是登录出错
+    		this.loginWaiter.objectArrive(state);
     		this.context.handleException(new LoginException(state));
-    		this.loginWaiter.objectArrive(state);
     	}else if(state==LoginState.LOGIN_SUCCESS) {
-    		this.context.updateState(ClientState.ONLINE);
     		this.loginWaiter.objectArrive(state);
+    		this.context.updateState(ClientState.ONLINE);
+    		if(this.isSSISign){
+	    		int ssicReplaceInterval = FetionConfig.getInteger("fetion.ssi.replace-interval")*1000;
+	    		this.context.getFetionTimer().scheduleTask(this.replaceSsicTask, ssicReplaceInterval, ssicReplaceInterval);
+    		}
     	}
     }
     ////////////////////////////////////////////////////////////////////
@@ -446,6 +485,19 @@ public class LoginWork implements Runnable
     }
     
     
+    public void setSSISign(boolean isSSISign) {
+		this.isSSISign = isSSISign;
+	}
+
+
+	/**
+     * 释放资源
+     */
+    public void dispose()
+    {
+    	this.replaceSsicTask.cancel();
+    }
+    
     /**
      * 等待登陆结果通知
      * 事实上这个方法不会永远超时，因为客户端登陆已经包含了超时控制
@@ -456,7 +508,26 @@ public class LoginWork implements Runnable
     	try {
 			return this.loginWaiter.waitObject();
 		} catch (Exception e) {
-			return LoginState.OHTER_ERROR;
+			return LoginState.OTHER_ERROR;
 		}
+    }
+    
+    /**
+     * 定时替换SSIC的任务
+     */
+    public class ReplaceSSICWork extends TimerTask
+    {
+		@Override
+		public void run()
+		{
+			try {
+				logger.debug("Replacing ssic...");
+				HttpApplication.replaceSsic(context.getFetionUser(), context.getLocaleSetting());
+				logger.debug("Replaced ssic:"+context.getFetionUser().getSsic());
+			} catch (IOException e) {
+				logger.warn("replaceSsic failed." , e);
+			}
+		}
+    	
     }
 }

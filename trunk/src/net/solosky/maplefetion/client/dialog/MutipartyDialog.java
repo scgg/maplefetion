@@ -58,6 +58,11 @@ public interface MutipartyDialog
 	public void buddyEntered(Buddy buddy);
 	
 	/**
+	 * 用户未能进入对话
+	 */
+	public void buddyFailed(Buddy buddy);
+	
+	/**
 	 * 用户离开了对话
 	 * @param buddy
 	 */

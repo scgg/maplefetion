@@ -66,13 +66,14 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
 			throws FetionException
 	{
 		Element root = XMLHelper.build(response.getBody().toSendString());
-		Element element = XMLHelper.find(root, "/results/contacts/contact");
+		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
 		if(element!=null && element.getAttributeValue("uri")!=null) {
 			Buddy buddy = this.context.getFetionStore().getBuddyByUri(element.getAttributeValue("uri"));
 			if(element.getChild("personal")!=null && buddy instanceof FetionBuddy) {
 				BeanHelper.toBean(FetionBuddy.class, buddy, element.getChild("personal"));
 			}
 			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
+			context.getFetionStore().flushBuddy(buddy);
 		}
 		
 		return super.doActionOK(response);

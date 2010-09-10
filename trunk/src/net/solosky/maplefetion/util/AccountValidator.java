@@ -139,6 +139,8 @@ public class AccountValidator
 			return true;
 		}else if(mobile>=13500000000L && mobile<=13999999999L){	//135-139
 			return true;
+		}else if(mobile>=14700000000L && mobile<=14799999999L){	//147
+			return true;
 		}else if(mobile>=15000000000L && mobile<=15299999999L){	//150-152
 			return true;
 		}else if(mobile>=15700000000L && mobile<=15999999999L){	//157-159

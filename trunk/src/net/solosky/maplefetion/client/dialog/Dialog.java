@@ -25,8 +25,6 @@
  */
 package net.solosky.maplefetion.client.dialog;
 
-import org.apache.log4j.Logger;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.event.ActionEvent;
@@ -39,6 +37,8 @@ import net.solosky.maplefetion.event.action.TransferErrorEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
+
+import org.apache.log4j.Logger;
 
 /**
  *
@@ -76,6 +76,12 @@ public abstract class Dialog
 	 * 对话框监听器
 	 */
 	protected DialogListener listener;
+	
+	/**
+	 * Logger
+	 */
+	protected Logger logger = Logger.getLogger(Dialog.class);
+	
 	/**
 	 * 默认的构造函数
 	 */
@@ -88,13 +94,52 @@ public abstract class Dialog
 	
 	/**
 	 * 启动这个对话框
+	 * @throws DialogException 
+	 * @throws RequestTimeoutException 
+	 * @throws TransferException 
 	 */
-	public abstract void openDialog() throws TransferException, RequestTimeoutException, DialogException;
+	public void openDialog() throws TransferException, RequestTimeoutException, DialogException
+	{
+	  	//检查对话状态，防止多次打开一个对话
+    	if(this.getState()==DialogState.CREATED) {
+			this.setState(DialogState.OPENNING);
+		
+			//尝试打开对话，如果发生任何异常，对话都建立失败， 如果没有发生异常，建立对话成功
+			try {
+				
+				this.doOpenDialog();
+	    		this.setState(DialogState.OPENED);
+	    		
+			} catch (Exception e) {
+				this.setState(DialogState.FAILED);
+				if(e instanceof TransferException){
+					throw (TransferException) e;
+				}else if(e instanceof RequestTimeoutException){
+					throw (RequestTimeoutException) e;
+				}else{ 
+					throw new DialogException(e);
+				}
+			}
+		}
+	}
 	
 	/**
 	 * 关闭这个对话框
 	 */
-	public abstract void closeDialog();
+	public void closeDialog()
+	{
+		try {
+			this.doCloseDialog();
+		} catch (Exception e) {
+			logger.warn("Close dialog failed:"+this, e);
+		}
+	    this.setState(DialogState.CLOSED);
+		this.context.getDialogFactory().removeDialog(this);
+	}
+	
+	protected abstract void doOpenDialog()  throws Exception;
+	
+	protected abstract void doCloseDialog() throws Exception;
 	
 	/**
 	 * 发送信令
@@ -173,12 +218,16 @@ public abstract class Dialog
 					  Logger.getLogger(Dialog.class).debug("Opened Dialog in Executor pool:"+dialog.toString());
 					  if(listener!=null) listener.fireEevent(new SuccessEvent());
 	                } catch (TransferException e) {
+	                	Logger.getLogger(Dialog.class).warn("Open Dialog failed in Executor pool.", e);
 	                	if(listener!=null) listener.fireEevent(new TransferErrorEvent());
 	                } catch (RequestTimeoutException e) {
+	                	Logger.getLogger(Dialog.class).warn("Open Dialog failed in Executor pool.", e);
 	                	if(listener!=null) listener.fireEevent(new TimeoutEvent());
 	                } catch (DialogException e) {
+	                	Logger.getLogger(Dialog.class).warn("Open Dialog failed in Executor pool.", e);
 	                	if(listener!=null) listener.fireEevent(new SystemErrorEvent(e));
 	                }catch(Throwable t){
+	                	Logger.getLogger(Dialog.class).warn("Open Dialog failed in Executor pool.", t);
 	                	if(listener!=null) listener.fireEevent(new SystemErrorEvent(t));
 	                }
 			}
@@ -199,6 +248,7 @@ public abstract class Dialog
 				dialog.closeDialog();
 				Logger.getLogger(Dialog.class).debug("Closed Dialog in Executor pool:"+dialog.toString());
 				listener.fireEevent(new SuccessEvent());
+				
 			}
 		};
 		this.context.getFetionExecutor().submitTask(r);

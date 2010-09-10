@@ -149,22 +149,26 @@ public abstract class AbstractProcessor implements Processor
 	}
 
 	/**
-	 * 这个方法实现了处理前面转发过来的对象，具体的交给子类去完成，并且如果子类方法返回真才进行下一个处理
+	 * 这个方法实现了处理前面转发过来的对象，具体的交给子类去完成
+	 * 子类返回处理后的对象，如果返回null,则终止处理链
 	 */
     @Override
     public void processIncoming(Object o) throws FetionException
     {
-	    if(this.doProcessIncoming(o)!=null && this.previousProcessor!=null)
-	    	this.previousProcessor.processIncoming(o);
+    	Object ret = this.doProcessIncoming(o);
+	    if(ret!=null && this.previousProcessor!=null)
+	    	this.previousProcessor.processIncoming(ret);
     }
 
     /**
-	 * 这个方法实现了处理后面转发过来的对象，具体的交给子类去完成，并且如果子类方法返回真才进行下一个处理
+	 * 这个方法实现了处理后面转发过来的对象，具体的交给子类去完成
+	 * 子类返回处理后的对象，如果返回null,则终止处理链
 	 */
     @Override
     public void processOutcoming(Object o) throws FetionException
     {
-    	if(this.doProcessOutcoming(o)!=null && this.nextProcessor!=null)
-    		this.nextProcessor.processOutcoming(o);
+    	Object ret = this.doProcessOutcoming(o);
+    	if(ret!=null && this.nextProcessor!=null)
+    		this.nextProcessor.processOutcoming(ret);
     }
 }

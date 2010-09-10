@@ -34,6 +34,7 @@ import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
+import net.solosky.maplefetion.event.action.success.AddBuddySuccessEvent;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -74,7 +75,7 @@ public class AddMobileBuddyResponseHandler extends AbstractResponseHandler
 		BeanHelper.toBean(MobileBuddy.class, buddy, element);
 		this.context.getFetionStore().addBuddy(buddy);
 		
-		return super.doActionOK(response);
+		return new AddBuddySuccessEvent(buddy);
 	}
 
 	/* (non-Javadoc)

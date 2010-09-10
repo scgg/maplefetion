@@ -116,6 +116,8 @@ public class Member extends Person
     {
     	this.t6svcid = t6svcid;
     }
+    
+    
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.bean.Person#getDisplayName()
@@ -130,5 +132,4 @@ public class Member extends Person
 	   else
 		   return getUri();
     }
-	
 }

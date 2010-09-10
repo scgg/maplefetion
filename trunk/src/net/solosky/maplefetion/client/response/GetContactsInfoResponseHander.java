@@ -84,6 +84,7 @@ public class GetContactsInfoResponseHander extends AbstractResponseHandler
 	     	    	if(store.getBuddyByUri(uri)!=null&& p!=null) {
 	         	    	Buddy b = store.getBuddyByUri(uri);
 	         	    	BeanHelper.toBean(FetionBuddy.class, b, p);
+	         	    	context.getFetionStore().flushBuddy(b);
 	     	    	}
 	     	    }
 	    	}

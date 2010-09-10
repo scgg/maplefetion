@@ -31,6 +31,8 @@ import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.XMLHelper;
 
@@ -71,6 +73,20 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		version.setContactVersion(Integer.parseInt( userInfo.getAttributeValue("contact-version")));
 		version.setPermissionVersion(Integer.parseInt( userInfo.getAttributeValue("permission-version")));
 		return super.doActionOK(response);
+	}
+	
+
+	@Override
+	protected ActionEvent doRequestFailure(SipcResponse response)
+			throws FetionException {
+		return new FailureEvent(FailureType.REGISTER_FORBIDDEN);
+	}
+
+	@Override
+	protected ActionEvent doNotAuthorized(SipcResponse response)
+			throws FetionException
+	{
+		return new FailureEvent(FailureType.AUTHORIZATION_FAIL);
 	}
     
     

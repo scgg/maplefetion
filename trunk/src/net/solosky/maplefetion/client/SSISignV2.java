@@ -31,6 +31,7 @@ import java.net.URLConnection;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.bean.User;
@@ -46,7 +47,7 @@ import org.jdom.Element;
 
 /**
  * 
- * SSI登录第一版
+ * SSI登录第二版
  * 
  * @author solosky <solosky772@qq.com>
  */
@@ -130,7 +131,7 @@ public class SSISignV2 implements SSISign
 		String url = this.buildUrl(user, pid, pic);
 		try {
 	        HttpsURLConnection conn = (HttpsURLConnection) this.getConnection(url);
-	        conn.addRequestProperty("User-Agent", "IIC2.0/PC 3.5.2540");
+	        conn.addRequestProperty("User-Agent", "IIC2.0/PC "+FetionClient.PROTOCOL_VERSION);
 	        logger.debug("SSISignIn: status="+Integer.toString(conn.getResponseCode()));
 	        int status = conn.getResponseCode();
 	        switch(status) {
@@ -188,20 +189,20 @@ public class SSISignV2 implements SSISign
 	        	break;
 	        	
 	        	default:
-	        		state = LoginState.OHTER_ERROR;
+	        		state = LoginState.OTHER_ERROR;
 	        }
         } catch (NumberFormatException e) {
-        	state = LoginState.OHTER_ERROR;
+        	state = LoginState.OTHER_ERROR;
         } catch (ParseException e) {
-        	state = LoginState.OHTER_ERROR;
+        	state = LoginState.OTHER_ERROR;
         } catch (IOException e) {
         	state = LoginState.SSI_CONNECT_FAIL;
         }catch(Throwable e) {
-        	state = LoginState.OHTER_ERROR;
+        	state = LoginState.OTHER_ERROR;
         }
 		return state;
 	}
-
+	
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.SSISign#signIn(net.solosky.maplefetion.bean.User)
      */

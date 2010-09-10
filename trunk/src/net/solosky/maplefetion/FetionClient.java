@@ -31,6 +31,8 @@
  */
 package net.solosky.maplefetion;
 
+import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -48,6 +50,7 @@ import net.solosky.maplefetion.bean.ScheduleSMS;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.GetScheduleListWork;
+import net.solosky.maplefetion.client.HttpApplication;
 import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
 import net.solosky.maplefetion.client.RegistrationException;
@@ -66,7 +69,9 @@ import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
+import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
+import net.solosky.maplefetion.event.action.TransferErrorEvent;
 import net.solosky.maplefetion.event.action.success.FindBuddySuccessEvent;
 import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
@@ -97,12 +102,12 @@ public class FetionClient implements FetionContext
 	/**
 	 * MapleFetion版本
 	 */
-	public static final String CLIENT_VERSION = "MapleFetion 2.0 Beta1";
+	public static final String CLIENT_VERSION = "MapleFetion-2.0.1";
 	
 	/**
 	 * 协议版本
 	 */
-	public static final String PROTOCOL_VERSION = "2009 3.5.1170";
+	public static final String PROTOCOL_VERSION = "3.4.2229";
 	
 	/**
 	 * SIPC版本
@@ -251,8 +256,6 @@ public class FetionClient implements FetionContext
 		this.executor        = fetionExecutor;
 		this.notifyEventListener  = notifyEventListener;
 		this.localeSetting   = new LocaleSetting();
-		
-		
     }
 	
 	
@@ -395,6 +398,13 @@ public class FetionClient implements FetionContext
     {
     	return proxyFactory;
     }
+    
+
+
+	@Override
+	public String toString() {
+		return "FetionClient [user=" + user + ", state=" + state + "]";
+	}
 
 
 	/**
@@ -410,6 +420,7 @@ public class FetionClient implements FetionContext
     	this.loginWork       = new LoginWork(this, Presence.ONLINE);
     	
     	this.transferFactory.setFetionContext(this);
+    	
 		this.store.init(user);
     }
     
@@ -422,7 +433,18 @@ public class FetionClient implements FetionContext
          this.transferFactory.closeFactory();
          this.dialogFactory.closeFactory();
          this.executor.stopExecutor();
+         this.loginWork.dispose();
          this.timer.stopTimer();
+    }
+    
+    /**
+     * 在操作之前检测客户端是否在线，如果不在线就抛出异常
+     */
+    private void ensureOnline()
+    {
+    	if(this.state!=ClientState.ONLINE){
+    		throw new IllegalStateException("client is not online [state="+this.state+"], action failed.");
+    	}
     }
 
     /**
@@ -466,17 +488,17 @@ public class FetionClient implements FetionContext
     		}else {
     			logger.fatal("Unknown registration exception", exception);
     		}
-		}else if(exception instanceof SystemException){		//系统错误
-			logger.fatal("System error. Please email the crush report file or the system log file to the project owner to find and fix bugs,  thank you sincerely.", exception);
-			this.state = ClientState.SYSTEM_ERROR;
-			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());
+		}else if(exception instanceof SystemException){		//系统错误,为了保证系统的稳定性，这里只是做个记录，并不退出客户端
+			logger.fatal("System error, just log it and ignore it. Not exit the client for stablity reason.", exception);
+			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());		//生成错误报告
+			return ;		//返回，不退出客户端
     	}else if(exception instanceof LoginException){		//登录错误
     		logger.fatal("Login error. state="+((LoginException)exception).getState().name());
     		this.state = ClientState.LOGIN_ERROR;
     	}else {
-    		logger.fatal("System error. Please email the crush report file or the system log file to the project owner to find and fix bugs,  thank you sincerely", exception);
-    		this.state = ClientState.SYSTEM_ERROR;			//其他错误
-    		CrushBuilder.handleCrushReport(exception);
+    		logger.fatal("Unknown error, just log it and ignore it. Not exit the client for stablity reason.", exception);
+			CrushBuilder.handleCrushReport(exception);			//生成错误报告
+			return ;
     	}
 
     	//尝试关闭所有的对话框，对话框应该判断当前客户端状态然后决定是否进行某些操作
@@ -543,13 +565,15 @@ public class FetionClient implements FetionContext
      */
     public void logout()
     {
+    	this.ensureOnline();
     	if(this.state==ClientState.ONLINE) {
     		try {
                 dialogFactory.closeAllDialog();
                 dialogFactory.closeFactory();
                 transferFactory.closeFactory();
+                loginWork.dispose();
                 timer.stopTimer();
-                this.executor.stopExecutor();
+                executor.stopExecutor();
             	updateState(ClientState.LOGOUT);
             } catch (FetionException e) {
             	logger.warn("logout error.", e);
@@ -566,14 +590,36 @@ public class FetionClient implements FetionContext
 	 * 这是个异步操作，会把登录的操作封装在单线程池里去执行，登录结果应该通过NotifyEventListener异步通知结果
 	 * @param presence 		在线状态 定义在Presence中 
 	 * @param verifyImage	验证图片，如果没有可以设置为null
+	 * @param isSSISign		是否启用SSI登录
 	 */
-	public void login(int presence, VerifyImage verifyImage)
+	public void login(int presence, VerifyImage verifyImage, boolean isSSISign)
 	{
+		//为了防止用户在客户端登录过程中或者在线情况下错误的调用，检查下当前客户端状态，如果为登录中或者在线状态就抛出异常
+		ClientState state = this.getState();
+		if(state==ClientState.LOGGING || state==ClientState.ONLINE){
+			throw new IllegalStateException("Client is "+state.toString()+", could not login again.");
+		}
+		
 		//为了便于掉线后可以重新登录，把初始化对象的工作放在登录函数做
 		this.init();
 		this.loginWork.setPresence(presence);
 		this.loginWork.setVerifyImage(verifyImage);
+		this.loginWork.setSSISign(isSSISign);
 		this.executor.submitTask(this.loginWork);
+	}
+	
+	
+	/**
+	 * 
+	 * 客户端异步登录,默认启用SSI登录
+	 * @deprecated 使用login(int presence, VerifyImage verifyImage, boolean isSSISign)代替
+	 * @param presence 		在线状态 定义在Presence中 
+	 * @param verifyImage	验证图片，如果没有可以设置为null
+	 * @return
+	 */
+	public void login(int presence, VerifyImage verifyImage)
+	{
+		this.login(presence, verifyImage, true);
 	}
 	
 	
@@ -583,20 +629,33 @@ public class FetionClient implements FetionContext
      */
     public void login()
     {
-		this.login(Presence.ONLINE, null);
+		this.login(Presence.ONLINE, null, true);
     }
-
 	
 	/**
 	 * 客户端同步登录
 	 * @param presence 		在线状态 定义在Presence中 
 	 * @param verifyImage	验证图片，如果没有可以设置为null
+	 * @param isSSISign		是否启用SSI登录
 	 * @return 登录结果,定义在LoginState中
 	 */
-	public LoginState syncLogin(int presence, VerifyImage verifyImage)
+	public LoginState syncLogin(int presence, VerifyImage verifyImage, boolean isSSISign)
 	{
-		this.login(presence, verifyImage);
+		this.login(presence, verifyImage, isSSISign);
 		return this.loginWork.waitLoginState();
+	}
+	
+	
+	/**
+	 * 
+	 * 客户端同步登录,默认启用SSI登录
+	 * @deprecated 使用syncLogin(int presence, VerifyImage verifyImage, boolean isSSISign)代替
+	 * @param presence 		在线状态 定义在Presence中 
+	 * @param verifyImage	验证图片，如果没有可以设置为null
+	 * @return
+	 */
+	public LoginState syncLogin(int presence, VerifyImage verifyImage) {
+		return this.syncLogin(presence, verifyImage, true);
 	}
 	
 	/**
@@ -606,21 +665,25 @@ public class FetionClient implements FetionContext
 	 */
 	public LoginState syncLogin()
 	{
-		return this.syncLogin(Presence.ONLINE, null);
+		return this.syncLogin(Presence.ONLINE, null, true);
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////
 	
 	/**
 	 * 发送聊天消息，如果好友不在线将会发送到手机
-	 * @param toBuddy  发送聊天消息的好友,如果好友在黑名单里，则发送失败
+	 * @param toBuddy  发送聊天消息的好友，关系只能是好友或者陌生人才能发送消息，否则会得到FailureType.BUDDY_RELATION_FORBIDDEN的错误
 	 * @param message  需发送的消息
 	 * @param listener 操作结果监听器
 	 */
 	public void sendChatMessage(final Buddy toBuddy, final Message message, ActionEventListener listener)
 	{
-		if(toBuddy.getRelation()==Relation.BANNED) {
-			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_BLOCKED));
+		this.ensureOnline();
+		Relation relation = toBuddy.getRelation();
+		if( relation==Relation.BANNED||
+			relation==Relation.DECLINED||
+			relation==Relation.UNCONFIRMED) {
+			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_RELATION_FORBIDDEN));
 		}else {
     		try {
     			ChatDialogProxy proxy = this.proxyFactory.create(toBuddy);
@@ -639,6 +702,7 @@ public class FetionClient implements FetionContext
 	 */
 	public ActionEventFuture sendChatMessage(Buddy toBuddy, Message message)
 	{
+		this.ensureOnline();
 		ActionEventFuture future = new ActionEventFuture();
 		this.sendChatMessage(toBuddy, message, new FutureActionEventListener(future));
 		return future;
@@ -652,6 +716,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendSMSMessage(Buddy toBuddy, Message message, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		if(toBuddy.getRelation()==Relation.BANNED) {
 			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_BLOCKED));
 		}else {
@@ -666,6 +731,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendSMSMessageToSelf(Message message, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.sendSMSMessage(this.getFetionUser(), message, listener);
 	}
 	
@@ -677,6 +743,8 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendChatMessage(long mobile,final Message message, final ActionEventListener listener)
 	{
+		this.ensureOnline();
+		
 		//要做的第一件事是找到这个好友，因为通过手机查找好友需要向服务器发起请求，所以这里先建立一个临时的事件监听器
 		//当找到好友操作完成之后，判断是否找到，如果找到就发送消息
 		ActionEventListener tmpListener = new ActionEventListener() {
@@ -704,6 +772,8 @@ public class FetionClient implements FetionContext
 	 */
 	public void sendSMSMessage(long mobile, final Message message, final ActionEventListener listener)
 	{
+		this.ensureOnline();
+		
 		//注释同上一个方法，这里不赘述了
 		ActionEventListener tmpListener = new ActionEventListener() {
 			public void fireEevent(ActionEvent event){
@@ -744,6 +814,7 @@ public class FetionClient implements FetionContext
      */  
 	private void setPersonalInfo(ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().setPesonalInfo(listener);
 	}
 	
@@ -758,6 +829,8 @@ public class FetionClient implements FetionContext
 	 */
 	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
+		this.ensureOnline();
+		
 		//先判断是否是合法的移动号码
 		if(!AccountValidator.validateMobile(mobile)){
 			if(listener!=null){
@@ -790,6 +863,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void setBuddyLocalName(Buddy buddy,String localName, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().setBuddyLocalName(buddy, localName, listener);
 	}
 	
@@ -802,6 +876,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void setBuddyCord(Buddy buddy, Collection<Cord> cordList, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().setBuddyCord(buddy, cordList, listener);
 	}
 	
@@ -813,6 +888,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void setBuddyCord(Buddy buddy, Cord cord, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		ArrayList<Cord> list = new ArrayList<Cord>();
 		list.add(cord);
 		this.dialogFactory.getServerDialog().setBuddyCord(buddy, list, listener);
@@ -848,10 +924,11 @@ public class FetionClient implements FetionContext
 	 */
 	public void addBuddy(String account, String localName, Cord cord, String desc, int promptId, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		AccountValidator validator = new AccountValidator(account);
 		if(validator.isValidMobile()){
 			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, localName, cord, desc, promptId,  listener);
-		}else if(validator.isValidFetionId()){
+		}else if(validator.getFetionId()>0){
 			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, localName, cord, desc, promptId, listener);
 		}else{
 			if(listener!=null){
@@ -867,6 +944,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void addBuddy(String account, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.addBuddy(account, null, null, this.user.getDisplayName(), 0, listener);
 	}
 	
@@ -877,6 +955,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void deleteBuddy(Buddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().deleteBuddy(buddy, listener);
 	}
 	
@@ -887,6 +966,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void agreedApplication(Buddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().agreedApplication(buddy, listener);
 	}
 	
@@ -897,6 +977,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void declinedApplication(Buddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().declinedAppliction(buddy, listener);
 	}
 	
@@ -908,7 +989,12 @@ public class FetionClient implements FetionContext
 	 */
 	public void setPresence(int presence, ActionEventListener listener)
 	{
-		this.dialogFactory.getServerDialog().setPresence(presence, listener);
+		this.ensureOnline();
+		if(Presence.isValidPresenceValue(presence)){
+			this.dialogFactory.getServerDialog().setPresence(presence, listener);
+		}else{
+			if(listener!=null)	listener.fireEevent(new FailureEvent(FailureType.INVALID_PRESENCE_VALUE));
+		}
 	}
 	
 	/**
@@ -918,6 +1004,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().getBuddyDetail(buddy, listener);
 	}
 	
@@ -930,6 +1017,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().getContactsInfo(buddyList, listener);
 	}
 	
@@ -940,6 +1028,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void createCord(String title, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().createCord(title, listener);
 	}
 	
@@ -950,6 +1039,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void deleteCord(Cord cord, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		if(this.store.getBuddyListByCord(cord).size()>0 && listener!=null){
 			listener.fireEevent(new FailureEvent(FailureType.CORD_NOT_EMPTY));
 		}else{
@@ -965,6 +1055,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void setCordTitle(Cord cord, String title, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.dialogFactory.getServerDialog().setCordTitle(cord, title, listener);
 	}
 	
@@ -975,6 +1066,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void setNickName(String nickName, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		 this.user.setNickName(nickName);
 		 this.setPersonalInfo(listener);
 	}
@@ -986,8 +1078,37 @@ public class FetionClient implements FetionContext
 	 */
 	public void setImpresa(String impresa, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.user.setImpresa(impresa);
 		this.setPersonalInfo(listener);
+	}
+	
+	/**
+	 * 设置用户的头像
+	 * @param imgStream		头像图片流
+	 * @param listener
+	 */
+	public void setPortrait(final InputStream imgStream, final ActionEventListener listener)
+	{
+		this.ensureOnline();
+		//检测是否有有效的SSI
+		if(this.user.getSsic()==null) {
+			throw new IllegalStateException("Empty ssic, please enable ssi login first.");
+		}
+		
+		//TODO 检测是不是有效的图片文件
+		Runnable r = new Runnable(){
+			public void run(){
+				try {
+					long portraitId = HttpApplication.setPortrait(user, localeSetting, imgStream);
+					if(listener!=null) listener.fireEevent(new SuccessEvent());
+				} catch (IOException e) {
+					logger.debug("Set portrait failed.", e);
+					if(listener!=null) listener.fireEevent(new TransferErrorEvent());
+				}
+			}
+		};
+		this.executor.submitTask(r);
 	}
 	
 	/**
@@ -997,6 +1118,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void getScheduleSMSList(final ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.executor.submitTask(new GetScheduleListWork(this, listener));
 	}
 	
@@ -1009,6 +1131,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void createScheduleSMS(Message message, Date sendDate, Collection<Buddy> receiverList, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		//检查定时短信的定时时间，最短时间是 当前时间+11分钟-一年后当前时间
 		//比如当前时间是 2007.7.1 22:56 有效的时间是 2010.7.1 23:07 - 2011.7.1 22:56，在这个时间之内的才是有效时间，
 		Calendar calMin = Calendar.getInstance();
@@ -1041,6 +1164,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void deleteScheduleSMS(ScheduleSMS scheduleSMS, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		ArrayList<ScheduleSMS> list = new ArrayList<ScheduleSMS>();
 		list.add(scheduleSMS);
 		this.getServerDialog().deleteScheduleSMS(list, listener);
@@ -1051,6 +1175,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void invalidateScheduleSMSList()
 	{
+		this.ensureOnline();
 		synchronized (this.store) {
 			Iterator <ScheduleSMS> it = this.store.getScheduleSMSList().iterator();
 			Date nowDate = new Date();
@@ -1069,6 +1194,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void updateBuddyList(ActionEventListener listener)
 	{
+		this.ensureOnline();
 		this.getFetionExecutor().submitTask( new UpdateBuddyListWork(this, listener));
 	}
 	
@@ -1081,6 +1207,7 @@ public class FetionClient implements FetionContext
 	 */
 	public void addBuddyToBlackList(Buddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		if(buddy.getRelation()==Relation.BANNED) {
 			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_IN_BLACKLIST));
 		}else {
@@ -1096,10 +1223,12 @@ public class FetionClient implements FetionContext
 	 */
 	public void removeBuddyFromBlackList(Buddy buddy, ActionEventListener listener)
 	{
+		this.ensureOnline();
 		if(buddy.getRelation()!=Relation.BANNED) {
 			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_NOT_IN_BLACKLIST));
 		}else {
 			this.getServerDialog().removeBuddyFromBlackList(buddy, listener);
 		}
 	}
+	
 }

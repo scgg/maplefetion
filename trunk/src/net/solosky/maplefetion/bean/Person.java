@@ -140,10 +140,64 @@ public abstract class Person
     {
     	return presence;
     }
-    
-    /**
+
+	/**
      * 返回可以显示的名字
+     * 这只是个工具方法，不存在DisplayName这个字段
+     * 这个方法在子类会有不同的实现，总是可以返回一个可以显示的名字，简化程序的编写
      * @return
      */
-    public abstract String getDisplayName();
+    public String getDisplayName()
+    {
+    	return Integer.toString(this.userId);
+    }
+    
+    /**
+     * @param userId the userId to set
+     */
+    public void setUserId(int userId)
+    {
+    	this.userId = userId;
+    }
+
+	/**
+     * @param fetionId the fetionId to set
+     */
+    public void setFetionId(int fetionId)
+    {
+    	this.fetionId = fetionId;
+    }
+
+	/**
+     * @param domain the domain to set
+     */
+    public void setDomain(String domain)
+    {
+    	this.domain = domain;
+    }
+
+	/**
+     * @param mobile the mobile to set
+     */
+    public void setMobile(long mobile)
+    {
+    	this.mobile = mobile;
+    }
+
+	/**
+     * @param presence the presence to set
+     */
+    public void setPresence(Presence presence)
+    {
+    	this.presence = presence;
+    }
+
+	/**
+     * 返回可以显示的状态
+     * 也是工具方法，返回的状态可能 电脑在线，电脑离开，电脑忙碌，短信在线，离线
+     */
+    public String getDisplayPresence()
+    {
+    	return Presence.presenceValueToDisplayString(this.presence.getValue());
+    }
 }

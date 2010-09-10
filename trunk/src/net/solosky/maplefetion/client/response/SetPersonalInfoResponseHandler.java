@@ -18,16 +18,18 @@
  /**
  * Project  : MapleFetion2
  * Package  : net.solosky.maplefetion.client.response
- * File     : SetBuddyInfoResponseHandler.java
+ * File     : SetPersonalInfoResponseHandler.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-3-14
+ * Created  : SetPersonalInfoResponseHandler.java
  * License  : Apache License 2.0 
  */
 package net.solosky.maplefetion.client.response;
 
+import org.jdom.Element;
+
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
-import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
@@ -35,55 +37,37 @@ import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
-import org.jdom.Element;
-
 /**
- *
- *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public class SetBuddyInfoResponseHandler extends AbstractResponseHandler
-{
+public class SetPersonalInfoResponseHandler extends AbstractResponseHandler {
 
 	/**
-     * @param client
-     * @param dialog
-     * @param listener
-     */
-    public SetBuddyInfoResponseHandler(FetionContext client, Dialog dialog,
-            ActionEventListener listener)
-    {
-	    super(client, dialog, listener);
-    }
+	 * @param context
+	 * @param dialog
+	 * @param listener
+	 */
+	public SetPersonalInfoResponseHandler(FetionContext context, Dialog dialog,
+			ActionEventListener listener) {
+		super(context, dialog, listener);
+	}
 
 	/* (non-Javadoc)
 	 * @see net.solosky.maplefetion.client.response.AbstractResponseHandler#doActionOK(net.solosky.maplefetion.sipc.SipcResponse)
 	 */
 	@Override
 	protected ActionEvent doActionOK(SipcResponse response)
-			throws FetionException
-	{
-		Element root = XMLHelper.build(response.getBody().toSendString());
-		   Element el = XMLHelper.find(root, "/results/contacts/buddies/buddy");
-		   
-		   if(el!=null) {
-			   Buddy buddy = this.context.getFetionStore().getBuddyByUri(el.getAttributeValue("uri"));
-			   BeanHelper.toBean(Buddy.class, buddy, el);
-			   context.getFetionStore().flushBuddy(buddy);
-		   }
-		   
-		   //Version control
-		   Element contacts = XMLHelper.find(root, "/results/contacts");
-		   if(contacts!=null){
-			   String version = contacts.getAttributeValue("version");
-			   if(version!=null){
-				   int contactsVersion = Integer.parseInt(version);
-				   this.context.getFetionStore().getStoreVersion().setContactVersion(contactsVersion);
-				   this.context.getFetionUser().getStoreVersion().setContactVersion(contactsVersion);
-			   }
-		   }
-		   
+			throws FetionException {
+		Element root = XMLHelper.build(response.getBody().toSendString());  
+		Element personal = XMLHelper.find(root, "/results/personal");
+		if(personal!=null){
+			BeanHelper.toBean(User.class, this.context.getFetionUser(), personal);
+		}
+		String version = personal.getAttributeValue("version");
+		if(version!=null){
+			this.context.getFetionStore().getStoreVersion().setPersonalVersion(Integer.parseInt(version));
+		}
 		return super.doActionOK(response);
 	}
-
 }

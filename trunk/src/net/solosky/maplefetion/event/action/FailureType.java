@@ -55,6 +55,11 @@ public enum FailureType {
 	NOT_ACCEPTABLE,
 	
 	/**
+	 * 请求失败
+	 */
+	REQEUST_FAIL,
+	
+	/**
 	 * 好友不存在，是指用户存在，但不是好友
 	 */
 	BUDDY_NOT_FOUND,
@@ -98,6 +103,31 @@ public enum FailureType {
 	 * 从黑名单中删除时，该好友不再黑名单中
 	 */
 	BUDDY_NOT_IN_BLACKLIST,
+	
+	/**
+	 * 无效的在线状态
+	 */
+	INVALID_PRESENCE_VALUE,
+	
+	/**
+	 *  好友关系不满足发送消息的条件，关系只能是好友或者陌生人才能发送消息。
+	 */
+	BUDDY_RELATION_FORBIDDEN,
+	
+	/**
+	 * 添加好友次数已达到上限
+	 */
+	ADD_BUDDY_TIMES_LIMITED,
+	
+	/**
+	 * 登录限制，帐号存在不安全因素
+	 */
+	REGISTER_FORBIDDEN,
+	
+	/**
+	 * 验证失败，用户名或者密码错误
+	 */
+	AUTHORIZATION_FAIL,
 	
 	/**
 	 * 未知错误

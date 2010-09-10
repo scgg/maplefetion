@@ -47,7 +47,7 @@ public class SMSPolicy
 	/**
 	 * 时间格式对象
 	 */
-	private static final SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("D.H:m:s");
+	private static final  SimpleDateFormat DATE_FORMAT = new SimpleDateFormat("D.H:m:s") ;
 	/**
 	 * 拒绝接受短信的时间点，小于这个时间就不接受短信
 	 */
@@ -55,7 +55,7 @@ public class SMSPolicy
 	/**
 	 * 构造函数
 	 * @param sms	短信策略字串
-	 * @throws ParseException 
+	 * @throws ParseException
 	 */
 	public SMSPolicy(String sms) throws ParseException
 	{
@@ -86,8 +86,10 @@ public class SMSPolicy
 	public void parse(String sms) throws ParseException
 	{
 		try {
-	        Date d = DATE_FORMAT.parse(sms);
-	        this.refusedSMSDate = new Date(d.getTime()+System.currentTimeMillis());
+			synchronized (DATE_FORMAT) {
+				Date d = DATE_FORMAT.parse(sms);
+		        this.refusedSMSDate = new Date(d.getTime()+System.currentTimeMillis());
+			}
         } catch (java.text.ParseException e) {
         	this.refusedSMSDate = new Date();
         	throw new ParseException("Cannot parse SMSPolicy:"+sms);
@@ -99,6 +101,8 @@ public class SMSPolicy
 	 */
 	public String toString()
 	{
-		return DATE_FORMAT.format(new Date(this.refusedSMSDate.getTime()-System.currentTimeMillis()));
+		synchronized (DATE_FORMAT) {
+			return DATE_FORMAT.format(new Date(this.refusedSMSDate.getTime()-System.currentTimeMillis()));
+		}
 	}
 }

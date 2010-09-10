@@ -73,7 +73,6 @@ public class BasicChatDialog extends ChatDialog
 	    return false;
     }
 
-
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.dialog.ChatDialog#sendChatMessage(java.lang.String, net.solosky.maplefetion.client.dialog.ActionListener)
      */
@@ -97,24 +96,21 @@ public class BasicChatDialog extends ChatDialog
     }
 
 	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
+     * @see net.solosky.maplefetion.client.dialog.Dialog#doCloseDialog()
      */
     @Override
-    public synchronized void closeDialog()
+    protected void doCloseDialog()
     {
     	//不做任何事情
-    	this.setState(DialogState.CLOSED);
     }
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
      */
     @Override
-    public synchronized void openDialog() throws TransferException, DialogException
+    protected void doOpenDialog() throws TransferException, DialogException
     {
-	    //不做任何事情
-    	this.setState(DialogState.OPENED);
-	    
+    	//不做任何事情
     }
     
 	/* (non-Javadoc)
@@ -131,5 +127,4 @@ public class BasicChatDialog extends ChatDialog
     	return "[BasicChatDialog - " +
 		"MainBuddy="+ mainBuddy.getDisplayName()+", "+mainBuddy.getUri()+" ]";
     }
-
 }

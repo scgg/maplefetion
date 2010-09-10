@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.client.dialog;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
@@ -39,8 +40,6 @@ import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.CallHelper;
 import net.solosky.maplefetion.util.ObjectWaiter;
 import net.solosky.maplefetion.util.ResponseFuture;
-
-import org.apache.log4j.Logger;
 
 /**
  * 
@@ -86,11 +85,6 @@ public class LiveV1ChatDialog extends ChatDialog
 	 * 等待对方确认的等待对象
 	 */
 	private ObjectWaiter<Boolean> ackWaiter;
-	
-	/**
-	 * LOGGER
-	 */
-	private static Logger logger = Logger.getLogger(LiveV1ChatDialog.class);
 
 	/**
 	 * 主动建立会话
@@ -145,6 +139,7 @@ public class LiveV1ChatDialog extends ChatDialog
 	{
 		this.ensureOpened();
 		SipcRequest req = this.getMessageFactory().createSendChatMessageRequest(this.mainBuddy.getUri(), message);
+		callHelper.set(req);
 		req.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
 		this.process(req);
 		this.updateActiveTime();
@@ -153,61 +148,37 @@ public class LiveV1ChatDialog extends ChatDialog
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see net.solosky.maplefetion.client.dialog.Dialog#closeDialog()
+	 * @see net.solosky.maplefetion.client.dialog.Dialog#doCloseDialog()
 	 */
 	@Override
-	public void closeDialog()
+	protected void doCloseDialog() throws Exception
 	{
 		if(!this.context
 				.getDialogFactory()
 				.getServerDialog()
 				.getProcessorChain()
 				.isChainClosed()) {
-			try {
 	            this.bye();
-            } catch (Exception e) {
-            	logger.warn("Close ChatDialog failed. dialog = "+this.toString()+" ", e);
-            }
 		}
-		this.setState(DialogState.CLOSED);
 	}
 
 	/*
 	 * (non-Javadoc)
 	 * 
-	 * @see net.solosky.maplefetion.client.dialog.Dialog#openDialog()
+	 * @see net.solosky.maplefetion.client.dialog.Dialog#doOpenDialog()
 	 */
 	@Override
-	public void openDialog() throws TransferException, DialogException
+	protected void doOpenDialog() throws Exception
 	{
-		//检查对话状态，防止多次打开一个对话
-		if(this.getState()==DialogState.CREATED) {
-			this.setState(DialogState.OPENNING);
+		//只有主动打开对话才会发出邀请请求，如果是被动邀请，什么也不需要做
+		if (!this.isBeenInvited()) {
+			this.invite();
+			this.ack();
 		}else {
-			return;
+			int waitTimeout = FetionConfig.getInteger("fetion.dialog.wait-buddy-enter-timeout")*1000;
+			this.ackWaiter.waitObject(waitTimeout);
 		}
-		
-		try {
-			this.setState(DialogState.OPENNING);
-			//只有主动打开对话才会发出邀请请求，如果是被动邀请，什么也不需要做
-			if (!this.isBeenInvited()) {
-				this.invite();
-				this.ack();
-			}else {
-				this.ackWaiter.waitObject(60*1000);	//等待60秒，如果没有回复就抛出异常
-			}
-			
-			this.setState(DialogState.OPENED);
-		} catch (RequestTimeoutException e) {
-			this.setState(DialogState.FAILED);
-			throw new DialogException(e);
-		} catch (InterruptedException e) {
-			this.setState(DialogState.FAILED);
-			throw new DialogException(e);
-		} catch (Exception e) {
-			this.setState(DialogState.FAILED);
-			throw new DialogException(e);
-        }
+
 
 	}
 

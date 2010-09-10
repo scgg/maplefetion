@@ -65,7 +65,7 @@ public class User extends FetionBuddy
 			throw new UnsupportedOperationException("Sorry, the Fetion2008 Protocol does not supported Email sign in.");
 		}else if(validator.isValidMobile()){
 			this.mobile = validator.getMobile();
-		}else if(validator.isValidFetionId()){
+		}else if(validator.getFetionId()>0){
 			this.fetionId = validator.getFetionId();
 		}else{
 			throw new IllegalStateException("Invalid account "+account+", it should be CMCC mobile number, FetionId or Registered Email.");
@@ -109,6 +109,24 @@ public class User extends FetionBuddy
     {
     	return storeVersion;
     }
-	
-	
+
+
+
+	/**
+     * @param password the password to set
+     */
+    public void setPassword(String password)
+    {
+    	this.password = password;
+    }
+
+
+
+	/**
+     * @param storeVersion the storeVersion to set
+     */
+    public void setStoreVersion(StoreVersion storeVersion)
+    {
+    	this.storeVersion = storeVersion;
+    }
 }

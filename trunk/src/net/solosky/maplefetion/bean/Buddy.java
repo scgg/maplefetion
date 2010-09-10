@@ -100,6 +100,15 @@ public abstract class Buddy extends Person
     {
     	this.localName = localName;
     }
+    
+
+	/**
+     * @param relation the relation to set
+     */
+    public void setRelation(Relation relation)
+    {
+    	this.relation = relation;
+    }
 
 
 	/**

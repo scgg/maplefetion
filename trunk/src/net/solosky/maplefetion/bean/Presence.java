@@ -59,6 +59,11 @@ public class Presence
 	public static final int HIDEN = 000;
 	
 	/**
+	 * 机器人状态
+	 */
+	public static final int ROBOT = 499;
+	
+	/**
 	 * 在线状态
 	 */
 	private int value;
@@ -133,6 +138,52 @@ public class Presence
 	{
 		return desc;
 	}
+	
+
+	/**
+     * @param value the value to set
+     */
+    public void setValue(int value)
+    {
+    	this.value = value;
+    }
+
+
+	/**
+     * @param desc the desc to set
+     */
+    public void setDesc(String desc)
+    {
+    	this.desc = desc;
+    }
+
+
+	/**
+     * @param clientType the clientType to set
+     */
+    public void setClientType(String clientType)
+    {
+    	this.clientType = clientType;
+    }
+
+
+	/**
+     * @param clientId the clientId to set
+     */
+    public void setClientId(String clientId)
+    {
+    	this.clientId = clientId;
+    }
+
+
+	/**
+     * @param clientCaps the clientCaps to set
+     */
+    public void setClientCaps(String clientCaps)
+    {
+    	this.clientCaps = clientCaps;
+    }
+
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()
@@ -144,6 +195,22 @@ public class Presence
 				+ clientId + "]";
 	}
 
+	/**
+	 * 把状态值转换为可以显示的字符串
+	 * @param value
+	 * @return
+	 */
+	public static String presenceValueToDisplayString(int value)
+	{
+		switch(value){
+	    	case Presence.ONLINE:	return "电脑在线";
+	    	case Presence.BUSY:		return "电脑忙碌";
+	    	case Presence.AWAY:		return "电脑离开";
+	    	case Presence.OFFLINE:	return "离线";
+	    	case Presence.ROBOT:	return "机器人在线";
+	    	default:	return "未知状态";
+    	}
+	}
 
 	/**
      * 检查是否是合法的presence
@@ -157,6 +224,7 @@ public class Presence
     	case ONLINE:
     	case HIDEN:
     	case BUSY:
+    	case ROBOT:
     		return true;
     	
     	default:
