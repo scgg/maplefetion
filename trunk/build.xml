@@ -33,7 +33,7 @@
     <!-- 构建JAR -->
     <target name="dist" depends="compile">
         <mkdir dir="${dist.dir}"/>
-        <jar jarfile="${dist.dir}/maplefetion-${DSTAMP}.jar" basedir="${build.dir}"/>
+        <jar jarfile="${dist.dir}/maplefetion-core-${DSTAMP}.jar" basedir="${build.dir}"/>
     </target>
 
      <!-- 构建Demo -->

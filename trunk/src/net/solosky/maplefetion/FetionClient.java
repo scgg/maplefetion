@@ -745,22 +745,27 @@ public class FetionClient implements FetionContext
 	{
 		this.ensureOnline();
 		
-		//要做的第一件事是找到这个好友，因为通过手机查找好友需要向服务器发起请求，所以这里先建立一个临时的事件监听器
-		//当找到好友操作完成之后，判断是否找到，如果找到就发送消息
-		ActionEventListener tmpListener = new ActionEventListener() {
-			public void fireEevent(ActionEvent event){
-				if(event.getEventType()==ActionEventType.SUCCESS){
-					//成功的找到了好友，获取这个好友，然后发送消息
-					FindBuddySuccessEvent evt = (FindBuddySuccessEvent) event;
-					sendChatMessage(evt.getFoundBuddy(), message, listener);
-				}else{
-					//查找失败直接回调设置的方法
-					listener.fireEevent(event);
+		//是否是自己,如果是，只能给自己发送短信
+		if(mobile==this.user.getMobile()) {
+			this.sendSMSMessageToSelf(message, listener);
+		}else {
+			//要做的第一件事是找到这个好友，因为通过手机查找好友需要向服务器发起请求，所以这里先建立一个临时的事件监听器
+			//当找到好友操作完成之后，判断是否找到，如果找到就发送消息
+			ActionEventListener tmpListener = new ActionEventListener() {
+				public void fireEevent(ActionEvent event){
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						//成功的找到了好友，获取这个好友，然后发送消息
+						FindBuddySuccessEvent evt = (FindBuddySuccessEvent) event;
+						sendChatMessage(evt.getFoundBuddy(), message, listener);
+					}else{
+						//查找失败直接回调设置的方法
+						listener.fireEevent(event);
+					}
 				}
-			}
-		};
-		//开始查找好友请求
-		this.findBuddyByMobile(mobile, tmpListener);
+			};
+			//开始查找好友请求
+			this.findBuddyByMobile(mobile, tmpListener);
+		}
 	}
 	
 	
