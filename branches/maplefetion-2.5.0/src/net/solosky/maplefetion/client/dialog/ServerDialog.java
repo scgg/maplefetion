@@ -55,9 +55,7 @@ import net.solosky.maplefetion.client.response.DeleteBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteCordResponseHandler;
 import net.solosky.maplefetion.client.response.DeleteScheduleSMSResponseHandler;
 import net.solosky.maplefetion.client.response.FindBuddyByMobileResponseHandler;
-import net.solosky.maplefetion.client.response.GetContactDetailResponseHandler;
-import net.solosky.maplefetion.client.response.GetContactListResponseHandler;
-import net.solosky.maplefetion.client.response.GetContactsInfoResponseHander;
+import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetGroupListResponseHandler;
 import net.solosky.maplefetion.client.response.GetGroupsInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
@@ -163,11 +161,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     {
     	//建立处理链
     	this.buildProcessorChain();
-		
-		//注册定时任务
-    	this.keepAliveTask = new ServerKeepLiveTask();
-    	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
-		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
     }
 
     
@@ -187,6 +180,18 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		
 		this.processorChain.startProcessorChain();
 		
+    }
+    
+    
+    /**
+     * 开始保持在线
+     */
+    public void startKeepAlive()
+    {
+    	//注册定时任务
+    	this.keepAliveTask = new ServerKeepLiveTask();
+    	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
+		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
     }
     
     /**
@@ -278,30 +283,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		request.setResponseHandler(new GetPersonalInfoResponseHandler(context, this, listener));
 		this.process(request);
     }
-	
-	/**
-	 * 获取好友列表
-	 * @param listener 消息监听器
-	 */
-	public void getContactList(ActionEventListener listener)
-	{
-		this.ensureOpened();
-		SipcRequest request = this.getMessageFactory().createGetContactListRequest();
-		request.setResponseHandler(new GetContactListResponseHandler(context, this, listener));
-		this.process(request);		
-	}
-	
-	/**
-	 * 获取联系人详细信息
-	 * @return
-	 */
-	public void getContactsInfo(Collection<FetionBuddy> buddyList, ActionEventListener listener)
-	{
-		this.ensureOpened();
-		SipcRequest request = this.getMessageFactory().createGetContactsInfoRequest(buddyList);
-		request.setResponseHandler(new GetContactsInfoResponseHander(context, this, listener));
-		this.process(request);
-	}
 	
 	/**
 	 * 订阅异步通知
@@ -536,7 +517,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 		this.ensureOpened();
 		SipcRequest request = null;
 		if(buddy instanceof FetionBuddy) {
-			request = this.messageFactory.createDeleteBuddyRequest(buddy.getUri());
+			request = this.messageFactory.createDeleteBuddyRequest(buddy.getUserId());
 		}else {
 			request = this.messageFactory.createDeleteMobileBuddyRequest(buddy.getUri());
 		}
@@ -620,11 +601,11 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param buddy		只能是飞信好友才能获取详细信息
 	 * @param listener
 	 */
-	public void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener)
+	public void retireBuddyInfo(FetionBuddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createGetContactDetailRequest(buddy.getUri());
-		request.setResponseHandler(new GetContactDetailResponseHandler(context, this, listener));
+		SipcRequest request = this.messageFactory.createGetContactInfoRequest(buddy.getUri());
+		request.setResponseHandler(new GetContactInfoResponseHandler(context, this, buddy, listener));
 		this.process(request);
 	}
 	
@@ -683,7 +664,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void findBuddyByMobile(long mobile, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createGetContactDetailRequest("tel:"+mobile);
+		SipcRequest request = this.messageFactory.createGetContactInfoRequest("tel:"+mobile);
 		request.setResponseHandler(new FindBuddyByMobileResponseHandler(context, this, listener));
 		this.process(request);
 	}

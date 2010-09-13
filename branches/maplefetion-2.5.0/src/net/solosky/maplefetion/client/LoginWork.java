@@ -27,7 +27,6 @@ package net.solosky.maplefetion.client;
 
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.TimerTask;
 
@@ -35,8 +34,6 @@ import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.LoginState;
-import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.StoreVersion;
@@ -414,6 +411,7 @@ public class LoginWork implements Runnable
     	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.loginWaiter.objectArrive(state);
     		this.context.updateState(ClientState.ONLINE);
+    		this.context.getDialogFactory().getServerDialog().startKeepAlive();
     		if(this.isSSISign){
 	    		int ssicReplaceInterval = FetionConfig.getInteger("fetion.ssi.replace-interval")*1000;
 	    		this.context.getFetionTimer().scheduleTask(this.replaceSsicTask, ssicReplaceInterval, ssicReplaceInterval);

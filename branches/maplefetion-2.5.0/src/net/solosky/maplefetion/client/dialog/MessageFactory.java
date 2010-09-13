@@ -120,7 +120,7 @@ public class MessageFactory
      */
     public SipcRequest createUserAuthRequest(SipcHeader wwwHeader, int presence, boolean isSupportedMutiConnection)
     {
-    	SipcRequest  req = this.createServerRegisterRequest(presence, isSupportedMutiConnection);
+    	SipcRequest  req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
     	
     	Pattern pt = Pattern.compile("Digest algorithm=\"SHA1-sess-v4\",nonce=\"(.*?)\",key=\"(.*?)\",signature=\"(.*?)\"");
     	Matcher mc = pt.matcher(wwwHeader.getValue());
@@ -131,8 +131,10 @@ public class MessageFactory
         	String response = auth.generate(mc.group(2), passHex, mc.group(1), aeskey);
         	String authString ="Digest response=\""+response+"\",algorithm=\"SHA1-sess-v4\"";
         	req.addHeader(SipcHeader.AUTHORIZATION, authString);
+        	req.addHeader("AK", "ak-value");
         	
         	String body = MessageTemplate.TMPL_USER_AUTH;
+        	body = body.replace("{machineCode}", "5DBFE64D4449FBD0AE130C7B12D27A9F");
         	body = body.replace("{sid}", Integer.toString(this.user.getFetionId()));
         	body = body.replace("{userId}", Integer.toString(this.user.getUserId()));
         	body = body.replace("{presence}", Integer.toString(presence));
@@ -205,61 +207,22 @@ public class MessageFactory
     	req.addHeader(SipcHeader.EVENT, "KeepConnectionBusy");
     	return req;
     }
-
-    /**
-     *  获取联系人详细信息
-     * @param buddyList
-     * @return
-     */
-    public SipcRequest createGetContactsInfoRequest(Collection<FetionBuddy> buddyList)
-    {
-    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
-    	
-    	StringBuffer buffer = new StringBuffer();
-    	Iterator<FetionBuddy> it = buddyList.iterator();
-    	String contactTemplate = "<contact uri=\"{uri}\" />";
-    	while(it.hasNext()){
-    		FetionBuddy b = it.next();
-    		buffer.append(contactTemplate.replace("{uri}", b.getUri()));
-    	}
-    	String body = MessageTemplate.TMPL_GET_CONTACTS_INFO;
-    	body = body.replace("{contactList}", buffer.toString());
-    	req.setBody(new SipcBody(body));
-    	
-    	req.addHeader(SipcHeader.EVENT, "GetContactsInfo");
-    	
-    	
-    	return req;
-    }
     
     /**
      *  获取联系人详细信息
      * @param buddyList
      * @return
      */
-    public SipcRequest createGetContactDetailRequest(String uri)
+    public SipcRequest createGetContactInfoRequest(String uri)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	
-    	String body = MessageTemplate.TMPL_GET_CONTACT_DETAIL;
-    	body = body.replace("{args}", " uri=\""+uri+"\" ");
+    	String body = MessageTemplate.TMPL_GET_CONTACT_INFO;
+    	body = body.replace("{args}", " uri=\""+uri+"\" version=\"0\" ");
     	req.setBody(new SipcBody(body));
     	
-    	req.addHeader(SipcHeader.EVENT, "GetContactsInfo");
+    	req.addHeader(SipcHeader.EVENT, "GetContactInfoV4");
     	
-    	return req;
-    }
-    
-    /**
-     * 获取联系人列表
-     */
-    public SipcRequest createGetContactListRequest()
-    {
-    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
-    	
-    	req.addHeader(SipcHeader.EVENT, "GetContactList");
-    	
-    	req.setBody(new SipcBody(MessageTemplate.TMPL_GET_CONTACT_LIST));
     	return req;
     }
     
@@ -352,7 +315,7 @@ public class MessageFactory
     	body = body.replace("{desc}", StringHelper.qouteHtmlSpecialChars(desc));
     	body = body.replace("{localName}", localName!=null?"local-name=\""+localName+"\"":"");
     	
-    	req.addHeader(SipcHeader.EVENT,"AddBuddy");
+    	req.addHeader(SipcHeader.EVENT,"AddBuddyV4");
     	req.setBody(new SipcBody(body));
     	return req;
     }
@@ -382,13 +345,13 @@ public class MessageFactory
      * @param uri
      * @return
      */
-    public SipcRequest createDeleteBuddyRequest(String uri)
+    public SipcRequest createDeleteBuddyRequest(int userId)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	String body = MessageTemplate.TMPL_DELETE_BUDDY;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{userId}", Integer.toString(userId));
     	
-    	req.addHeader(SipcHeader.EVENT,"DeleteBuddy");
+    	req.addHeader(SipcHeader.EVENT,"DeleteBuddyV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;
@@ -467,7 +430,7 @@ public class MessageFactory
     	String body = MessageTemplate.TMPL_SET_PERSONAL_INFO;
     	body = body.replace("{personal}", builder.toXML("personal"));
     	
-    	req.addHeader(SipcHeader.EVENT,"SetPersonalInfo");
+    	req.addHeader(SipcHeader.EVENT,"SetUserInfoV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;

@@ -25,12 +25,15 @@
  */
 package net.solosky.maplefetion.client.response;
 
+import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.client.ResponseHandler;
+import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
-import net.solosky.maplefetion.sipc.SipcStatus;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
@@ -42,22 +45,24 @@ import org.jdom.Element;
  * 
  * @author solosky <solosky772@qq.com>
  */
-public class GetContactInfoResponseHandler implements ResponseHandler
+public class GetContactInfoResponseHandler extends AbstractResponseHandler
 {
 	/**
 	 * 好友对象
 	 */
 	private FetionBuddy buddy;
-
+	
 	/**
-	 * 默认构造函数
-	 * 
-	 * @param buddy
-	 */
-	public GetContactInfoResponseHandler(FetionBuddy buddy)
-	{
-		this.buddy = buddy;
-	}
+     * @param context
+     * @param dialog
+     * @param listener
+     */
+    public GetContactInfoResponseHandler(FetionContext context, Dialog dialog, 
+    		FetionBuddy buddy, ActionEventListener listener)
+    {
+	    super(context, dialog, listener);
+	    this.buddy = buddy;
+    }
 
 	/*
 	 * (non-Javadoc)
@@ -67,45 +72,22 @@ public class GetContactInfoResponseHandler implements ResponseHandler
 	 * .sipc.SipcResponse)
 	 */
 	@Override
-	public void handle(SipcResponse response) throws FetionException
+	public ActionEvent doActionOK(SipcResponse response) throws FetionException
 	{
-		if(response.getStatusCode()==SipcStatus.ACTION_OK){
-			Element root = XMLHelper.build(response.getBody().toSendString());
-			Element contact = XMLHelper.find(root, "/results/contacts/contact");
-			if (contact != null
-			        && contact.getAttributeValue("status-code").equals("200")) {
-				String uri = contact.getAttributeValue("uri");
-				if (!uri.equals(buddy.getUri()))
-					return; // 判断获取结果的uri和需要更新的好友的uri是否相同，如果不同直接返回
-				Element personal = contact.getChild("personal");
-				if (personal != null) {
-					BeanHelper.toBean(FetionBuddy.class, this.buddy, personal);
-				}
-			}
+		
+		Element root = XMLHelper.build(response.getBody().toSendString());
+		Element contact = XMLHelper.find(root, "/results/contact");
+		
+		BeanHelper.toBean(FetionBuddy.class, buddy, contact);
+		
+		BuddyExtend extend = buddy.getExtend();
+		if(extend==null) {
+			extend = new BuddyExtend();
+			buddy.setExtend(extend);
 		}
-	}
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.ResponseHandler#timeout(net.solosky.maplefetion.sipc.SipcRequest)
-     */
-    @Override
-    public void timeout(SipcRequest request)
-    {
-    }
-
-	/* (non-Javadoc)
-     * @see net.solosky.maplefetion.client.ResponseHandler#error(net.solosky.maplefetion.sipc.SipcRequest)
-     */
-    @Override
-    public void ioerror(SipcRequest request)
-    {
-    }
-
-	/* (non-Javadoc)
-	 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest)
-	 */
-	@Override
-	public void syserror(SipcRequest request, Throwable t)
-	{
+		BeanHelper.toBean(BuddyExtend.class, extend, contact);
+		context.getFetionStore().flushBuddy(buddy);
+		
+		return super.doActionOK(response);
 	}
 }

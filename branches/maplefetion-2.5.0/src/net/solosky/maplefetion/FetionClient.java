@@ -55,7 +55,6 @@ import net.solosky.maplefetion.client.LoginException;
 import net.solosky.maplefetion.client.LoginWork;
 import net.solosky.maplefetion.client.RegistrationException;
 import net.solosky.maplefetion.client.SystemException;
-import net.solosky.maplefetion.client.UpdateBuddyListWork;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxyFactory;
 import net.solosky.maplefetion.client.dialog.DialogException;
@@ -484,7 +483,15 @@ public class FetionClient implements FetionContext
     		SipcRequest request = event.getTargetRequest();
     		VerifyImage image   = event.getVerifyImage();
     		
-    		request.removeHeader(SipcHeader.AUTHORIZATION);
+    		//移除之前的A字段
+    		Iterator<SipcHeader> it = request.getHeaders().iterator();
+    		while(it.hasNext()) {
+    			SipcHeader h = it.next();
+    			if(h.getName().equals(SipcHeader.AUTHORIZATION) && h.getValue().indexOf("Verify response=")!=-1) {
+    				it.remove();
+    			}
+    		}
+    		
     		request.addHeader(SipcHeader.AUTHORIZATION, "Verify response=\""+image.getVerifyCode()+"\",algorithm=\""+image.getAlgorithm()+"\"," +
     				"type=\""+image.getVerifyType()+"\",chid=\""+image.getImageId()+"\"");
     		
@@ -992,6 +999,17 @@ public class FetionClient implements FetionContext
 	}
 	
 	/**
+	 * 获取好友的详细信息
+	 * @param buddy		飞信好友，只能是飞信好友
+	 * @param listener
+	 */
+	public void retireBuddyInfo(FetionBuddy buddy, ActionEventListener listener)
+	{
+		this.ensureOnline();
+		this.dialogFactory.getServerDialog().retireBuddyInfo(buddy, listener);
+	}
+	
+	/**
 	 * 同意对方添加好友
 	 * @param buddy			飞信好友
 	 * @param listener
@@ -1027,30 +1045,6 @@ public class FetionClient implements FetionContext
 		}else{
 			if(listener!=null)	listener.fireEevent(new FailureEvent(FailureType.INVALID_PRESENCE_VALUE));
 		}
-	}
-	
-	/**
-	 * 获取好友的详细信息
-	 * @param buddy		飞信好友，只能是飞信好友
-	 * @param listener
-	 */
-	public void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener)
-	{
-		this.ensureOnline();
-		this.dialogFactory.getServerDialog().getBuddyDetail(buddy, listener);
-	}
-	
-	/**
-	 * 批量获取获取好友的详细信息
-	 * 注意：如果一次请求的获取好友的详细信息过多，这个方法可能不能完全的返回好友的详细信息，其他结果则通过BN通知返回
-	 * 建议一次最多不要获取超过10个好友信息，如果超出10个，建议循环请求
-	 * @param buddy		飞信好友列表，只能是飞信好友
-	 * @param listener
-	 */
-	public void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionEventListener listener)
-	{
-		this.ensureOnline();
-		this.dialogFactory.getServerDialog().getContactsInfo(buddyList, listener);
 	}
 	
 	/**
@@ -1219,17 +1213,6 @@ public class FetionClient implements FetionContext
 			}
 		}
 	}
-	
-	/**
-	 * 强制更新好友列表，这个方法会清空本地的好友列表，并从服务器上获取最新的好友列表和好友信息
-	 * @param listener
-	 */
-	public void updateBuddyList(ActionEventListener listener)
-	{
-		this.ensureOnline();
-		this.getFetionExecutor().submitTask( new UpdateBuddyListWork(this, listener));
-	}
-	
 	
 	/**
 	 * 将好友添加到黑名单，也就是无法发送消息给在黑名单的好友

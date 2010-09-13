@@ -84,14 +84,8 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		//解析个人信息，飞信真有意思，这里却不简写，map.xml里面全是简写的，所以这里只能手动注入了。
 		Element personal = XMLHelper.find(root, "/results/user-info/personal");
 		User user = this.context.getFetionUser();
-		user.setImpresa(personal.getAttributeValue("impresa"));
-		user.setTrueName(personal.getAttributeValue("name"));
-		user.setNickName(personal.getAttributeValue("nickname"));	
 		user.setEmail(personal.getAttributeValue("register-email"));
-		user.setUri(personal.getAttributeValue("uri"));
-		user.setFetionId(Integer.parseInt(personal.getAttributeValue("sid")));
-		user.setMobile(Long.parseLong(personal.getAttributeValue("mobile-no")));
-		user.setUserId(Integer.parseInt(personal.getAttributeValue("user-id")));
+		BeanHelper.toBean(User.class, user, personal);
 		
 		Element contactList = XMLHelper.find(root, "/results/user-info/contact-list");
 		

@@ -147,8 +147,8 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	context.getFetionStore().addBuddy(buddy);
     	//如果是飞信好友，获取陌生人的信息
     	if(buddy instanceof FetionBuddy) {
-        	SipcRequest request = this.dialog.getMessageFactory().createGetContactDetailRequest(uri);
-        	request.setResponseHandler(new GetContactInfoResponseHandler((FetionBuddy)buddy));
+        	SipcRequest request = this.dialog.getMessageFactory().createGetContactInfoRequest(uri);
+        	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy)buddy),null));
         	dialog.process(request);
     	}
     	//通知监听器
@@ -213,53 +213,10 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     			if(relation==Relation.BUDDY && buddy.getRelation()!=Relation.BUDDY) {
     				
     				//这里还需要获取好友的详细信息
-    				SipcRequest request = dialog.getMessageFactory().createGetContactDetailRequest(buddy.getUri());
-    				
-    				//这里需要动态的创建一个hanler, 当前操作在读线程上，还不能等待
-    				ResponseHandler handler = new ResponseHandler()
-    					{
-    						public void handle(SipcResponse response) throws FetionException
-    						{
-    							Element root = XMLHelper.build(response.getBody().toSendString());
-    		    				Element contact = root.getChild("contacts").getChild("contact");
-    		    				if(contact!=null) {
-    		        				Element p = contact.getChild("personal");
-    		        			    if(p!=null) {	
-    		        			    	BeanHelper.toBean(FetionBuddy.class, buddy, p);
-    		        			    }
-    		    				}
-    		    				context.getFetionStore().flushBuddy(buddy);
-    		    				
-    		    				logger.debug("buddy agreed your buddy request:"+buddy.getDisplayName());
-    		    				tryFireNotifyEvent(new BuddyConfirmedEvent(buddy, true));			//通知监听器
-    						}
-
-							@Override
-                            public void timeout(SipcRequest request)
-                            {
-								logger.warn("ContactDetailRequest timeout ...");
-                            }
-
-							@Override
-                            public void ioerror(SipcRequest request)
-                            {
-								logger.warn("ContactDetailRequest io error ...");
-                            }
-
-							/* (non-Javadoc)
-							 * @see net.solosky.maplefetion.client.ResponseHandler#syserror(net.solosky.maplefetion.sipc.SipcRequest, java.lang.Throwable)
-							 */
-							@Override
-							public void syserror(SipcRequest request,
-									Throwable throwable)
-							{
-								logger.warn("ContactDetailRequest system error ...");
-							}
-    					};
-    					//消息回复收到后就会自动调用这个处理器
-    					request.setResponseHandler(handler);
-    					//发出这个消息
-    					dialog.process(request);
+    				SipcRequest request = dialog.getMessageFactory().createGetContactInfoRequest(buddy.getUri());
+    				request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy) buddy),null));
+					dialog.process(request);
+					
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
     				logger.debug("buddy declined your buddy request:"+buddy.getDisplayName());
     				this.tryFireNotifyEvent(new BuddyConfirmedEvent( buddy, false));	//通知监听器

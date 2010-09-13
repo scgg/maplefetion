@@ -101,8 +101,8 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    	
 	    	//如果是飞信好友，还需要获取这个陌生人的信息
 	    	if(from instanceof FetionBuddy) {
-    	    	SipcRequest request = this.dialog.getMessageFactory().createGetContactDetailRequest(notify.getFrom());
-    	    	request.setResponseHandler(new GetContactInfoResponseHandler((FetionBuddy) from));
+    	    	SipcRequest request = this.dialog.getMessageFactory().createGetContactInfoRequest(notify.getFrom());
+    	    	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy) from),null));
     	    	this.dialog.process(request);
 	    	}
 	    }

@@ -38,7 +38,6 @@ import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.event.notify.BuddyPresenceEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.util.BeanHelper;
-import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;
@@ -123,7 +122,6 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
     	    }else if(tmpBuddy!=null && tmpBuddy instanceof MobileBuddy ) {	
     	    	//如果是手机好友，目前还没有想到手机好友的Presence有什么内容，先做个记录，方便以后分析
     	    	logger.warn("Got a mobile buddy presence notify,just ignore it.");
-    	    	//logger.warn(notify.toSendString());
     	    }else{
     	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+userId);
     	    }
