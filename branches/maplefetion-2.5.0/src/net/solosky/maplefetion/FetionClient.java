@@ -41,7 +41,6 @@ import java.util.Iterator;
 
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.Presence;
@@ -477,7 +476,7 @@ public class FetionClient implements FetionContext
     public void processVerify(ImageVerifyEvent event) 
     {
     	if(event.getVerifyAction()==ImageVerifyEvent.SSI_VERIFY) {
-    		this.login(this.loginWork.getPresence(), event.getVerifyImage());
+    		this.loginWork.setVerifyImage(event.getVerifyImage());
     	}else if(event.getVerifyAction()==ImageVerifyEvent.SIPC_VERIFY) {
     		
     		SipcRequest request = event.getTargetRequest();
@@ -626,7 +625,7 @@ public class FetionClient implements FetionContext
 	 * @param verifyImage	验证图片，如果没有可以设置为null
 	 * @param isSSISign		是否启用SSI登录
 	 */
-	public void login(int presence, VerifyImage verifyImage, boolean isSSISign)
+	public void login(int presence)
 	{
 		//为了防止用户在客户端登录过程中或者在线情况下错误的调用，检查下当前客户端状态，如果为登录中或者在线状态就抛出异常
 		ClientState state = this.getState();
@@ -637,23 +636,7 @@ public class FetionClient implements FetionContext
 		//为了便于掉线后可以重新登录，把初始化对象的工作放在登录函数做
 		this.init();
 		this.loginWork.setPresence(presence);
-		this.loginWork.setVerifyImage(verifyImage);
-		this.loginWork.setSSISign(isSSISign);
 		this.executor.submitTask(this.loginWork);
-	}
-	
-	
-	/**
-	 * 
-	 * 客户端异步登录,默认启用SSI登录
-	 * @deprecated 使用login(int presence, VerifyImage verifyImage, boolean isSSISign)代替
-	 * @param presence 		在线状态 定义在Presence中 
-	 * @param verifyImage	验证图片，如果没有可以设置为null
-	 * @return
-	 */
-	public void login(int presence, VerifyImage verifyImage)
-	{
-		this.login(presence, verifyImage, true);
 	}
 	
 	
@@ -663,33 +646,18 @@ public class FetionClient implements FetionContext
      */
     public void login()
     {
-		this.login(Presence.ONLINE, null, true);
+		this.login(Presence.ONLINE);
     }
 	
 	/**
 	 * 客户端同步登录
 	 * @param presence 		在线状态 定义在Presence中 
-	 * @param verifyImage	验证图片，如果没有可以设置为null
-	 * @param isSSISign		是否启用SSI登录
 	 * @return 登录结果,定义在LoginState中
 	 */
-	public LoginState syncLogin(int presence, VerifyImage verifyImage, boolean isSSISign)
+	public LoginState syncLogin(int presence, long timeout)
 	{
-		this.login(presence, verifyImage, isSSISign);
-		return this.loginWork.waitLoginState();
-	}
-	
-	
-	/**
-	 * 
-	 * 客户端同步登录,默认启用SSI登录
-	 * @deprecated 使用syncLogin(int presence, VerifyImage verifyImage, boolean isSSISign)代替
-	 * @param presence 		在线状态 定义在Presence中 
-	 * @param verifyImage	验证图片，如果没有可以设置为null
-	 * @return
-	 */
-	public LoginState syncLogin(int presence, VerifyImage verifyImage) {
-		return this.syncLogin(presence, verifyImage, true);
+		this.login(presence);
+		return this.loginWork.waitLoginState(timeout);
 	}
 	
 	/**
@@ -699,7 +667,17 @@ public class FetionClient implements FetionContext
 	 */
 	public LoginState syncLogin()
 	{
-		return this.syncLogin(Presence.ONLINE, null, true);
+		return this.syncLogin(Presence.ONLINE, 0 );
+	}
+	
+	
+	/**
+	 * 取消当前登录操作，并释放资源
+	 */
+	public void cancelLogin() 
+	{
+		this.loginWork.cancelLogin();
+		this.dispose();
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////
@@ -1000,10 +978,10 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 获取好友的详细信息
-	 * @param buddy		飞信好友，只能是飞信好友
+	 * @param buddy		飞信好友
 	 * @param listener
 	 */
-	public void retireBuddyInfo(FetionBuddy buddy, ActionEventListener listener)
+	public void retireBuddyInfo(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOnline();
 		this.dialogFactory.getServerDialog().retireBuddyInfo(buddy, listener);

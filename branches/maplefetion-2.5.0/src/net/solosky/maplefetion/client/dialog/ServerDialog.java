@@ -36,7 +36,6 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.ScheduleSMS;
@@ -45,7 +44,6 @@ import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dispatcher.ServerMessageDispatcher;
 import net.solosky.maplefetion.client.response.AddBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AddBuddyToBlackListResponseHandler;
-import net.solosky.maplefetion.client.response.AddMobileBuddyResponseHandler;
 import net.solosky.maplefetion.client.response.AgreeApplicationResponseHandler;
 import net.solosky.maplefetion.client.response.CreateCordResponseHandler;
 import net.solosky.maplefetion.client.response.CreateScheduleSMSResponseHandler;
@@ -70,10 +68,7 @@ import net.solosky.maplefetion.client.response.SetCordTitleResponseHandler;
 import net.solosky.maplefetion.client.response.SetPresenceResponseHandler;
 import net.solosky.maplefetion.client.response.UserAuthResponseHandler;
 import net.solosky.maplefetion.event.ActionEvent;
-import net.solosky.maplefetion.event.ActionEventType;
 import net.solosky.maplefetion.event.action.ActionEventListener;
-import net.solosky.maplefetion.event.action.FailureEvent;
-import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.net.TransferService;
@@ -405,43 +400,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createAddBuddyRequest(uri, promptId, cord!=null?cord.getId():-1, desc, localName);
-		
-		//这里需要建立一个新的监听器进行适配，因为返回的结果可能要进行另外一个操作才能确定操作是否完成
-		ActionEventListener tmpListener = new ActionEventListener(){
-			public void fireEevent(ActionEvent event){
-				if(event.getEventType()==ActionEventType.FAILURE){
-					FailureEvent evt = (FailureEvent) event;
-					if(evt.getFailureType()==FailureType.USER_NOT_FOUND){
-						//表明用户没开通飞信，那就添加手机好友,不要调用用户定义的回调函数
-						addMobileBuddy(uri, cord, desc, listener);
-					}else{
-						//其他情况，直接调用用户的回调函数
-						listener.fireEevent(event);
-					}
-				}else{
-					listener.fireEevent(event);
-				}
-			}
-		};
-		
-		request.setResponseHandler(new AddBuddyResponseHandler(context,this, tmpListener));
-    	
-    	this.process(request);
-	}
-	
-	
-	/**
-	 * 添加手机好友
-	 * @param uri		好友手机uri(类似tel:159xxxxxxxx)
-	 * @param cord		设置添加到那个好友分组，如果传递null就表示放入默认分组
-	 * @param desc		“我是xx” xx：名字
-	 * @return
-	 */
-	private void addMobileBuddy(String uri, Cord cord, String desc, ActionEventListener listener)
-	{
-		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createAddMobileBuddyRequest(uri, cord!=null?cord.getId():-1, desc);
-		request.setResponseHandler(new AddMobileBuddyResponseHandler(context, this, listener));
+		request.setResponseHandler(new AddBuddyResponseHandler(context,this, listener));
     	
     	this.process(request);
 	}
@@ -516,11 +475,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		this.ensureOpened();
 		SipcRequest request = null;
-		if(buddy instanceof FetionBuddy) {
-			request = this.messageFactory.createDeleteBuddyRequest(buddy.getUserId());
-		}else {
-			request = this.messageFactory.createDeleteMobileBuddyRequest(buddy.getUri());
-		}
+		request = this.messageFactory.createDeleteBuddyRequest(buddy.getUserId());
 		request.setResponseHandler(new DeleteBuddyResponseHandler(context, this, listener, buddy));
 		this.process(request);
 	}
@@ -601,7 +556,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param buddy		只能是飞信好友才能获取详细信息
 	 * @param listener
 	 */
-	public void retireBuddyInfo(FetionBuddy buddy, ActionEventListener listener)
+	public void retireBuddyInfo(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
 		SipcRequest request = this.messageFactory.createGetContactInfoRequest(buddy.getUri());

@@ -28,7 +28,6 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
@@ -69,8 +68,8 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
 		if(element!=null && element.getAttributeValue("uri")!=null) {
 			Buddy buddy = this.context.getFetionStore().getBuddyByUri(element.getAttributeValue("uri"));
-			if(element.getChild("personal")!=null && buddy instanceof FetionBuddy) {
-				BeanHelper.toBean(FetionBuddy.class, buddy, element.getChild("personal"));
+			if(element.getChild("personal")!=null) {
+				BeanHelper.toBean(Buddy.class, buddy, element.getChild("personal"));
 			}
 			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
 			context.getFetionStore().flushBuddy(buddy);

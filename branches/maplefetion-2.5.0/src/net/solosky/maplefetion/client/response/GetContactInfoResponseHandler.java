@@ -27,12 +27,11 @@ package net.solosky.maplefetion.client.response;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.BuddyExtend;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
-import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
@@ -50,7 +49,7 @@ public class GetContactInfoResponseHandler extends AbstractResponseHandler
 	/**
 	 * 好友对象
 	 */
-	private FetionBuddy buddy;
+	private Buddy buddy;
 	
 	/**
      * @param context
@@ -58,7 +57,7 @@ public class GetContactInfoResponseHandler extends AbstractResponseHandler
      * @param listener
      */
     public GetContactInfoResponseHandler(FetionContext context, Dialog dialog, 
-    		FetionBuddy buddy, ActionEventListener listener)
+    		Buddy buddy, ActionEventListener listener)
     {
 	    super(context, dialog, listener);
 	    this.buddy = buddy;
@@ -78,7 +77,7 @@ public class GetContactInfoResponseHandler extends AbstractResponseHandler
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element contact = XMLHelper.find(root, "/results/contact");
 		
-		BeanHelper.toBean(FetionBuddy.class, buddy, contact);
+		BeanHelper.toBean(Buddy.class, buddy, contact);
 		
 		BuddyExtend extend = buddy.getExtend();
 		if(extend==null) {

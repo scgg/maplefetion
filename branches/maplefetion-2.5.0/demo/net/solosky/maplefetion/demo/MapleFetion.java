@@ -44,11 +44,9 @@ import net.solosky.maplefetion.NotifyEventAdapter;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.BuddyExtend;
 import net.solosky.maplefetion.bean.Cord;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.VerifyImage;
@@ -68,6 +66,7 @@ import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.ThreadTimer;
+import net.solosky.maplefetion.util.UriHelper;
 
 /**
  * 这个是MapleFetion的演示程序，也提供了一个完整的命令行下的飞信
@@ -136,7 +135,7 @@ public class MapleFetion extends NotifyEventAdapter
 	public void login(int presence)
 	{
 		//this.client.enableGroup(true);
-		this.client.login(presence, null, true);
+		this.client.login(presence);
 	}
 	
 	
@@ -356,12 +355,7 @@ public class MapleFetion extends NotifyEventAdapter
 			while(it.hasNext()) {
 				buddy = it.next();
 				this.buddymap.put(Integer.toString(startId), buddy.getUri());
-				String impresa = null;
-				if(buddy instanceof FetionBuddy) {
-					impresa = ((FetionBuddy) buddy).getImpresa();
-				}else {
-					impresa = "";
-				}
+				String impresa = buddy.getImpresa();
 				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
 						+buddy.getDisplayPresence()
 						+"\t"+impresa);
@@ -523,10 +517,10 @@ public class MapleFetion extends NotifyEventAdapter
 	    	final Buddy buddy = this.client.getFetionStore().getBuddyByUri(uri);
 	    	if(buddy==null) {
 	    		println("找不到好友，请重新输入好友信息");
-	    	}else if(buddy instanceof MobileBuddy) {
+	    	}else if(UriHelper.isMobile(buddy.getUri())) {
 	    		printBuddyInfo(buddy);
-	    	}else if(buddy instanceof FetionBuddy) {
-	    		this.client.getBuddyDetail((FetionBuddy)buddy, new ActionEventListener() {
+	    	}else {
+	    		this.client.retireBuddyInfo(buddy, new ActionEventListener() {
 					public void fireEevent(ActionEvent event)
 					{
 						if(event.getEventType()==ActionEventType.SUCCESS){
@@ -554,14 +548,13 @@ public class MapleFetion extends NotifyEventAdapter
     	    System.out.println("备注:"+buddy.getLocalName());
     	    System.out.println("手机号码:"+buddy.getMobile());
     	    
-    	    if(buddy instanceof FetionBuddy) {
-    	    	FetionBuddy fbuddy = (FetionBuddy) buddy;
-        	    BuddyExtend extend = fbuddy.getExtend();
-        	    System.out.println("个性签名:"+fbuddy.getImpresa());
+    	    BuddyExtend extend = buddy.getExtend();
+    	    if(extend!=null) {
+        	    System.out.println("个性签名:"+buddy.getImpresa());
         	    System.out.println("国家:"+extend.getNation());
         	    System.out.println("省份:"+extend.getProvince());
         	    System.out.println("城市:"+extend.getCity());
-        	    System.out.println("EMAIL:"+fbuddy.getEmail());
+        	    System.out.println("EMAIL:"+buddy.getEmail());
     	    }
     	    System.out.println("----------------------------------");
 	    }
@@ -951,21 +944,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public String fomartPresence(Buddy buddy)
 		{
-	    	if(buddy instanceof MobileBuddy)
-	    		return "短信在线";
-	    	
-	    	FetionBuddy b = (FetionBuddy) buddy;
-	    	int p = buddy.getPresence().getValue();
-	    	if(p==Presence.ONLINE)
-	    		return "电脑在线";
-	    	else if(p==Presence.AWAY)
-	    		return "电脑离开";
-	    	else if(p==Presence.BUSY)
-	    		return "电脑忙碌";
-	    	else if(p==Presence.OFFLINE && b.getSMSPolicy().isSMSOnline())
-	    		return "短信在线";
-	    	else
-	    		return "离线";
+	    	return buddy.getDisplayPresence();
 		}
 	    
 	    /**
@@ -1303,7 +1282,7 @@ public class MapleFetion extends NotifyEventAdapter
      * @see net.solosky.maplefetion.NotifyListener#presenceChanged(net.solosky.maplefetion.bean.Buddy)
      */
     @Override
-    public void buddyPresenceChanged(FetionBuddy b)
+    public void buddyPresenceChanged(Buddy b)
     {
     	if(b.getPresence().getValue()==Presence.ONLINE) {
     		println("[系统通知]:"+b.getDisplayName()+" 上线了。");

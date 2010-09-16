@@ -28,10 +28,10 @@ package net.solosky.maplefetion.client.dialog;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcOutMessage;
+import net.solosky.maplefetion.util.UriHelper;
 
 /**
  * 
@@ -84,7 +84,7 @@ public class BasicChatDialog extends ChatDialog
     	ServerDialog serverDialog = this.context.getDialogFactory().getServerDialog();
     	
     	//如果当前好友是手机好友，也就是没有开通飞信的好友的时候，只能发短信
-    	if(this.mainBuddy instanceof MobileBuddy){
+    	if(UriHelper.isMobile(this.mainBuddy.getUri())){
     		serverDialog.sendSMSMessage(this.mainBuddy, message, listener);
     	}else{	
     		//如果当前对话好友是飞信好友，发送消息的是通过服务器中转的，

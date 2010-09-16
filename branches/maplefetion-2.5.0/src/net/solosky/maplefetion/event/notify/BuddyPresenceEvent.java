@@ -25,7 +25,7 @@
  */
 package net.solosky.maplefetion.event.notify;
 
-import net.solosky.maplefetion.bean.FetionBuddy;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.event.NotifyEvent;
 import net.solosky.maplefetion.event.NotifyEventType;
 
@@ -42,13 +42,13 @@ public class BuddyPresenceEvent extends NotifyEvent
 	/**
 	 * 变了状态的好友
 	 */
-	private FetionBuddy buddy;
+	private Buddy buddy;
 	
 	
 	/**
 	 * @param buddy
 	 */
-	public BuddyPresenceEvent( FetionBuddy buddy)
+	public BuddyPresenceEvent(Buddy buddy)
 	{
 		this.buddy = buddy;
 	}
@@ -67,7 +67,7 @@ public class BuddyPresenceEvent extends NotifyEvent
 	/**
 	 * @return the buddy
 	 */
-	public FetionBuddy getBuddy()
+	public Buddy getBuddy()
 	{
 		return buddy;
 	}

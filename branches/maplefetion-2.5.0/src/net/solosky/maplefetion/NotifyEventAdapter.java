@@ -26,7 +26,6 @@
 package net.solosky.maplefetion;
 
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
@@ -181,7 +180,7 @@ public class NotifyEventAdapter implements NotifyEventListener
 	 *  用户状态改变了
 	 * @param 状态改变的好友
 	 */
-	protected void buddyPresenceChanged(FetionBuddy buddy)
+	protected void buddyPresenceChanged(Buddy buddy)
 	{
 	}
 	

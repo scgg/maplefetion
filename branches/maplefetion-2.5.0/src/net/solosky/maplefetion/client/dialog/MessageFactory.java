@@ -37,7 +37,6 @@ import java.util.regex.Pattern;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.ScheduleSMS;

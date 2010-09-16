@@ -30,8 +30,6 @@ import java.util.List;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Presence;
 import net.solosky.maplefetion.client.dialog.BasicChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
@@ -68,16 +66,14 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
     	    Integer userId = Integer.parseInt(contact.getAttributeValue("id"));
     	    
     	    //查找这个好友
-    	    Buddy tmpBuddy = context.getFetionStore().getBuddyByUserId(userId);
+    	    Buddy buddy = context.getFetionStore().getBuddyByUserId(userId);
     	    //这里可能是用户自己
-    	    if(tmpBuddy==null && context.getFetionUser().getUserId()==userId) {
-    	    	tmpBuddy = context.getFetionUser();			
+    	    if(buddy==null && context.getFetionUser().getUserId()==userId) {
+    	    	buddy = context.getFetionUser();			
     	    }    	    
     	    
     	    //判断用户是不是飞信好友
-    	    if(tmpBuddy!=null && tmpBuddy instanceof FetionBuddy) {
-    	    	//安全强制转换
-    	    	FetionBuddy buddy = (FetionBuddy) tmpBuddy;
+    	    if(buddy!=null) {
 				//好友信息改变
         	    if(personal!=null) {
         	    	String nickname = personal.getAttributeValue("n");
@@ -119,9 +115,6 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
         	    context.getFetionStore().flushBuddy(buddy);
         	    logger.debug("PresenceChanged:"+buddy.toString()+" - "+buddy.getPresence());
         	    //TODO ..这里只处理了好友状态改变，本来还应该处理其他信息改变，如好友个性签名和昵称的改变，以后添加。。
-    	    }else if(tmpBuddy!=null && tmpBuddy instanceof MobileBuddy ) {	
-    	    	//如果是手机好友，目前还没有想到手机好友的Presence有什么内容，先做个记录，方便以后分析
-    	    	logger.warn("Got a mobile buddy presence notify,just ignore it.");
     	    }else{
     	    	logger.warn("Unknown Buddy in PresenceChanged notify:"+userId);
     	    }

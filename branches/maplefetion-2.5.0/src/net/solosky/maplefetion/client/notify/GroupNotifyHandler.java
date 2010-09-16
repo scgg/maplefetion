@@ -34,7 +34,6 @@ import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
-import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.jdom.Element;

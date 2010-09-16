@@ -35,7 +35,7 @@ import net.solosky.maplefetion.util.AccountValidator;
  *
  * @author solosky <solosky772@qq.com> 
  */
-public class User extends FetionBuddy
+public class User extends Buddy
 {
 	/**
 	 * 用户密码

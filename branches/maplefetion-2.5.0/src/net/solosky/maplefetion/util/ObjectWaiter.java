@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.util;
 
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
 
@@ -82,7 +83,7 @@ public class ObjectWaiter<T>
 	 * @return  等待结果对象
 	 * @throws Exception 如果超时或结果出现异常就抛出
 	 */
-	public T waitObject(long timeout) throws Exception
+	public T waitObject(long timeout) throws ExecutionException, TimeoutException, InterruptedException
 	{
 		synchronized (lock) {
 			
@@ -110,9 +111,12 @@ public class ObjectWaiter<T>
 	/**
 	 * 等待结果，如果结果没有到来就一直等待
 	 * @return
+	 * @throws InterruptedException 
+	 * @throws TimeoutException 
+	 * @throws ExecutionException 
 	 * @throws Exception
 	 */
-	public T waitObject() throws Exception
+	public T waitObject() throws ExecutionException, TimeoutException, InterruptedException
 	{
 		return this.waitObject(0);
 	}
@@ -175,12 +179,14 @@ public class ObjectWaiter<T>
 	/**
 	 * 根据当前结果返回对象
 	 * 如果有异常就抛出异常，如果没有异常就返回结果对象
+	 * @throws ExecutionException 
+	 * @throws TimeoutException 
 	 * @throws Exception 
 	 */
-	public T getObject() throws Exception
+	public T getObject() throws ExecutionException, TimeoutException
 	{
 		if(this.exception!=null) {
-			throw this.exception;
+			throw new ExecutionException(this.exception);
 		}else if(this.target!=null) {
 			return this.target;
 		}else {

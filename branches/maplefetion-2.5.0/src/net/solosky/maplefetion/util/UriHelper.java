@@ -26,8 +26,6 @@
 package net.solosky.maplefetion.util;
 
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
 
 /**
  *
@@ -64,12 +62,7 @@ public class UriHelper
 	 */
 	public static Buddy createBuddy(String uri)
 	{
-		Buddy buddy = null;
-		if(isMobile(uri)) {
-			buddy = new MobileBuddy();
-		}else {
-			buddy = new FetionBuddy();
-		}
+		Buddy buddy = new Buddy();
 		buddy.setUri(uri);
 		
 		return buddy;

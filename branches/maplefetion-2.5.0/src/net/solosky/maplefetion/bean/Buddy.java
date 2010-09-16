@@ -31,7 +31,7 @@ package net.solosky.maplefetion.bean;
  *
  * @author solosky <solosky772@qq.com> 
  */
-public abstract class Buddy extends Person
+public class Buddy extends Person
 {
 	/**
 	 * 和用户的关系， 只读属性
@@ -47,6 +47,214 @@ public abstract class Buddy extends Person
      * 用户设置的好友备注 
      */
 	protected String localName;
+	
+	/**
+	 * 好友昵称
+	 */
+	protected String nickName;
+	
+	/**
+	 * 真实姓名
+	 */
+	protected String trueName;
+	
+	/**
+	 * 好友签名
+	 */
+	protected String impresa;
+	
+	/**
+	 * 好友邮件
+	 */
+	protected String email;
+	/**
+	 * 级别
+	 */
+	protected int level;
+	
+	/**
+	 * 好友扩展信息
+	 */
+	protected BuddyExtend extend;
+	
+	/**
+	 * 权限设置
+	 */
+	protected Permission permission;
+	
+	/**
+	 * 短信策略
+	 */
+	protected SMSPolicy smsPolicy;
+
+	/**
+     * @return the nickName
+     */
+    public String getNickName()
+    {
+    	return nickName;
+    }
+
+	/**
+     * @param nickName the nickName to set
+     */
+    public void setNickName(String nickName)
+    {
+    	this.nickName = nickName;
+    }
+    
+	/**
+     * @return the trueName
+     */
+    public String getTrueName()
+    {
+    	return trueName;
+    }
+
+	/**
+     * @param trueName the trueName to set
+     */
+    public void setTrueName(String trueName)
+    {
+    	this.trueName = trueName;
+    }
+
+	/**
+     * @return the level
+     */
+    public int getLevel()
+    {
+    	return level;
+    }
+
+
+	/**
+     * @return the impresa
+     */
+    public String getImpresa()
+    {
+    	return impresa;
+    }
+
+	/**
+     * @param impresa the impresa to set
+     */
+    public void setImpresa(String impresa)
+    {
+    	this.impresa = impresa;
+    }
+
+	/**
+     * @return the extend
+     */
+    public BuddyExtend getExtend()
+    {
+    	return extend;
+    }
+
+	/**
+     * @param extend the extend to set
+     */
+    public void setExtend(BuddyExtend extend)
+    {
+    	this.extend = extend;
+    }
+
+	/**
+     * @return the permission
+     */
+    public Permission getPermission()
+    {
+    	return permission;
+    }
+    
+    
+	/**
+     * @return the smsPolicy
+     */
+    public SMSPolicy getSMSPolicy()
+    {
+    	return smsPolicy;
+    }
+    
+    
+
+	/**
+	 * @return the email
+	 */
+	public String getEmail()
+	{
+		return email;
+	}
+
+	/**
+	 * @param email the email to set
+	 */
+	public void setEmail(String email)
+	{
+		this.email = email;
+	}
+	/**
+     * @param smsPolicy the smsPolicy to set
+     */
+    public void setSmsPolicy(SMSPolicy smsPolicy)
+    {
+    	this.smsPolicy = smsPolicy;
+    }
+
+	/**
+     * @param level the level to set
+     */
+    public void setLevel(int level)
+    {
+    	this.level = level;
+    }
+
+	/**
+     * @param permission the permission to set
+     */
+    public void setPermission(Permission permission)
+    {
+    	this.permission = permission;
+    }
+
+	/**
+     * 返回可以显示的名字
+     */
+    public String getDisplayName()
+    {
+    	if(getLocalName()!=null && getLocalName().length()>0)
+    		return getLocalName();
+    	if(getNickName()!=null && getNickName().length()>0)
+    		return getNickName();
+    	if(getTrueName()!=null && getTrueName().length()>0)
+    		return getTrueName();
+    	if(getFetionId()>0)
+    		return Integer.toString(getFetionId());
+    	if(getMobile()!=0)
+    		return Long.toString(getMobile());
+    	return null;
+    }
+
+	/* (non-Javadoc)
+	 * @see net.solosky.maplefetion.bean.Person#getDisplayPresence()
+	 */
+	@Override
+	public String getDisplayPresence() {
+		if(this.getRelation()!=Relation.BUDDY){
+			return "离线";
+		}
+		if(this.getPresence().getValue()==Presence.OFFLINE){
+			if(this.getSMSPolicy().isSMSOnline()){
+				return "短信在线";
+			}else{
+				return "离线";
+			}
+		}else{
+			return Presence.presenceValueToDisplayString(this.getPresence().getValue());
+		}
+	}
+	
 
 	
 	/**
@@ -55,6 +263,8 @@ public abstract class Buddy extends Person
     public Buddy()
     {
     	relation =  Relation.BUDDY;
+    	this.permission = new Permission();
+		this.smsPolicy  = new SMSPolicy();
     }
 
 
@@ -109,14 +319,6 @@ public abstract class Buddy extends Person
     {
     	this.relation = relation;
     }
-
-
-	/**
-     * 返回可以显示的名字
-     */
-    
-    public abstract String getDisplayName();
-
 
 	/* (non-Javadoc)
 	 * @see java.lang.Object#toString()

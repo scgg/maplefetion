@@ -29,7 +29,6 @@ import java.io.IOException;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Message;
@@ -100,11 +99,9 @@ public class MessageNotifyHandler extends AbstractNotifyHandler
 	    	this.context.getFetionStore().addBuddy(from);
 	    	
 	    	//如果是飞信好友，还需要获取这个陌生人的信息
-	    	if(from instanceof FetionBuddy) {
-    	    	SipcRequest request = this.dialog.getMessageFactory().createGetContactInfoRequest(notify.getFrom());
-    	    	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy) from),null));
-    	    	this.dialog.process(request);
-	    	}
+	    	SipcRequest request = this.dialog.getMessageFactory().createGetContactInfoRequest(notify.getFrom());
+	    	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, from ,null));
+	    	this.dialog.process(request);
 	    }
 	   
 	    //查找这个好友的聊天代理对话

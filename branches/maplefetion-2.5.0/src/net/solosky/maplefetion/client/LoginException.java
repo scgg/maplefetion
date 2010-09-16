@@ -44,7 +44,21 @@ public class LoginException extends FetionException
     	this.state = state;
     }
     
-    public LoginState getState()
+    
+    
+    /**
+     * @param e
+     * @param state
+     */
+    public LoginException(LoginState state, Throwable e)
+    {
+	    super(e);
+	    this.state = state;
+    }
+
+
+
+	public LoginState getState()
     {
     	return this.state;
     }

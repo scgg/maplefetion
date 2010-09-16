@@ -31,16 +31,12 @@ import java.util.List;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.client.ResponseHandler;
 import net.solosky.maplefetion.client.response.GetContactInfoResponseHandler;
 import net.solosky.maplefetion.event.notify.BuddyApplicationEvent;
 import net.solosky.maplefetion.event.notify.BuddyConfirmedEvent;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcRequest;
-import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.ParseException;
@@ -104,12 +100,12 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		Element e =  (Element) it.next();
     		String uri = e.getAttributeValue("uri");
     		String status = e.getAttributeValue("status-code");
-    		FetionBuddy buddy = (FetionBuddy) context.getFetionStore().getBuddyByUri(uri);
+    		Buddy buddy = context.getFetionStore().getBuddyByUri(uri);
     		if(status!=null && status.equals("200") && buddy!=null) {
     			//个人信息
     			Element p = e.getChild("personal");
     			if(p!=null) {
-        			BeanHelper.toBean(FetionBuddy.class, buddy, p);
+        			BeanHelper.toBean(Buddy.class, buddy, p);
     			}
     			//扩展信息
     			List extendz = e.getChildren("extended");
@@ -146,9 +142,9 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     	BeanHelper.setValue(buddy, "relation", Relation.STRANGER);
     	context.getFetionStore().addBuddy(buddy);
     	//如果是飞信好友，获取陌生人的信息
-    	if(buddy instanceof FetionBuddy) {
+    	if(buddy instanceof Buddy) {
         	SipcRequest request = this.dialog.getMessageFactory().createGetContactInfoRequest(uri);
-        	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy)buddy),null));
+        	request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((Buddy)buddy),null));
         	dialog.process(request);
     	}
     	//通知监听器
@@ -214,7 +210,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     				
     				//这里还需要获取好友的详细信息
     				SipcRequest request = dialog.getMessageFactory().createGetContactInfoRequest(buddy.getUri());
-    				request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((FetionBuddy) buddy),null));
+    				request.setResponseHandler(new GetContactInfoResponseHandler(context, dialog, ((Buddy) buddy),null));
 					dialog.process(request);
 					
     			}else if(relation==Relation.DECLINED) {	//对方拒绝了请求
@@ -223,7 +219,7 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     			}else {}
 
     			//buddy.setUserId(Integer.parseInt(e.getAttributeValue("user-id")));
-    			BeanHelper.setValue(buddy, "relation", relation);
+    			buddy.setRelation(relation);
     			
     			context.getFetionStore().flushBuddy(buddy);
     		}
@@ -282,15 +278,10 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     		if(uri!=null){
     			//这里应该都是飞信好友，不过还是做了相应的判断
     			Buddy buddy = null;
-    			if(UriHelper.isMobile(uri)){
-    				buddy = new MobileBuddy();
-    				BeanHelper.toBean(MobileBuddy.class, buddy, e);
-    			}else{
-    				buddy = new FetionBuddy();
-    				BeanHelper.toBean(FetionBuddy.class, buddy, e);
-    			}
+				buddy = new Buddy();
+				BeanHelper.toBean(Buddy.class, buddy, e);
     			
-    			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
+    			buddy.setRelation(Relation.BUDDY);
 				store.addBuddy(buddy);
 				
 				logger.info("Added Buddy : "+buddy);

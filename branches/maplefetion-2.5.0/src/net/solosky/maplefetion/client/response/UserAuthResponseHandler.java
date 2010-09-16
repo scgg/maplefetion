@@ -32,10 +32,7 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.MobileBuddy;
 import net.solosky.maplefetion.bean.Relation;
-import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
@@ -116,6 +113,7 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 				b.setLocalName(e.getAttributeValue("n"));
 				b.setUri(e.getAttributeValue("u"));
 				b.setCordId(e.getAttributeValue("l"));
+				b.setRelation(Relation.valueOf(Integer.parseInt(e.getAttributeValue("r"))));
 				
 				store.addBuddy(b);
 			}

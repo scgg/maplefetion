@@ -28,7 +28,6 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
@@ -92,8 +91,8 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 		if(buddy!=null){
 			store.deleteBuddy(buddy);
 		}
-		buddy = new FetionBuddy();
-		BeanHelper.toBean(FetionBuddy.class, buddy, element);
+		buddy = new Buddy();
+		BeanHelper.toBean(Buddy.class, buddy, element);
 		
 		store.addBuddy(buddy);
 		

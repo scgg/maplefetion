@@ -27,14 +27,10 @@ package net.solosky.maplefetion.client.notify;
 
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
 import net.solosky.maplefetion.client.dialog.BasicChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialog;
 import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
-import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.event.notify.InviteReceivedEvent;
-import net.solosky.maplefetion.net.RequestTimeoutException;
-import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.sipc.SipcNotify;
 import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.store.FetionStore;
@@ -78,7 +74,7 @@ public class InviteBuddyNotifyHandler extends AbstractNotifyHandler
 		synchronized(store){
 			buddy = store.getBuddyByUri(notify.getFrom());
 			if(buddy==null){
-				buddy = new FetionBuddy();
+				buddy = new Buddy();
 				buddy.setUri(notify.getFrom());
 				store.addBuddy(buddy);
 			}

@@ -29,6 +29,8 @@ package net.solosky.maplefetion.client;
 import java.io.IOException;
 import java.util.Iterator;
 import java.util.TimerTask;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.TimeoutException;
 
 import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionConfig;
@@ -41,6 +43,7 @@ import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.client.dialog.DialogException;
 import net.solosky.maplefetion.client.dialog.GroupDialog;
+import net.solosky.maplefetion.client.dialog.IllegalResponseException;
 import net.solosky.maplefetion.client.dialog.ServerDialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.ActionEventType;
@@ -53,7 +56,6 @@ import net.solosky.maplefetion.event.notify.LoginStateEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
-import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ObjectWaiter;
 
@@ -73,35 +75,32 @@ public class LoginWork implements Runnable
 	private FetionContext context;
 
 	/**
-	 * 用户登录的验证图片信息
-	 */
-	private VerifyImage verifyImage;
-	/**
 	 * SSI登录对象
 	 */
 	private SSISign signAction;
-	/**
-	 * 当前登录状态
-	 */
-	private LoginState state;
 	
 	/**
 	 * 用户状态
 	 */
 	private int presence;
-	
-	/**
-	 * 是否使用SSI登录
-	 */
-	private boolean isSSISign;
-	
+
 	/**
 	 * 替换SSIC的定时任务
 	 */
 	private TimerTask replaceSsicTask;
 	
 	/**
-	 * 同步登陆等待对象
+	 * 是否用户取消了登录
+	 */
+	private boolean isCanceledLogin;
+	
+	/**
+	 * 等待用户处理SSI验证码事件
+	 */
+	private ObjectWaiter<VerifyImage> ssiVerifyWaiter;
+	
+	/**
+	 * 同步登录的处理对象
 	 */
 	private ObjectWaiter<LoginState> loginWaiter;
 	/**
@@ -118,9 +117,9 @@ public class LoginWork implements Runnable
 		this.context = context;
 		this.presence = presence;
 		this.signAction = new SSISignV4();
-		this.loginWaiter = new ObjectWaiter<LoginState>();
+		this.ssiVerifyWaiter = new ObjectWaiter<VerifyImage>();
+		this.loginWaiter     = new ObjectWaiter<LoginState>();
 		this.replaceSsicTask = new ReplaceSSICWork();
-		this.isSSISign  = true;
 		
 		this.signAction.setLocaleSetting(this.context.getLocaleSetting());
 		this.signAction.setFetionContext(this.context);
@@ -129,24 +128,28 @@ public class LoginWork implements Runnable
 	
 	/**
 	 * 尝试登录
+	 * @throws InterruptedException 
+	 * @throws SystemException 
+	 * @throws DialogException 
+	 * @throws RequestTimeoutException 
+	 * @throws TransferException 
+	 * @throws LoginException 
 	 */
-	public void login()
+	public void login() throws LoginException, TransferException, RequestTimeoutException, DialogException, SystemException, InterruptedException
 	{
 		this.context.updateState(ClientState.LOGGING);
-		if( this.updateSystemConfig() && 	//获取自适应配置
-			(this.isSSISign ? this.SSISign() : true)  &&  			//SSI登录 			NOTE:去掉SSI登录的过程，也能登录，防止出现验证码
-			this.openServerDialog() && 		//服务器连接并验证
-			this.getContactsInfo()) {		//获取联系人列表和信息
-			boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enable");
-			if(groupEnabled) {	//启用了群
-				if( this.getGroupsInfo() &&	 	//获取群信息
-					this.openGroupDialogs()) {	//建立群会话
-					this.updateLoginState(LoginState.LOGIN_SUCCESS);
-				}
-			}else {
-				this.updateLoginState(LoginState.LOGIN_SUCCESS);
-			}
+		this.updateSystemConfig();	//获取自适应配置
+		this.SSISign();				//SSI登录 
+		this.openServerDialog();	//服务器连接并验证
+		this.getContactsInfo();		//获取联系人列表和信息
+		
+		boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enable");
+		if(groupEnabled) {	//启用了群
+			this.getGroupsInfo();	 	//获取群信息
+			this.openGroupDialogs();	//建立群会话
 		}
+	
+		this.updateLoginState(LoginState.LOGIN_SUCCESS, null);
 		
 	}
 	
@@ -155,12 +158,20 @@ public class LoginWork implements Runnable
     public void run()
     {
     	try {
-    		this.login();
-    	}catch(Throwable e) {
-    		logger.fatal("Unkown login error..", e);
-    		this.updateLoginState(LoginState.OTHER_ERROR);
-    		CrushBuilder.handleCrushReport(e);
-    	}
+	        this.login();
+        } catch (LoginException e) {
+	        this.updateLoginState(e.getState(), e);
+        } catch (TransferException e) {
+        	this.updateLoginState(LoginState.SIPC_CONNECT_FAIL, e);
+        } catch (RequestTimeoutException e) {
+        	this.updateLoginState(LoginState.SIPC_TIMEOUT, e);
+        } catch (DialogException e) {
+        	this.updateLoginState(LoginState.OTHER_ERROR, e);
+        } catch (SystemException e) {
+        	this.updateLoginState(LoginState.OTHER_ERROR, e);
+        } catch (InterruptedException e) {
+    		this.updateLoginState(LoginState.OTHER_ERROR, e);
+        }
     }
     
     
@@ -168,254 +179,215 @@ public class LoginWork implements Runnable
     /**
      * 更新自适应配置
      */
-    private boolean updateSystemConfig()
+    private void updateSystemConfig() throws LoginException
     {
     	LocaleSetting localeSetting = this.context.getLocaleSetting();
     	if(!localeSetting.isLoaded()) {
     		try {
     			logger.debug("Loading locale setting...");
-				this.updateLoginState(LoginState.SEETING_LOAD_DOING);
+				this.updateLoginState(LoginState.SEETING_LOAD_DOING, null);
 				localeSetting.load(this.context.getFetionUser());
-				this.updateLoginState(LoginState.SETTING_LOAD_SUCCESS);
-				return true;
+				this.updateLoginState(LoginState.SETTING_LOAD_SUCCESS, null);
 			} catch (Exception e) {
 				logger.debug("Load localeSetting error", e);
-				this.updateLoginState(LoginState.SETTING_LOAD_FAIL);
-				return false;
+				throw new LoginException(LoginState.SETTING_LOAD_FAIL, e);
 			}
-    	}else {
-    		return true;
     	}
     }
     
     /**
      * SSI登录
+     * @throws LoginException 
      */
-    private boolean SSISign()
+    private void SSISign() throws LoginException
     {
-    	this.updateLoginState(LoginState.SSI_SIGN_IN_DOING);
-    	if (this.verifyImage == null) {
-        	this.state = this.signAction.signIn(this.context.getFetionUser());
-        } else {
-        	this.state = this.signAction.signIn(this.context.getFetionUser(), this.verifyImage);
-        }
-		this.updateLoginState(this.state);
-		return this.state==LoginState.SSI_SIGN_IN_SUCCESS;
+    	this.updateLoginState(LoginState.SSI_SIGN_IN_DOING, null);
+    	
+    	//第一次尝试不用验证码登录
+    	LoginState state = this.signAction.signIn(this.context.getFetionUser());
+    	//如果结果为需要验证或者验证失败，重复验证，直到SSI的结果为其他结果为止
+    	while(state==LoginState.SSI_NEED_VERIFY || state==LoginState.SSI_VERIFY_FAIL) {
+            try {
+            	VerifyImage img = this.ssiVerifyWaiter.waitObject();
+            	state = this.signAction.signIn(this.context.getFetionUser(), img);
+            } catch (ExecutionException e) {
+            	 throw new LoginException(LoginState.OTHER_ERROR, e);
+            } catch (TimeoutException e) {
+            	 throw new LoginException(LoginState.OTHER_ERROR, e);
+            } catch (InterruptedException e) {
+	           if(!this.isCanceledLogin) throw new LoginException(LoginState.OTHER_ERROR, e);
+            }
+    	}
+    	
+		this.updateLoginState(state, null);
     }
     
     /**
      * 建立服务器会话
+     * @throws DialogException 
+     * @throws RequestTimeoutException 
+     * @throws TransferException 
+     * @throws InterruptedException 
+     * @throws SystemException 
      */
-    private boolean openServerDialog()
+    private void openServerDialog() throws LoginException, TransferException, RequestTimeoutException, DialogException, SystemException, InterruptedException
     {
     	//判断是否有飞信号
     	if(this.context.getFetionUser().getFetionId()==0){
     		throw new IllegalArgumentException("Invalid fetion id. if disabled SSI sign, you must login with fetion id..");
     	}
     	
-    	this.updateLoginState(LoginState.SIPC_REGISTER_DOING);
+    	this.updateLoginState(LoginState.SIPC_REGISTER_DOING, null);
 		ServerDialog serverDialog = this.context.getDialogFactory().createServerDialog();
-		try {
-	        serverDialog.openDialog();
-	        
-	        ActionEventFuture future = new ActionEventFuture();
-	    	ActionEventListener listener = new FutureActionEventListener(future);
-	    	
-	    	//注册服务器
-	    	serverDialog.register(presence, listener);
-	    	Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
-	    	
-	    	//用户验证
-	    	future.clear();
-	    	serverDialog.userAuth(presence, listener);
-	    	ActionEvent event = future.waitActionEventWithoutException();
-	    	if(event.getEventType()==ActionEventType.SUCCESS){
-	    		state = LoginState.SIPC_REGISGER_SUCCESS;
-	    	}else if(event.getEventType()==ActionEventType.FAILURE){
-	    		FailureEvent evt = (FailureEvent) event;
-	    		FailureType type =  evt.getFailureType();
-	    		if(type==FailureType.REGISTER_FORBIDDEN){
-	    			state = LoginState.SIPC_ACCOUNT_FORBIDDEN;	//帐号限制登录，可能存在不安全因素，请修改密码后再登录
-	    		}else if(type==FailureType.AUTHORIZATION_FAIL){
-	    			state = LoginState.SIPC_AUTH_FAIL;			//登录验证失败
-	    		}else{
-	    			Dialog.assertActionEvent(event, ActionEventType.SUCCESS);
-	    		}
-	    	}
-	    	
-		} catch (TransferException e) {
-			logger.warn("serverDialog: failed to connect to server.", e);
-			this.state = LoginState.SIPC_CONNECT_FAIL;
-		} catch (DialogException e) {
-			logger.warn("serverDialog: login failed.", e);
-			this.state = LoginState.OTHER_ERROR;
-		} catch (RequestTimeoutException e) {
-			logger.warn("serverDialog: login request timeout.", e);
-			state = LoginState.SIPC_TIMEOUT;
-        } catch (InterruptedException e) {
-        	logger.warn("serverDialog: login thread interrupted.", e);
-        	state = LoginState.OTHER_ERROR;
-        } catch (SystemException e) {
-        	logger.warn("serverDialog: login system error.", e);
-        	state = LoginState.OTHER_ERROR;
-		}
-    	this.updateLoginState(this.state);
+        serverDialog.openDialog();
+        
+        ActionEventFuture future = new ActionEventFuture();
+    	ActionEventListener listener = new FutureActionEventListener(future);
     	
-    	return this.state == LoginState.SIPC_REGISGER_SUCCESS;
+    	//注册服务器
+    	serverDialog.register(presence, listener);
+    	Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+    	
+    	//用户验证
+    	future.clear();
+    	serverDialog.userAuth(presence, listener);
+    	ActionEvent event = future.waitActionEventWithoutException();
+    	if(event.getEventType()==ActionEventType.SUCCESS){
+    		this.updateLoginState(LoginState.SIPC_REGISGER_SUCCESS, null);
+    	}else if(event.getEventType()==ActionEventType.FAILURE){
+    		FailureEvent evt = (FailureEvent) event;
+    		FailureType type =  evt.getFailureType();
+    		if(type==FailureType.REGISTER_FORBIDDEN){
+    			throw new LoginException(LoginState.SIPC_ACCOUNT_FORBIDDEN); //帐号限制登录，可能存在不安全因素，请修改密码后再登录
+    		}else if(type==FailureType.AUTHORIZATION_FAIL){
+    			throw new LoginException(LoginState.SIPC_AUTH_FAIL);			//登录验证失败
+    		}else{
+    			Dialog.assertActionEvent(event, ActionEventType.SUCCESS);
+    		}
+    	}
     }
     
     /**
      * 获取联系人信息
+     * @throws InterruptedException 
+     * @throws SystemException 
+     * @throws TransferException 
+     * @throws RequestTimeoutException 
+     * @throws IllegalResponseException 
      */
-    private boolean getContactsInfo()
+    private void getContactsInfo() throws IllegalResponseException, RequestTimeoutException, TransferException, SystemException, InterruptedException
     {
     	ActionEventFuture future = new ActionEventFuture();
     	ActionEventListener listener = new FutureActionEventListener(future);
     	ServerDialog dialog = this.context.getDialogFactory().getServerDialog();
-    	StoreVersion storeVersion   = this.context.getFetionStore().getStoreVersion();
-    	StoreVersion userVersion    = this.context.getFetionUser().getStoreVersion();
-    	FetionStore  store          = this.context.getFetionStore();
-    	
-    	try {
-			this.updateLoginState(LoginState.GET_CONTACTS_INFO_DOING);
-			
-	        
-	        //订阅异步通知
-    		if(this.context.getFetionStore().getBuddyList().size()>0){
-		        future.clear();
-		        dialog.subscribeBuddyNotify(listener);
-		        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
-    		}
-	        
-	        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS);
-	        
-	        return true;
-    	} catch (TransferException e) {
-			this.state = LoginState.SIPC_CONNECT_FAIL;
-			return false;
-		} catch (RequestTimeoutException e) {
-			this.state = LoginState.SIPC_TIMEOUT;
-			return false;
-		}catch (Exception e) {
-        	//TODO 这里应该分别处理不同的异常，通知登录监听器的错误更详细点。。暂时就这样了
-        	logger.fatal("get contacts info failed.", e); 
-        	this.updateLoginState(LoginState.GET_CONTACTS_INFO_FAIL);
-        	return false;
-        }
-    	
+		this.updateLoginState(LoginState.GET_CONTACTS_INFO_DOING, null);
+		
+        
+        //订阅异步通知
+		if(this.context.getFetionStore().getBuddyList().size()>0){
+	        future.clear();
+	        dialog.subscribeBuddyNotify(listener);
+	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+		}
+        
+        this.updateLoginState(LoginState.GET_CONTACTS_INFO_SUCCESS, null);
     }
     
     /**
      * 获取群信息
+     * @throws InterruptedException 
+     * @throws SystemException 
+     * @throws TransferException 
+     * @throws RequestTimeoutException 
+     * @throws IllegalResponseException 
      */
-    private boolean getGroupsInfo()
+    private void getGroupsInfo() throws IllegalResponseException, RequestTimeoutException, TransferException, SystemException, InterruptedException
     {
     	ActionEventFuture future = new ActionEventFuture();
     	ActionEventListener listener = new FutureActionEventListener(future);
     	ServerDialog dialog = this.context.getDialogFactory().getServerDialog();
     	StoreVersion storeVersion   = this.context.getFetionStore().getStoreVersion();
     	StoreVersion userVersion    = this.context.getFetionUser().getStoreVersion();
-    	
-    	try {
-    		this.updateLoginState(LoginState.GET_GROUPS_INFO_DOING);
-	        //获取群列表
+
+    	this.updateLoginState(LoginState.GET_GROUPS_INFO_DOING, null);
+        //获取群列表
+        future.clear();
+        dialog.getGroupList(listener);
+        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+        
+		//如果群列表为空，就不发送下面的一些请求了
+		FetionStore store = this.context.getFetionStore();
+		if(store.getGroupList().size()==0){
+			logger.debug("The group list is empty, group dialog login is skipped.");
+			return;
+		}
+
+        //如果当前存储版本和服务器相同，就不获取群信息和群成员列表，
+        //TODO ..这里只是解决了重新登录的问题，事实上这里问题很大，群信息分成很多
+        //用户加入的群列表 groupListVersion
+        //某群的信息		  groupInfoVersion
+        //群成员列表		  groupMemberListVersion
+        //暂时就这样，逐步完善中.....
+        logger.debug("GroupListVersion: server="+userVersion.getGroupVersion()+", local="+storeVersion.getGroupVersion());
+        if(storeVersion.getGroupVersion()!=userVersion.getGroupVersion()) {
+			//更新存储版本
+			storeVersion.setGroupVersion(userVersion.getGroupVersion());
+	        //获取群信息
 	        future.clear();
-	        dialog.getGroupList(listener);
+	        dialog.getGroupsInfo(this.context.getFetionStore().getGroupList(), listener);
+	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
+        
+        	//获取群成员
+	        future.clear();
+	        dialog.getMemberList(this.context.getFetionStore().getGroupList(), listener);
 	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
 	        
-			//如果群列表为空，就不发送下面的一些请求了
-			FetionStore store = this.context.getFetionStore();
-			if(store.getGroupList().size()==0){
-				logger.debug("The group list is empty, group dialog login is skipped.");
-				return true;
-			}
-
-	        //如果当前存储版本和服务器相同，就不获取群信息和群成员列表，
-	        //TODO ..这里只是解决了重新登录的问题，事实上这里问题很大，群信息分成很多
-	        //用户加入的群列表 groupListVersion
-	        //某群的信息		  groupInfoVersion
-	        //群成员列表		  groupMemberListVersion
-	        //暂时就这样，逐步完善中.....
-	        logger.debug("GroupListVersion: server="+userVersion.getGroupVersion()+", local="+storeVersion.getGroupVersion());
-	        if(storeVersion.getGroupVersion()!=userVersion.getGroupVersion()) {
-				//更新存储版本
-				storeVersion.setGroupVersion(userVersion.getGroupVersion());
-    	        //获取群信息
-    	        future.clear();
-    	        dialog.getGroupsInfo(this.context.getFetionStore().getGroupList(), listener);
-    	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
-	        
-	        	//获取群成员
-    	        future.clear();
-    	        dialog.getMemberList(this.context.getFetionStore().getGroupList(), listener);
-    	        Dialog.assertActionEvent(future.waitActionEventWithException(), ActionEventType.SUCCESS);
-    	        
-    	        storeVersion.setGroupVersion(userVersion.getGroupVersion());
-	        }
-	        
-	    	this.updateLoginState(LoginState.GET_GROUPS_INFO_SUCCESS);
-	        return true; 
-        } catch (TransferException e) {
-			this.state = LoginState.SIPC_CONNECT_FAIL;
-			return false;
-		} catch (RequestTimeoutException e) {
-			this.state = LoginState.SIPC_TIMEOUT;
-			return false;
-        } catch (Exception e) {
-        	logger.fatal("get groups info failed.", e); 
-        	this.updateLoginState(LoginState.GET_GROUPS_INFO_FAIL);
-        	return false;
+	        storeVersion.setGroupVersion(userVersion.getGroupVersion());
         }
+        
+    	this.updateLoginState(LoginState.GET_GROUPS_INFO_SUCCESS,null);
     }
     
     /**
      * 打开群会话
+     * @throws DialogException 
+     * @throws RequestTimeoutException 
+     * @throws TransferException 
      */
-    private boolean openGroupDialogs()
+    private void openGroupDialogs() throws TransferException, RequestTimeoutException, DialogException
     {
-    	this.updateLoginState(LoginState.GROUPS_REGISTER_DOING);
+    	this.updateLoginState(LoginState.GROUPS_REGISTER_DOING, null);
 		Iterator<Group> it = this.context.getFetionStore().getGroupList().iterator();
-		try {
-	        while (it.hasNext()) {
-	        	GroupDialog groupDialog = this.context.getDialogFactory().createGroupDialog(it.next());
-	        	groupDialog.openDialog();
-	        }
-	        
-	        this.updateLoginState(LoginState.GROUPS_REGISTER_SUCCESS);
-	        return true;
-		} catch (TransferException e) {
-				this.state = LoginState.SIPC_CONNECT_FAIL;
-				return false;
-		} catch (RequestTimeoutException e) {
-				this.state = LoginState.SIPC_TIMEOUT;
-				return false;
-        } catch (Exception e) {
-        	logger.fatal("open group dialogs failed.", e);
-        	this.updateLoginState(LoginState.GROUPS_REGISTER_FAIL);
-        	return false;
+        while (it.hasNext()) {
+        	GroupDialog groupDialog = this.context.getDialogFactory().createGroupDialog(it.next());
+        	groupDialog.openDialog();
         }
-    }
+        
+        this.updateLoginState(LoginState.GROUPS_REGISTER_SUCCESS, null);
+}
     
     /**
      * 更新登录状态
      * @param status
      */
-    private void updateLoginState(LoginState state)
+    private void updateLoginState(LoginState state, Throwable t)
     {
-    	if(this.context.getNotifyEventListener()!=null)
+    	logger.debug("Login state:"+state+", canceledLogin="+isCanceledLogin, t);
+    	
+    	if(this.context.getNotifyEventListener()!=null && !this.isCanceledLogin)
     		this.context.getNotifyEventListener().fireEvent(new LoginStateEvent(state));
     		
-    	if(state.getValue()>0x400) {	//大于400都是登录出错
+    	if(state.getValue()>400 && !this.isCanceledLogin) {	//大于400都是登录出错
     		this.loginWaiter.objectArrive(state);
     		this.context.handleException(new LoginException(state));
     	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.loginWaiter.objectArrive(state);
     		this.context.updateState(ClientState.ONLINE);
     		this.context.getDialogFactory().getServerDialog().startKeepAlive();
-    		if(this.isSSISign){
-	    		int ssicReplaceInterval = FetionConfig.getInteger("fetion.ssi.replace-interval")*1000;
-	    		this.context.getFetionTimer().scheduleTask(this.replaceSsicTask, ssicReplaceInterval, ssicReplaceInterval);
-    		}
+    		//int ssicReplaceInterval = FetionConfig.getInteger("fetion.ssi.replace-interval")*1000;
+    		//this.context.getFetionTimer().scheduleTask(this.replaceSsicTask, ssicReplaceInterval, ssicReplaceInterval);
+    	}else {
+    		//logger.warn("Unhandled login state="+state);
     	}
     }
     ////////////////////////////////////////////////////////////////////
@@ -425,7 +397,7 @@ public class LoginWork implements Runnable
      */
     public void setVerifyImage(VerifyImage verifyImage)
     {
-    	this.verifyImage = verifyImage;
+    	this.ssiVerifyWaiter.objectArrive(verifyImage);
     }
 
 	/**
@@ -449,11 +421,6 @@ public class LoginWork implements Runnable
     }
 
 
-	public void setSSISign(boolean isSSISign) {
-		this.isSSISign = isSSISign;
-	}
-
-
 	/**
      * 释放资源
      */
@@ -467,13 +434,25 @@ public class LoginWork implements Runnable
      * 事实上这个方法不会永远超时，因为客户端登陆已经包含了超时控制
      * @return
      */
-    public LoginState waitLoginState()
+    public LoginState waitLoginState(long timeout)
     {
     	try {
-			return this.loginWaiter.waitObject();
-		} catch (Exception e) {
-			return LoginState.OTHER_ERROR;
-		}
+	        return this.loginWaiter.waitObject(timeout);
+        } catch (ExecutionException e) {
+	        return LoginState.OTHER_ERROR;
+        } catch (TimeoutException e) {
+	        return LoginState.LOGIN_TIMEOUT;
+        } catch (InterruptedException e) {
+        	return LoginState.OTHER_ERROR;
+        }
+    }
+    
+    /**
+     * 取消登录
+     */
+    public void cancelLogin() {
+    	this.isCanceledLogin = true;
+    	this.loginWaiter.objectArrive(LoginState.LOGIN_CANCELED);
     }
     
     /**

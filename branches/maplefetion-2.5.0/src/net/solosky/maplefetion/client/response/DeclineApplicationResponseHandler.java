@@ -25,21 +25,18 @@
  */
 package net.solosky.maplefetion.client.response;
 
-import org.jdom.Element;
-
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.FetionBuddy;
-import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
-import net.solosky.maplefetion.util.BeanHelper;
 import net.solosky.maplefetion.util.XMLHelper;
+
+import org.jdom.Element;
 
 /**
  * 
