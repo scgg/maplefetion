@@ -109,6 +109,11 @@ public class MapleFetion extends NotifyEventAdapter
 	 * 是否启动了读取命令线程的标志
 	 */
 	private boolean isConsoleReadTheadStarted;
+	
+	/**
+	 * 当前需要处理的验证码事件,这里只能处理一个，如果要处理多个，则需建立验证码处理队列
+	 */
+	private ImageVerifyEvent verifyEvent;
 	 
 	 /**
 	  * 默认构造函数
@@ -313,6 +318,7 @@ public class MapleFetion extends NotifyEventAdapter
 			println("cordtitle 分组编号 分组标题   修改分组标题");
 			println("self 消息内容              给自己发送短信");
 			println("presence away/online/busy/hiden   改变自己在线状态");
+			println("verify 验证码     验证当前需要验证的操作");
 	    	println("exit                       退出登录");
 	    	println("help                       帮助信息");
 	    	println("=========================================");
@@ -381,6 +387,21 @@ public class MapleFetion extends NotifyEventAdapter
 			   }
 			   println("-----------------------------------------------------------------");
 			   groupId++;
+		   }
+	   }
+	   
+	   
+	   /**
+	    * 处理验证码
+	    * @param code
+	    */
+	   public void verify(String code) {
+		   if(this.verifyEvent!=null) {
+			   this.verifyEvent.getVerifyImage().setVerifyCode(code);
+			   this.client.processVerify(this.verifyEvent);
+			   this.verifyEvent = null;
+		   }else {
+			   println("No verify action to do.");
 		   }
 	   }
 	    
@@ -1105,6 +1126,9 @@ public class MapleFetion extends NotifyEventAdapter
 		}else if(cmd[0].equals("presence")) {
 			if(cmd.length>=2)
 				this.presence(cmd[1]);
+		}else if(cmd[0].equals("verify")) {
+			if(cmd.length>=2)
+				this.verify(cmd[1]);
 		}else if(cmd[0].equals("help")) {
 			this.help();
 		}
@@ -1356,15 +1380,20 @@ public class MapleFetion extends NotifyEventAdapter
     protected void imageVerify(final VerifyImage verifyImage, final String verifyReason,
             final String verifyTips, final ImageVerifyEvent event)
     {
-    	//启动一个新线程完成重新登录的操作，让回调函数马上返回，详细信息请参见NotifyListener里面的注释
-    	new Thread(new Runnable() {
-			public void run() {
-					println("需要验证："+verifyReason+", 提示："+verifyTips);
-	        		saveImage(verifyImage.getImageData());
-	        		verifyImage.setVerifyCode(readLine());
-	        		client.processVerify(event);
-			}
-		}).start();
+    	
+    	saveImage(verifyImage.getImageData());
+    	System.out.print("当前操作需要验证,原因:【"+verifyReason+"】请输入当前目录下[verify.jpg]里面的验证码(如verify 123abc):");
+    	if(!this.isConsoleReadTheadStarted) {
+    		String line = this.readLine();
+    		if(line.indexOf("verify ")!=-1) {
+    			verifyImage.setVerifyCode(line.substring(7));
+    			client.processVerify(event);
+    		}else {
+    			println("无效的输入");
+    		}
+    	}else {
+    		this.verifyEvent = event;
+    	}
     }
 
 

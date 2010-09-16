@@ -64,6 +64,7 @@ public class ServerRegisterResponseHandler extends AbstractResponseHandler
 			throws FetionException
 	{
 		SipcHeader header = response.getHeader(SipcHeader.WWWAUTHENTICATE);
+		logger.debug("SipcRegister:"+header.toSendString());
 		this.dialog.getSession().setAttribute(SipcHeader.WWWAUTHENTICATE, header);
 		return new SuccessEvent();
 		

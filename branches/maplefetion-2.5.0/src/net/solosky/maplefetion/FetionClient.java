@@ -493,7 +493,7 @@ public class FetionClient implements FetionContext
     		
     		request.addHeader(SipcHeader.AUTHORIZATION, "Verify response=\""+image.getVerifyCode()+"\",algorithm=\""+image.getAlgorithm()+"\"," +
     				"type=\""+image.getVerifyType()+"\",chid=\""+image.getImageId()+"\"");
-    		
+    		request.resetReplyTimes();
     		event.getTargetDialog().process(request);
     	}else {
     		throw new IllegalArgumentException("Invalid verify action:"+event.getVerifyAction());
@@ -608,8 +608,6 @@ public class FetionClient implements FetionContext
                 timer.stopTimer();
                 executor.stopExecutor();
             	updateState(ClientState.LOGOUT);
-            } catch (FetionException e) {
-            	logger.warn("logout error.", e);
             }catch(Throwable t) {
             	logger.warn("logout error ", t);
             }
@@ -673,11 +671,21 @@ public class FetionClient implements FetionContext
 	
 	/**
 	 * 取消当前登录操作，并释放资源
+	 * 只能在登录的过程调用，否则会抛出IllegalStateException
 	 */
 	public void cancelLogin() 
 	{
-		this.loginWork.cancelLogin();
-		this.dispose();
+		if(this.state==ClientState.LOGGING) {
+    		this.loginWork.cancelLogin();
+    		try {
+	            dialogFactory.closeAllDialog();
+            } catch (Exception e) {
+            	logger.warn("close dialog failed.", e);
+            }
+    		this.dispose();
+		}else {
+			throw new IllegalStateException("client is not in logging state(state="+state.toString()+"). if client is online, please call FetionClient.logout().");
+		}
 	}
 	
 	/////////////////////////////////////////////用户操作开始/////////////////////////////////////////////

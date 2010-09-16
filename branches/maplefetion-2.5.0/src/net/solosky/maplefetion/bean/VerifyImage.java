@@ -142,5 +142,16 @@ public class VerifyImage
     {
     	return algorithm;
     }
+
+	/* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+	    return "VerifyImage [imageId=" + imageId + ", algorithm=" + algorithm
+	            + ", verifyType=" + verifyType + ", verifyCode=" + verifyCode
+	            + "]";
+    }
 	
 }

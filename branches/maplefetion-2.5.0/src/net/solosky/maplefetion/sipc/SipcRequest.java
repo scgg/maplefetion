@@ -170,6 +170,11 @@ public class SipcRequest extends SipcOutMessage
     {
     	this.replyTimes++;
     }
+    
+    public void resetReplyTimes()
+    {
+    	this.replyTimes=0;
+    }
 
 	/**
      * @return the method

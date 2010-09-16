@@ -176,5 +176,19 @@ public class ImageVerifyEvent extends NotifyEvent
 
 
 
+	/* (non-Javadoc)
+     * @see java.lang.Object#toString()
+     */
+    @Override
+    public String toString()
+    {
+	    return "ImageVerifyEvent [verifyAction=" + verifyAction
+	            + ", verifyReason=" + verifyReason + ", verifyTips="
+	            + verifyTips + ", verifyImage=" + verifyImage
+	            + ", targetRequest=" + targetRequest + "]";
+    }
+
+
+
     
 }
