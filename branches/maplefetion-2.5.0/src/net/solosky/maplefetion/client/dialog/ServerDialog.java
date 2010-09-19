@@ -260,7 +260,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		SipcHeader wwwHeader = (SipcHeader) this.session.getAttribute(SipcHeader.WWWAUTHENTICATE);
 		SipcRequest request = this.getMessageFactory().createUserAuthRequest(wwwHeader, presence, 
-				this.context.getTransferFactory().isMutiConnectionSupported());
+				this.context.getTransferFactory().isMutiConnectionSupported(),
+				this.context.getFetionStore().getStoreVersion());
 		request.setResponseHandler(new UserAuthResponseHandler(context, this, listener));
 		this.process(request);
 	}
@@ -513,10 +514,10 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	 * @param buddy		好友
 	 * @param listener	
 	 */
-	public void setBuddyLocalName(Buddy buddy,String localName, ActionEventListener listener)
+	public void setBuddyLocalName(Buddy buddy, String localName, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createSetBuddyLocalName(buddy.getUri(), localName);
+		SipcRequest request = this.messageFactory.createSetBuddyLocalName(buddy.getUserId(), localName);
 		request.setResponseHandler(new SetBuddyInfoResponseHandler(context, this, listener));
 		this.process(request);
 	}
@@ -546,7 +547,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 			cordIds = "";	//默认分组
 		}
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createSetBuddyCord(buddy.getUri(), cordIds);
+		SipcRequest request = this.messageFactory.createSetBuddyCord(buddy.getUserId(), cordIds);
 		request.setResponseHandler(new SetBuddyInfoResponseHandler(context, this, listener));
 		this.process(request);
 	}

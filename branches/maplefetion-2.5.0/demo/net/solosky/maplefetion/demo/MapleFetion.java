@@ -1342,16 +1342,16 @@ public class MapleFetion extends NotifyEventAdapter
         	println("你已经从其他客户端登录。");
         	println("30秒之后重新登录..");
 //        	//新建一个线程等待登录，不能在这个回调函数里做同步操作
-//        	new Thread(new Runnable() {
-//        		public void run() {
-//        			try {
-//	                    Thread.sleep(30000);
-//                    } catch (InterruptedException e) {
-//                    	System.out.println("重新登录等待过程被中断");
-//                    }
-//                    client.login();
-//        		}
-//        	}).start();
+        	new Thread(new Runnable() {
+        		public void run() {
+        			try {
+	                    Thread.sleep(30000);
+                    } catch (InterruptedException e) {
+                    	System.out.println("重新登录等待过程被中断");
+                    }
+                    client.login();
+        		}
+        	}).start();
 	        break;
         case CONNECTION_ERROR:
         	println("客户端连接异常");
@@ -1382,7 +1382,7 @@ public class MapleFetion extends NotifyEventAdapter
     {
     	
     	saveImage(verifyImage.getImageData());
-    	System.out.print("当前操作需要验证,原因:【"+verifyReason+"】请输入当前目录下[verify.jpg]里面的验证码(如verify 123abc):");
+    	System.out.print("当前操作需要验证,原因:【"+verifyReason+"】。\n请输入当前目录下[verify.jpg]里面的验证码(如verify 123abc):");
     	if(!this.isConsoleReadTheadStarted) {
     		String line = this.readLine();
     		if(line.indexOf("verify ")!=-1) {

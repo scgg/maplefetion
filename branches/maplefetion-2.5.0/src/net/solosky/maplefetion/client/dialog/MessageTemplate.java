@@ -34,7 +34,7 @@ package net.solosky.maplefetion.client.dialog;
  */
 public class MessageTemplate
 {
-	public static final String TMPL_USER_AUTH = "<args><device machine-code=\"{machineCode}\" accept-language=\"default\"/><caps value=\"1FFF\" /><events value=\"7f\" /><user-info sid=\"{sid}\" user-id=\"{userId}\"><personal version=\"0\" attributes=\"v4default\" /><custom-config version=\"0\" /><contact-list version=\"0\"   buddy-attributes=\"v4default\" /></user-info><credentials domains=\"fetion.com.cn;m161.com.cn;www.ikuwa.cn;games.fetion.com.cn\" /><presence><basic value=\"{presence}\" desc=\"\" /></presence></args>";
+	public static final String TMPL_USER_AUTH = "<args><device machine-code=\"{machineCode}\" accept-language=\"default\"/><caps value=\"1FFF\" /><events value=\"7f\" /><user-info sid=\"{sid}\" user-id=\"{userId}\"><personal version=\"{personalVersion}\" attributes=\"v4default\" /><custom-config version=\"0\" /><contact-list version=\"{contactVersion}\"   buddy-attributes=\"v4default\" /></user-info><credentials domains=\"fetion.com.cn;m161.com.cn;www.ikuwa.cn;games.fetion.com.cn\" /><presence><basic value=\"{presence}\" desc=\"\" /></presence></args>";
 	public static final String TMPL_GET_PERSONAL_INFO = "<args><personal attributes=\"all\" /><services version=\"\" attributes=\"all\" /><quota attributes=\"all\" /></args>";
 	public static final String TMPL_GET_CONTACT_INFO = "<args><contact {args}/></args>";
 	public static final String TMPL_SUBSCRIBE = "<args><subscription self=\"v4default;mail-count\" buddy=\"v4default\" version=\"0\" /></args>";
@@ -42,14 +42,12 @@ public class MessageTemplate
 	public static final String TMPL_FETION_SHOW_2 = "0x000101010000010001000000000000010000000</state></is-composing>";
 	public static final String TMPL_INVATE_BUDDY = "<args><contacts><contact uri=\"{uri}\" /></contacts></args>";
 	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" {localName} desc=\"{desc}\" expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" /></buddies></contacts></args>";
-	public static final String TMPL_ADD_MOBILE_BUDDY = "<args><contacts><mobile-buddies><mobile-buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" desc=\"{desc}\" invite=\"0\" addbuddy-phrase-id=\"0\" /></mobile-buddies></contacts></args>";
 	public static final String TMPL_DELETE_BUDDY = "<args><contacts><buddies><buddy user-id=\"{userId}\" /></buddies></contacts></args>";
-	public static final String TMPL_DELETE_MOBILE_BUDDY = "<args><contacts><mobile-buddies><mobile-buddy uri=\"{uri}\" /></mobile-buddies></contacts></args>";
 	public static final String TMPL_APPLICATION_AGREED = "<args><contacts><buddies><buddy uri=\"{uri}\" result=\"1\" buddy-lists=\"\" expose-mobile-no=\"1\" expose-name=\"1\" /></buddies></contacts></args>";
 	public static final String TMPL_APPLICATION_DECLINED = "<args><contacts><buddies><buddy uri=\"{uri}\" result=\"0\" /></buddies></contacts></args>";
 	public static final String TMPL_SET_PERSONAL_INFO = "<args><userinfo>{personal}</userinfo></args>";
-	public static final String TMPL_SET_BUDDY_LOCAL_NAME = "<args><contacts><buddies><buddy uri=\"{uri}\" local-name=\"{localName}\" /></buddies></contacts></args>";
-	public static final String TMPL_SET_BUDDY_CORD = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" /></buddies></contacts></args>";
+	public static final String TMPL_SET_BUDDY_LOCAL_NAME = "<args><contacts><contact user-id=\"{userId}\" local-name=\"{localName}\" /></contacts></args>";
+	public static final String TMPL_SET_BUDDY_CORD = "<args><contacts><contact user-id=\"{userId}\" buddy-lists=\"{cordId}\" /></contacts></args>";
 	public static final String TMPL_SET_PRESENCE = "<args><presence><basic value=\"{presence}\" /></presence></args>";
 	
 	public static final String TMPL_ADD_TO_BLACKLIST = "<args><contacts><blacklist><blocked uri=\"{uri}\" /></blacklist></contacts></args>";

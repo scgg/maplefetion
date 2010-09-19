@@ -40,6 +40,7 @@ import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.bean.ScheduleSMS;
+import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.net.Port;
 import net.solosky.maplefetion.sipc.SipcBody;
@@ -117,7 +118,7 @@ public class MessageFactory
      * 用户登录验证
      * @return
      */
-    public SipcRequest createUserAuthRequest(SipcHeader wwwHeader, int presence, boolean isSupportedMutiConnection)
+    public SipcRequest createUserAuthRequest(SipcHeader wwwHeader, int presence, boolean isSupportedMutiConnection, StoreVersion version)
     {
     	SipcRequest  req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
     	
@@ -133,11 +134,12 @@ public class MessageFactory
         	req.addHeader("AK", "ak-value");
         	
         	String body = MessageTemplate.TMPL_USER_AUTH;
-        	body = body.replace("{machineCode}", "5DBFE64D4449FBD0AE130C7B12D27A9F");
+        	body = body.replace("{machineCode}", "5DBFE64D4449FBD0AE130C7B12D27A9F"); /*暂时固定，以后可能要动态生成*/
         	body = body.replace("{sid}", Integer.toString(this.user.getFetionId()));
         	body = body.replace("{userId}", Integer.toString(this.user.getUserId()));
         	body = body.replace("{presence}", Integer.toString(presence));
-        	
+        	body = body.replace("{personalVersion}", Integer.toString(version.getPersonalVersion()));
+        	body = body.replace("{contactVersion}", Integer.toString(version.getContactVersion()));
         	req.setBody(new SipcBody(body));
         	
     	}else {
@@ -320,26 +322,6 @@ public class MessageFactory
     }
     
     /**
-     * 添加手机好友请求
-     * @param uri		好友的URI，这里应该是tel:159xxxxx
-     * @param cordId	添加的组编号
-     * @param desc		对好友的自我描述
-     * @return
-     */
-    public SipcRequest createAddMobileBuddyRequest(String uri, int cordId, String desc)
-    {
-    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
-    	String body = MessageTemplate.TMPL_ADD_MOBILE_BUDDY;
-    	body = body.replace("{uri}", uri);
-    	body = body.replace("{cordId}", cordId==-1? "": Integer.toString(cordId));
-    	body = body.replace("{desc}", StringHelper.qouteHtmlSpecialChars(desc));
-    	
-    	req.addHeader(SipcHeader.EVENT,"AddMobileBuddy");
-    	req.setBody(new SipcBody(body));
-    	return req;
-    }
-    
-    /**
      * 删除好友
      * @param uri
      * @return
@@ -351,23 +333,6 @@ public class MessageFactory
     	body = body.replace("{userId}", Integer.toString(userId));
     	
     	req.addHeader(SipcHeader.EVENT,"DeleteBuddyV4");
-    	
-    	req.setBody(new SipcBody(body));
-    	return req;
-    }
-    
-    /**
-     * 删除手机好友
-     * @param uri  好友手机uri(类似tel:159xxxxxxxx)
-     * @return
-     */
-    public SipcRequest createDeleteMobileBuddyRequest(String uri)
-    {
-    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
-    	String body = MessageTemplate.TMPL_DELETE_MOBILE_BUDDY;
-    	body = body.replace("{uri}", uri);
-    	
-    	req.addHeader(SipcHeader.EVENT,"DeleteMobileBuddy");
     	
     	req.setBody(new SipcBody(body));
     	return req;
@@ -437,19 +402,19 @@ public class MessageFactory
     
     /**
      * 设置好友本地姓名
-     * @param uri		好友飞信地址
+     * @param userId	好友用户ID
      * @param localName	本地显示名字
      * @return
      */
-    public SipcRequest createSetBuddyLocalName(String uri, String localName)
+    public SipcRequest createSetBuddyLocalName(int userId, String localName)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	
     	String body = MessageTemplate.TMPL_SET_BUDDY_LOCAL_NAME;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{userId}", Integer.toString(userId));
     	body = body.replace("{localName}", localName);
     	
-    	req.addHeader(SipcHeader.EVENT,"SetBuddyInfo");
+    	req.addHeader(SipcHeader.EVENT,"SetContactInfoV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;
@@ -461,15 +426,15 @@ public class MessageFactory
      * @param cordId
      * @return
      */
-    public SipcRequest createSetBuddyCord(String uri, String cordId)
+    public SipcRequest createSetBuddyCord(int userId, String cordId)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	
     	String body = MessageTemplate.TMPL_SET_BUDDY_CORD;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{userId}", Integer.toString(userId));
     	body = body.replace("{cordId}", cordId!=null?cordId:"");
     	
-    	req.addHeader(SipcHeader.EVENT,"SetBuddyLists");
+    	req.addHeader(SipcHeader.EVENT,"SetContactInfoV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;
@@ -524,7 +489,7 @@ public class MessageFactory
     	String body = MessageTemplate.TMPL_SET_PRESENCE;
     	body = body.replace("{presence}", Integer.toString(presence));
     	
-    	req.addHeader(SipcHeader.EVENT,"SetPresence");
+    	req.addHeader(SipcHeader.EVENT,"SetPresenceV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;

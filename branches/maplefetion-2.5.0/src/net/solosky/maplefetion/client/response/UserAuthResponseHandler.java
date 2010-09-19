@@ -83,16 +83,17 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		User user = this.context.getFetionUser();
 		user.setEmail(personal.getAttributeValue("register-email"));
 		BeanHelper.toBean(User.class, user, personal);
-		
+		int personalVersion = Integer.parseInt(personal.getAttributeValue("version"));
 		Element contactList = XMLHelper.find(root, "/results/user-info/contact-list");
+		int contactVersion = Integer.parseInt(contactList.getAttributeValue("version"));
+		
+		//联系人和个人信息版本信息
+		store.getStoreVersion().setPersonalVersion(personalVersion);
+		store.getStoreVersion().setContactVersion(contactVersion);
 		
 		//一定要对飞信列表加锁，防止其他飞信操作获取到空的数据
 		synchronized (store) {
-			
-			//先清除飞信存储对象的所有数据
-    		store.clearBuddyList();
-    		store.clearCordList();
-    		
+
 			//解析分组列表
 			List list = XMLHelper.findAll(root, "/results/user-info/contact-list/buddy-lists/*buddy-list");
 			Iterator it = list.iterator();

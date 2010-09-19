@@ -64,10 +64,10 @@ public class SetBuddyInfoResponseHandler extends AbstractResponseHandler
 			throws FetionException
 	{
 		Element root = XMLHelper.build(response.getBody().toSendString());
-		   Element el = XMLHelper.find(root, "/results/contacts/buddies/buddy");
+		   Element el = XMLHelper.find(root, "/results/contacts/contact");
 		   
 		   if(el!=null) {
-			   Buddy buddy = this.context.getFetionStore().getBuddyByUri(el.getAttributeValue("uri"));
+			   Buddy buddy = this.context.getFetionStore().getBuddyByUserId(Integer.parseInt(el.getAttributeValue("user-id")));
 			   BeanHelper.toBean(Buddy.class, buddy, el);
 			   context.getFetionStore().flushBuddy(buddy);
 		   }
@@ -75,7 +75,7 @@ public class SetBuddyInfoResponseHandler extends AbstractResponseHandler
 		   //Version control
 		   Element contacts = XMLHelper.find(root, "/results/contacts");
 		   if(contacts!=null){
-			   String version = contacts.getAttributeValue("version");
+			   String version = contacts.getAttributeValue("contact-list-version");
 			   if(version!=null){
 				   int contactsVersion = Integer.parseInt(version);
 				   this.context.getFetionStore().getStoreVersion().setContactVersion(contactsVersion);

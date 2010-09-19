@@ -68,25 +68,17 @@ public class FindBuddyByMobileResponseHandler extends AbstractResponseHandler
 			throws FetionException
 	{
 		Element root = XMLHelper.build(response.getBody().toSendString());
-		Element contact = XMLHelper.find(root, "/results/contacts/contact");
-		int status = Integer.parseInt(contact.getAttributeValue("status-code"));
-		if(status==SipcStatus.ACTION_OK) {
-			Element personal = XMLHelper.find(root, "/results/contacts/contact/personal");
-			if(personal!=null) {
-				int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
-				Buddy buddy = this.context.getFetionStore().getBuddyByUserId(userId);
-				if(buddy!=null) {
-    				return new FindBuddySuccessEvent(buddy);				//找到该用户并且是好友，操作正确完成
-				}else {
-					return new FailureEvent(FailureType.BUDDY_NOT_FOUND);	//找到该用户但不是好友
-				}
-			}else{
-				return new FailureEvent(FailureType.SIPC_FAIL);				//服务器没有返回数据
+		Element personal = XMLHelper.find(root, "/results/contact");
+		if(personal!=null) {
+			int userId = Integer.parseInt(personal.getAttributeValue("user-id"));
+			Buddy buddy = this.context.getFetionStore().getBuddyByUserId(userId);
+			if(buddy!=null) {
+				return new FindBuddySuccessEvent(buddy);				//找到该用户并且是好友，操作正确完成
+			}else {
+				return new FailureEvent(FailureType.BUDDY_NOT_FOUND);	//找到该用户但不是好友
 			}
-		}else if(status==SipcStatus.NOT_FOUND) {
-			return new FailureEvent( FailureType.USER_NOT_FOUND);			//该用户找不到
-		}else {
-			return new FailureEvent(FailureType.UNKNOWN_FAIL);				//其他未知错误
+		}else{
+			return new FailureEvent(FailureType.SIPC_FAIL);				//服务器没有返回数据
 		}
 	}
     
