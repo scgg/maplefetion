@@ -51,7 +51,7 @@ public class MessageTemplate
 	public static final String TMPL_SET_PRESENCE = "<args><presence><basic value=\"{presence}\" /></presence></args>";
 	
 	public static final String TMPL_ADD_TO_BLACKLIST = "<args><contacts><blacklist><blocked uri=\"{uri}\" /></blacklist></contacts></args>";
-	public static final String TMPL_REMOVE_FROM_BLACKLIST = "<args><contacts><blacklist><blocked uri=\"{uri}\" /></blacklist></contacts></args>";
+	public static final String TMPL_REMOVE_FROM_BLACKLIST = "<args><contacts><blacklist><blocked user-id=\"{userId}\" /></blacklist></contacts></args>";
 	
 	public static final String TMPL_CREATE_CORD = "<args><contacts><buddy-lists><buddy-list name=\"{title}\" /></buddy-lists></contacts></args>";
 	public static final String TMPL_DELETE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" /></buddy-lists></contacts></args>";
@@ -68,4 +68,6 @@ public class MessageTemplate
 	public static final String TMPL_GET_SCHEDULE_SMS_INFO = "<args><schedule-sms-list>{scheduleSMSList}</schedule-sms-list></args>";
 	public static final String TMPL_CREATE_SCHEDULE_SMS = "<args><schedule-sms send-time=\"{sendDate}\"><message>{message}</message><receivers>{receiverList}</receivers></schedule-sms></args>";
 	public static final String TMPL_DELETE_SCHEDULE_SMS = "<args><schedule-sms-list>{scheduleSMSList}</schedule-sms-list></args>";
+
+	public static final String TMPL_KEEP_ALIVE = "<args><credentials domains=\"fetion.com.cn;m161.com.cn;www.ikuwa.cn;games.fetion.com.cn;turn.fetion.com.cn;pos.fetion.com.cn;ent.fetion.com.cn;mms.fetion.com.cn\" /></args>";
 }

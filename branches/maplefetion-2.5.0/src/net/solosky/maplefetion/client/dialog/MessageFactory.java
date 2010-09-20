@@ -198,16 +198,30 @@ public class MessageFactory
     }
     
     /**
+     * 保持连接
+     * @return
+     */
+    public SipcRequest createKeepConnectionRequest()
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.OPTION);
+    	req.addHeader(SipcHeader.EVENT, "KeepConnectionBusy");
+    	return req;
+    }
+    
+    /**
      * 保持在线的请求
      * 也就是需要每隔一定时间需要注册一次
      * @return
      */
     public SipcRequest createKeepAliveRequest()
     {
-    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.OPTION);
-    	req.addHeader(SipcHeader.EVENT, "KeepConnectionBusy");
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
+    	req.addHeader(SipcHeader.EVENT, "KeepAlive");
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_KEEP_ALIVE));
     	return req;
     }
+    
+    
     
     /**
      *  获取联系人详细信息
@@ -766,11 +780,11 @@ public class MessageFactory
     /**
      * 将好友从黑名单移除
      */
-    public SipcRequest createRemoveBuddyFromBlackList(String uri)
+    public SipcRequest createRemoveBuddyFromBlackList(int userId)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
-    	req.addHeader(SipcHeader.EVENT, "RemoveFromBlacklist");
-    	req.setBody(new SipcBody(MessageTemplate.TMPL_REMOVE_FROM_BLACKLIST.replace("{uri}", uri)));
+    	req.addHeader(SipcHeader.EVENT, "RemoveFromBlacklistV4");
+    	req.setBody(new SipcBody(MessageTemplate.TMPL_REMOVE_FROM_BLACKLIST.replace("{userId}", Integer.toString(userId))));
     	return req;
     }
     ///////////////////////////////////////收据///////////////////////////////////////////////

@@ -76,6 +76,7 @@ public class HttpApplication
 	 * @param user
 	 * @param setting
 	 * @throws IOException
+	 * @Deprecated 
 	 */
 	public static void replaceSsic(User user, LocaleSetting setting) throws IOException
 	{

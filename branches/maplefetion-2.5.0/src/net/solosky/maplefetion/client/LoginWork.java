@@ -85,11 +85,6 @@ public class LoginWork implements Runnable
 	private int presence;
 
 	/**
-	 * 替换SSIC的定时任务
-	 */
-	private TimerTask replaceSsicTask;
-	
-	/**
 	 * 是否用户取消了登录
 	 */
 	private boolean isCanceledLogin;
@@ -119,7 +114,6 @@ public class LoginWork implements Runnable
 		this.signAction = new SSISignV4();
 		this.ssiVerifyWaiter = new ObjectWaiter<VerifyImage>();
 		this.loginWaiter     = new ObjectWaiter<LoginState>();
-		this.replaceSsicTask = new ReplaceSSICWork();
 		
 		this.signAction.setLocaleSetting(this.context.getLocaleSetting());
 		this.signAction.setFetionContext(this.context);
@@ -426,7 +420,6 @@ public class LoginWork implements Runnable
      */
     public void dispose()
     {
-    	this.replaceSsicTask.cancel();
     }
     
     /**
@@ -453,24 +446,5 @@ public class LoginWork implements Runnable
     public void cancelLogin() {
     	this.isCanceledLogin = true;
     	this.loginWaiter.objectArrive(LoginState.LOGIN_CANCELED);
-    }
-    
-    /**
-     * 定时替换SSIC的任务
-     */
-    public class ReplaceSSICWork extends TimerTask
-    {
-		@Override
-		public void run()
-		{
-			try {
-				logger.debug("Replacing ssic...");
-				HttpApplication.replaceSsic(context.getFetionUser(), context.getLocaleSetting());
-				logger.debug("Replaced ssic:"+context.getFetionUser().getSsic());
-			} catch (IOException e) {
-				logger.warn("replaceSsic failed." , e);
-			}
-		}
-    	
     }
 }

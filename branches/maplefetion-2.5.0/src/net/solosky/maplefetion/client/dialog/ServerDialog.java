@@ -108,6 +108,11 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	private TimerTask keepAliveTask;
 	
 	/**
+	 * 保持连接的定时任务
+	 */
+	private TimerTask keepConnectionTask;
+	
+	/**
 	 * 日志记录
 	 */
 	private static Logger logger = Logger.getLogger(ServerDialog.class);
@@ -140,6 +145,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     {
     	//不需要发送任何离开消息，直接关闭对话框即可
     	this.keepAliveTask.cancel();
+    	this.keepConnectionTask.cancel();
     	this.context.getFetionTimer().clearCanceledTask();
     	
     	//停止处理链
@@ -184,9 +190,13 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     public void startKeepAlive()
     {
     	//注册定时任务
-    	this.keepAliveTask = new ServerKeepLiveTask();
-    	int keepInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
-		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepInterval, keepInterval);
+    	this.keepAliveTask = new ServerKeepAliveTask();
+    	int keepAliveInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
+		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepAliveInterval, keepAliveInterval);
+		
+		this.keepConnectionTask = new ServerKeepConnectionTask();
+    	int keepConnectionInterval = FetionConfig.getInteger("fetion.sip.keep-connection-interval")*1000;
+		this.context.getFetionTimer().scheduleTask(this.keepConnectionTask, keepConnectionInterval, keepConnectionInterval);
     }
     
     /**
@@ -338,11 +348,28 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     
     /**
      * 
-     * 内部类，实现了定时发送在线请求的任务
+     * 内部类，实现了定时发送保持连接忙碌请求的任务
      *
      * @author solosky <solosky772@qq.com>
      */
-    private class ServerKeepLiveTask extends TimerTask
+    private class ServerKeepConnectionTask extends TimerTask
+    {
+        @Override
+        public void run()
+        {
+        	SipcRequest request = messageFactory.createKeepConnectionRequest();
+        	request.setResponseHandler(new DefaultResponseHandler(null));
+	        process(request);
+        }
+    }
+    
+    /**
+     * 
+     * 内部类，实现了定时发送保持在线请求的任务
+     *
+     * @author solosky <solosky772@qq.com>
+     */
+    private class ServerKeepAliveTask extends TimerTask
     {
         @Override
         public void run()
@@ -352,12 +379,6 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 			{
 				public void fireEevent(ActionEvent event)
 				{
-//					if(event.getEventType()!=ActionEventType.SUCCESS){
-//						logger.fatal("ServerDialog keepAlive failed. event="+event);
-//						if(context.getState()==ClientState.ONLINE) {
-//							context.handleException(new TransferException("Client keepAlive failed."));
-//						}
-//					}
 				}
 			};
         	request.setResponseHandler(new DefaultResponseHandler(listener));
@@ -699,7 +720,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void removeBuddyFromBlackList(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.messageFactory.createRemoveBuddyFromBlackList(buddy.getUri());
+		SipcRequest request = this.messageFactory.createRemoveBuddyFromBlackList(buddy.getUserId());
 		request.setResponseHandler(new RemoveBuddyFromBlackListResponseHandler(context, this, listener));
 		this.process(request);
 	}
