@@ -39,9 +39,8 @@ import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.XMLHelper;
 
+import org.apache.mina.util.Base64;
 import org.jdom.Element;
-
-import sun.misc.BASE64Decoder;
 
 /**
  * 
@@ -108,8 +107,8 @@ public class HttpApplication
 				Element pic = XMLHelper.find(e, "/results/pic-certificate");
 				String pid = pic.getAttributeValue("id");
 				String code = pic.getAttributeValue("pic");
-				BASE64Decoder decoder = new BASE64Decoder();
-				byte[] bytes = decoder.decodeBuffer(code);
+				byte[] base64Data = code.getBytes();
+				byte[] bytes = Base64.decodeBase64(base64Data);
 	        	return new VerifyImage(pid, bytes, alg, type);
 	        }else {
 	        	throw new IOException("Http response is not OK. code="+conn.getResponseCode());
