@@ -75,6 +75,7 @@ public class HttpApplication
 		ByteArrayOutputStream out = new ByteArrayOutputStream();
 		ImageIO.write(image, "JPG", out);
 		String setPortraitUrl = context.getLocaleSetting().getNodeText("/config/http-applications/set-portrait");
+		if(setPortraitUrl==null)	setPortraitUrl = FetionConfig.getString("server.set-portrait"); 
 		byte [] bytes = HttpHelper.doFetchData(setPortraitUrl,
 				"POST", "image/jpeg", 
 				findCredential(setPortraitUrl, context),
@@ -93,6 +94,7 @@ public class HttpApplication
 	 */
 	public static BufferedImage getPortrait(FetionContext context, Buddy buddy, int size) throws IOException {
 		String getPortraitUrl = context.getLocaleSetting().getNodeText("/config/http-applications/get-portrait");
+		if(getPortraitUrl==null)	getPortraitUrl = FetionConfig.getString("server.get-portrait");
 		getPortraitUrl = StringHelper.format("{0}?Uri={1}&Size={2}&c={3}",
 											getPortraitUrl,
 											StringHelper.urlEncode(buddy.getUri()),
@@ -102,30 +104,17 @@ public class HttpApplication
 		return ImageIO.read(new ByteArrayInputStream(bytes));
 	}
 	
+	
 	/**
-	 * 替换SSIC
-	 * @param user
-	 * @param setting
+	 * 获取验证码图片
+	 * @param user		用户对象
+	 * @param setting	配置
+	 * @param alg		算法
+	 * @param type		类型
+	 * @return
 	 * @throws IOException
-	 * @Deprecated 
+	 * @throws ParseException
 	 */
-	public static void replaceSsic(User user, LocaleSetting setting) throws IOException
-	{
-		String v2Url = setting.getNodeText("/config/servers/ssi-app-sign-in-v2");
-		v2Url += "?domains=fetion.com.cn%3bm161.com.cn%3bwww.ikuwa.cn";
-		HttpURLConnection conn = HttpHelper.openConnection(v2Url, "GET", "application/x-www-form-urlencoded", user.getSsiCredential());
-		if(conn.getResponseCode()==HttpURLConnection.HTTP_OK){
-			String header = conn.getHeaderField("Set-Cookie");
-        	int s = header.indexOf("ssic=");
-        	int e = header.indexOf(';');
-        	String ssic = header.substring(s+5,e);
-        	user.setSsiCredential(ssic);
-		}else{
-			throw new IOException("Http response is not OK. code="+conn.getResponseCode());
-		}
-	}
-	
-	
 	public static VerifyImage fetchVerifyImage(User user, LocaleSetting setting, String alg, String type) throws IOException, ParseException
 	{
 			String picurl = setting.getNodeText("/config/servers/get-pic-code");
@@ -148,6 +137,12 @@ public class HttpApplication
 	}
 	
 	
+	/**
+	 * 根据域名获取对应的SSIC
+	 * @param url
+	 * @param context
+	 * @return
+	 */
 	private static String findCredential(String url, FetionContext context) {
 		String ssic = url.startsWith("https")? 
 				context.getFetionUser().getSsiCredential()
