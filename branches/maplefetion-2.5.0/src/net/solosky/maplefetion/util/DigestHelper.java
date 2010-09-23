@@ -115,8 +115,10 @@ public class DigestHelper
 	        return cipher.doFinal(encrypted);
 		} catch(InvalidKeyException e) {
 			throw new IllegalArgumentException(
-					"if you see invalid key size: 256, it cause by default JCE does not support 256-aes key for shipping reason.\n" +
-					"but you can download those two policy files(US_export_policy.jar,local_policy.jar) and replace the same files in '$JDK_HOME/jre/lib/security',\n" +
+					"if you see 'java.security.InvalidKeyException: Illegal key size', it cause by default JCE does not support 256-aes key for shipping reason.\n" +
+					"but you can download those two policy files" +
+					"		(US_export_policy.jar,local_policy.jar : Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files) " +
+					"and replace the same files in '$JDK_HOME/jre/lib/security',\n" +
 					"then it still work well. I would implement AES/CBC/NoPadding algorithm to make things better in futrue.\n" +
 					"download link:https://cds.sun.com/is-bin/INTERSHOP.enfinity/WFS/CDS-CDS_Developer-Site/en_US/-/USD/ViewProductDetail-Start?ProductRef=jce_policy-6-oth-JPR@CDS-CDS_Developer",
 				e);

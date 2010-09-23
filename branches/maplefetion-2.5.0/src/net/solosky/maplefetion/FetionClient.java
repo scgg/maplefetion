@@ -84,6 +84,7 @@ import net.solosky.maplefetion.util.CrushBuilder;
 import net.solosky.maplefetion.util.FetionExecutor;
 import net.solosky.maplefetion.util.FetionTimer;
 import net.solosky.maplefetion.util.LocaleSetting;
+import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.SingleExecutor;
 import net.solosky.maplefetion.util.ThreadTimer;
 
@@ -561,13 +562,17 @@ public class FetionClient implements FetionContext
 
     
     /**
-     * 获取验证图片
-     * @return
+     * 重新获取验证图片
+     * @param event 图片验证事件，如果获取成功，将会把获取的验证码图片注入到事件中
+     * @throws IOException 
+     * @throws ParseException 
      */
-    public VerifyImage fetchVerifyImage()
+    public void flushVerifyImage(ImageVerifyEvent event) throws ParseException, IOException
     {
-    	//HttpApplication.fetchVerifyImage(this.user,this.localeSetting, alg);
-    	return null;
+    	VerifyImage image = HttpApplication.fetchVerifyImage(getFetionUser(), 
+    			getLocaleSetting(), event.getVerifyImage().getAlgorithm(), 
+    			event.getVerifyImage().getVerifyType());
+    	event.setVerifyImage(image);
     }
     
     /**
@@ -663,7 +668,11 @@ public class FetionClient implements FetionContext
 	public LoginState syncLogin(int presence, long timeout)
 	{
 		this.login(presence);
-		return this.loginWork.waitLoginState(timeout);
+		LoginState state = this.loginWork.waitLoginState(timeout);
+		if(state==LoginState.LOGIN_TIMEOUT) {
+			this.dispose();
+		}
+		return state;
 	}
 	
 	/**

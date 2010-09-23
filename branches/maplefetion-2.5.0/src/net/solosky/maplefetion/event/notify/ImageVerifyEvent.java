@@ -175,6 +175,15 @@ public class ImageVerifyEvent extends NotifyEvent
     }
 
 
+	/**
+     * @param verifyImage the verifyImage to set
+     */
+    public void setVerifyImage(VerifyImage verifyImage)
+    {
+    	this.verifyImage = verifyImage;
+    }
+
+
 
 	/* (non-Javadoc)
      * @see java.lang.Object#toString()
