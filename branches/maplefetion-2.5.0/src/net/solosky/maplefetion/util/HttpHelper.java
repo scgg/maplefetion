@@ -34,9 +34,6 @@ import java.net.URL;
 
 import org.apache.log4j.Logger;
 
-import net.solosky.maplefetion.FetionClient;
-import net.solosky.maplefetion.bean.User;
-
 /**
 *
 * HTTP工具类
@@ -59,10 +56,13 @@ public class HttpHelper
 	{
 		URL realURL = new URL(url);
 		HttpURLConnection conn = (HttpURLConnection) realURL.openConnection();
-		conn.setRequestProperty("User-Agent", "IIC2.0/PC "+FetionClient.PROTOCOL_VERSION);
+		//conn.setRequestProperty("User-Agent", "IIC2.0/PC "+FetionClient.PROTOCOL_VERSION);
+		conn.setRequestProperty("User-Agent", "IIC2.0/PC 4.0.0000");
 		conn.setRequestProperty("Cookie", "ssic="+ssic);
 		conn.setRequestProperty("Host", realURL.getHost());
-		conn.setRequestProperty("Content-Type", contentType);
+		conn.setRequestProperty("Accept", "*/*");
+		conn.setRequestProperty("Cache-Control", "no-cache");
+		if(contentType!=null)	conn.setRequestProperty("Content-Type", contentType);
 		conn.setRequestMethod(method);
 		return conn;
 	}
@@ -110,9 +110,9 @@ public class HttpHelper
 	 * @return
 	 * @throws IOException
 	 */
-	public static String doFetchString(String url, String method, User user, InputStream in) throws IOException
+	public static String doFetchString(String url, String method, String ssic, InputStream in) throws IOException
 	{
-		return new String(doFetchData(url, method, "application/x-www-form-urlencoded", user, in));
+		return new String(doFetchData(url, method, "application/x-www-form-urlencoded", ssic, in));
 	}
 	
 	/**
@@ -124,9 +124,9 @@ public class HttpHelper
 	 * @return
 	 * @throws IOException
 	 */
-	public static byte[] doFetchData(String url, String method, String contentType, User user, InputStream in) throws IOException
+	public static byte[] doFetchData(String url, String method, String contentType, String ssic, InputStream in) throws IOException
 	{
-		HttpURLConnection conn = openConnection(url, method, contentType, user.getSsic());
+		HttpURLConnection conn = openConnection(url, method, contentType, ssic);
 		if(in!=null)	sendData(conn, in);
 		if(conn.getResponseCode()==HttpURLConnection.HTTP_OK){
 			return fetchData(conn);
@@ -139,16 +139,16 @@ public class HttpHelper
 	 * 尝试获取指定地址的数据，会尝试指定的次数，如果成功马上返回
 	 * @param url		地址
 	 * @param method	方法
-	 * @param user		用户对象
+	 * @param ssic 		SSIC
 	 * @param in		输入流，如果需要传输数据
 	 * @param tryTimes	重试次数
 	 * @return
 	 */
-	public static byte [] tryFetchData(String url, String method, String contentType, User user, InputStream in, int tryTimes)
+	public static byte [] tryFetchData(String url, String method, String contentType, String ssic, InputStream in, int tryTimes)
 	{
 		for(int i=0; i<tryTimes; i++){
 			try {
-				return doFetchData(url, method, contentType, user, in);
+				return doFetchData(url, method, contentType, ssic, in);
 			} catch (IOException e) {
 				Logger.getLogger(HttpHelper.class).info("Fetch url data failed: "+e.getMessage()+" - doTryTimes:"+i+", maxTryTimes:"+tryTimes);
 			}

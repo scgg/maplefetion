@@ -25,7 +25,12 @@
  */
 package net.solosky.maplefetion.bean;
 
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+
 import net.solosky.maplefetion.util.AccountValidator;
+import net.solosky.maplefetion.util.ConvertHelper;
+import net.solosky.maplefetion.util.DigestHelper;
 
 /**
  *
@@ -45,7 +50,17 @@ public class User extends Buddy
 	/**
 	 * 会话标志
 	 */
-	private String ssic;
+	private String ssiCredential;
+	
+	/**
+	 * 用于解密Credential的key
+	 */
+	private byte[] aesKey;
+	
+	/**
+	 * 用于解密Credential的iv
+	 */
+	private byte[] aesIV;
 	
 	/**
 	 * 存储版本，这是服务器上最新的版本
@@ -74,10 +89,21 @@ public class User extends Buddy
 		this.password = password;
 		this.domain = domain;
 		this.storeVersion = new StoreVersion();
+		this.aesKey = DigestHelper.createAESKey();
+		this.aesIV  = ConvertHelper.hexString2ByteNoSpace("00399F3D125DB5530AB5E000D6B0F45A");	//固定值
+		
 	}
 	
-	
-	
+	/**
+     * @return the aesIV
+     */
+    public byte[] getAesIV()
+    {
+    	return aesIV;
+    }
+
+
+
 	/**
      * @return the password
      */
@@ -89,17 +115,17 @@ public class User extends Buddy
 	/**
      * @return the ssic
      */
-    public String getSsic()
+    public String getSsiCredential()
     {
-    	return ssic;
+    	return ssiCredential;
     }
 
 	/**
      * @param ssic the ssic to set
      */
-    public void setSsic(String ssic)
+    public void setSsiCredential(String ssic)
     {
-    	this.ssic = ssic;
+    	this.ssiCredential = ssic;
     }
 
 	/**
@@ -121,6 +147,15 @@ public class User extends Buddy
     }
 
 
+	/**
+     * @return the aesKey
+     */
+    public byte[] getAesKey()
+    {
+    	return aesKey;
+    }
+
+
 
 	/**
      * @param storeVersion the storeVersion to set
@@ -129,4 +164,6 @@ public class User extends Buddy
     {
     	this.storeVersion = storeVersion;
     }
+    
+    
 }

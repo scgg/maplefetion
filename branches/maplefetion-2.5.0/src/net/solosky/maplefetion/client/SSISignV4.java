@@ -28,15 +28,19 @@ package net.solosky.maplefetion.client;
 import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.util.Iterator;
+import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventListener;
+import net.solosky.maplefetion.bean.Credential;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.event.notify.ImageVerifyEvent;
+import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ParseException;
 import net.solosky.maplefetion.util.PasswordEncrypterV4;
@@ -144,7 +148,7 @@ public class SSISignV4 implements SSISign
 	            	String h = conn.getHeaderField("Set-Cookie");
 	        		int s = h.indexOf("ssic=");
 	        		int m = h.indexOf(';');
-	        		user.setSsic( h.substring(s+5,m) );
+	        		user.setSsiCredential( h.substring(s+5,m) );
 	        		
 	        		Element root = XMLHelper.build(conn.getInputStream());
 	        		Element userEl = XMLHelper.find(root, "/results/user");
@@ -154,7 +158,15 @@ public class SSISignV4 implements SSISign
 	        		if(mobileStr!=null && mobileStr.length()>0)
 	        			user.setMobile(Long.parseLong(mobileStr));
 	        		
-	        		logger.info("SSISignV4:ssic="+user.getSsic());
+//	        		FetionStore store = this.fetionContext.getFetionStore();
+//	        		List list = XMLHelper.findAll(root, "/results/user/credentials/*credential");
+//	        		Iterator it = list.iterator();
+//	        		while(it.hasNext()) {
+//	        			Element c = (Element) it.next();
+//	        			store.addCredential(new Credential(c.getAttributeValue("domain"), c.getAttributeValue("c")));
+//	        		}
+	        		
+	        		logger.info("SSISignV4:ssic="+user.getSsiCredential());
 	        		
 	        		break;
 	        		

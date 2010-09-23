@@ -120,6 +120,11 @@ public enum FailureType {
 	ADD_BUDDY_TIMES_LIMITED,
 	
 	/**
+	 * 好友已经达到上限
+	 */
+	MAX_BUDDIES_LIMITED,
+	
+	/**
 	 * 登录限制，帐号存在不安全因素
 	 */
 	REGISTER_FORBIDDEN,

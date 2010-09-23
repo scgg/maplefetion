@@ -1296,9 +1296,6 @@ public class MapleFetion extends NotifyEventAdapter
     	else 
     		println("[陌生人消息]"+from.getDisplayName()+" 说:"+message.getText());
     	prompt();
-    	//dialog.sendSMSMessage(new Message(message.getText(), Message.TYPE_PLAIN));
-    	dialog.sendChatMessage(new Message(message.getText(), Message.TYPE_PLAIN));
-	    
     }
 
 
@@ -1399,7 +1396,6 @@ public class MapleFetion extends NotifyEventAdapter
 
 	@Override
 	protected void inviteReceived(ChatDialogProxy dialog) {
-		dialog.sendChatMessage(new Message("you dbClicked me!!"));
 	}
     
     

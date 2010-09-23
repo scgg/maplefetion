@@ -25,6 +25,8 @@
  */
 package net.solosky.maplefetion.bean;
 
+import java.awt.image.BufferedImage;
+
 
 /**
  *  飞信好友
@@ -86,6 +88,11 @@ public class Buddy extends Person
 	 * 短信策略
 	 */
 	protected SMSPolicy smsPolicy;
+	
+	/**
+	 * 头像
+	 */
+	protected BufferedImage portrait;
 
 	/**
      * @return the nickName
@@ -318,6 +325,23 @@ public class Buddy extends Person
     public void setRelation(Relation relation)
     {
     	this.relation = relation;
+    }
+    
+
+	/**
+     * @return the portrait
+     */
+    public BufferedImage getPortrait()
+    {
+    	return portrait;
+    }
+
+	/**
+     * @param portrait the portrait to set
+     */
+    public void setPortrait(BufferedImage portrait)
+    {
+    	this.portrait = portrait;
     }
 
 	/* (non-Javadoc)

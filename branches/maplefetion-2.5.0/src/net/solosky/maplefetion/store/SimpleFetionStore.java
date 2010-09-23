@@ -27,11 +27,13 @@ package net.solosky.maplefetion.store;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.Hashtable;
 import java.util.Iterator;
 
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
+import net.solosky.maplefetion.bean.Credential;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Relation;
@@ -67,12 +69,17 @@ public class SimpleFetionStore implements FetionStore
 	/**
 	 * 群成员列表
 	 */
-	private Hashtable<String, Hashtable<String, Member>> groupMemberList;
+	private HashMap<String, HashMap<String, Member>> groupMemberList;
 	
 	/**
 	 * 定时短信列表
 	 */
 	private ArrayList<ScheduleSMS> scheduleSMSList;
+	
+	/**
+	 * 凭证列表
+	 */
+	private HashMap<String, Credential> credentialList;
 	
 	/**
 	 * 存储版本
@@ -88,9 +95,10 @@ public class SimpleFetionStore implements FetionStore
 		this.buddyList = new Hashtable<String, Buddy>();
 		this.cordList  = new ArrayList<Cord>();
 		this.groupList = new Hashtable<String, Group>();
-		this.groupMemberList = new Hashtable<String, Hashtable<String,Member>>();
+		this.groupMemberList = new HashMap<String, HashMap<String,Member>>();
 		this.storeVersion = new StoreVersion();
 		this.scheduleSMSList = new ArrayList<ScheduleSMS>();
+		this.credentialList = new HashMap<String, Credential>();
 	}
 	
 	/* (non-Javadoc)
@@ -277,7 +285,7 @@ public class SimpleFetionStore implements FetionStore
     public synchronized void addGroup(Group group)
     {
     	this.groupList.put(group.getUri(), group);
-    	this.groupMemberList.put(group.getUri(), new Hashtable<String,Member>());
+    	this.groupMemberList.put(group.getUri(), new HashMap<String,Member>());
     }
 
 	/* (non-Javadoc)
@@ -351,7 +359,7 @@ public class SimpleFetionStore implements FetionStore
     @Override
     public synchronized void addGroupMember(Group group, Member member)
     {
-    	Hashtable<String,Member> table = this.groupMemberList.get(group.getUri());
+    	HashMap<String,Member> table = this.groupMemberList.get(group.getUri());
     	if(table!=null) {
     		table.put(member.getUri(), member);
     	}
@@ -372,7 +380,7 @@ public class SimpleFetionStore implements FetionStore
     @Override
     public void deleteGroupMember(Group group, Member member)
     {
-    	Hashtable<String,Member> table = this.groupMemberList.get(group.getUri());
+    	HashMap<String,Member> table = this.groupMemberList.get(group.getUri());
     	if(table!=null) {
     		table.remove(member.getUri());
     	}
@@ -385,7 +393,7 @@ public class SimpleFetionStore implements FetionStore
     @Override
     public synchronized Member getGroupMember(Group group, String uri)
     {
-    	Hashtable<String,Member> table = this.groupMemberList.get(group.getUri());
+    	HashMap<String,Member> table = this.groupMemberList.get(group.getUri());
     	if(table!=null) {
     		return table.get(uri);
     	}
@@ -464,4 +472,31 @@ public class SimpleFetionStore implements FetionStore
 		// TODO Auto-generated method stub
 		
 	}
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.store.FetionStore#addCredential(net.solosky.maplefetion.bean.Credential)
+     */
+    @Override
+    public void addCredential(Credential credential)
+    {
+    	this.credentialList.put(credential.getDomain(), credential);
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.store.FetionStore#getCredential(java.lang.String)
+     */
+    @Override
+    public Credential getCredential(String domain)
+    {
+	   return this.credentialList.get(domain);
+    }
+
+	/* (non-Javadoc)
+     * @see net.solosky.maplefetion.store.FetionStore#getCredentialList()
+     */
+    @Override
+    public Collection<Credential> getCredentialList()
+    {
+	   return this.credentialList.values();
+    }
 }

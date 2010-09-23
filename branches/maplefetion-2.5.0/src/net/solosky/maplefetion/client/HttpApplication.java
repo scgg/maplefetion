@@ -25,18 +25,25 @@
  */
 package net.solosky.maplefetion.client;
 
+import java.awt.image.BufferedImage;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
 import java.io.IOException;
-import java.io.InputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
 
+import javax.imageio.ImageIO;
+
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.FetionConfig;
+import net.solosky.maplefetion.FetionContext;
+import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.User;
 import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.util.HttpHelper;
 import net.solosky.maplefetion.util.LocaleSetting;
 import net.solosky.maplefetion.util.ParseException;
+import net.solosky.maplefetion.util.StringHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
 import org.apache.mina.util.Base64;
@@ -59,15 +66,40 @@ public class HttpApplication
 	 * 
 	 * @param user			用户编号
 	 * @param setting		自适应配置
-	 * @param imgStream		图片流
-	 * @return 	返回自定义头像编号
+	 * @param image			图片流
+	 * @return 	返回头像的crc校验码
 	 * @throws IOException 
 	 */
-	public static long setPortrait(User user, LocaleSetting setting, InputStream imgStream) throws IOException
+	public static long setPortrait(FetionContext context, BufferedImage image) throws IOException
 	{
-		String setPortraitUrl = setting.getNodeText("/config/http-applications/set-portrait");
-		byte [] bytes = HttpHelper.doFetchData(setPortraitUrl, "POST", "image/jpeg", user, imgStream);
+		ByteArrayOutputStream out = new ByteArrayOutputStream();
+		ImageIO.write(image, "JPG", out);
+		String setPortraitUrl = context.getLocaleSetting().getNodeText("/config/http-applications/set-portrait");
+		byte [] bytes = HttpHelper.doFetchData(setPortraitUrl,
+				"POST", "image/jpeg", 
+				findCredential(setPortraitUrl, context),
+				new ByteArrayInputStream(out.toByteArray()));
 		return Long.parseLong(new String(bytes));
+	}
+	
+	
+	/**
+	 * 获取头像
+	 * @param context
+	 * @param buddy
+	 * @param size
+	 * @return
+	 * @throws IOException
+	 */
+	public static BufferedImage getPortrait(FetionContext context, Buddy buddy, int size) throws IOException {
+		String getPortraitUrl = context.getLocaleSetting().getNodeText("/config/http-applications/get-portrait");
+		getPortraitUrl = StringHelper.format("{0}?Uri={1}&Size={2}&c={3}",
+											getPortraitUrl,
+											StringHelper.urlEncode(buddy.getUri()),
+											Integer.toString(size),
+											StringHelper.urlEncode(context.getFetionUser().getSsiCredential().trim())); 
+		byte[] bytes = HttpHelper.doFetchData(getPortraitUrl, "GET", null, findCredential(getPortraitUrl, context), null);
+		return ImageIO.read(new ByteArrayInputStream(bytes));
 	}
 	
 	/**
@@ -81,13 +113,13 @@ public class HttpApplication
 	{
 		String v2Url = setting.getNodeText("/config/servers/ssi-app-sign-in-v2");
 		v2Url += "?domains=fetion.com.cn%3bm161.com.cn%3bwww.ikuwa.cn";
-		HttpURLConnection conn = HttpHelper.openConnection(v2Url, "GET", "application/x-www-form-urlencoded", user.getSsic());
+		HttpURLConnection conn = HttpHelper.openConnection(v2Url, "GET", "application/x-www-form-urlencoded", user.getSsiCredential());
 		if(conn.getResponseCode()==HttpURLConnection.HTTP_OK){
 			String header = conn.getHeaderField("Set-Cookie");
         	int s = header.indexOf("ssic=");
         	int e = header.indexOf(';');
         	String ssic = header.substring(s+5,e);
-        	user.setSsic(ssic);
+        	user.setSsiCredential(ssic);
 		}else{
 			throw new IOException("Http response is not OK. code="+conn.getResponseCode());
 		}
@@ -113,5 +145,13 @@ public class HttpApplication
 	        }else {
 	        	throw new IOException("Http response is not OK. code="+conn.getResponseCode());
 	        }
+	}
+	
+	
+	private static String findCredential(String url, FetionContext context) {
+		String ssic = url.startsWith("https")? 
+				context.getFetionUser().getSsiCredential()
+				: context.getFetionStore().getCredential("fetion.com.cn").getCredential();
+		return ssic.trim();
 	}
 }

@@ -20,6 +20,13 @@ import java.security.spec.RSAPublicKeySpec;
 import java.util.UUID;
 
 import javax.crypto.Cipher;
+import javax.crypto.KeyGenerator;
+import javax.crypto.SecretKey;
+import javax.crypto.spec.IvParameterSpec;
+import javax.crypto.spec.SecretKeySpec;
+
+import sun.misc.BASE64Decoder;
+import sun.misc.BASE64Encoder;
 
 /**
  *  验证信息生成类
@@ -120,4 +127,53 @@ public class AuthGeneratorV4
 		String uuid = UUID.randomUUID().toString();
     	return ConvertHelper.byte2HexStringWithoutSpace( DigestHelper.MD5( uuid.getBytes()));
     }
+	
+	public static void main(String[] args) throws Exception {
+
+		
+		/*String target = "LToJhkEFXAJvhOvNGEBvfzizrunz9YEOXbcP0aPyOcbbKBG0jmuW6k+n5Xkpt3mnUuyMeqew/TbEt7zRocS5smGqn0uYE+6YKf9G8GZAJTKEBgI6JrYgNJcTEDy4bwXvC9ucx6zTZV62Kb144UCjdG223JU+GiKB4gYcEmRWlX7i3P8hALzrcTg8IDUWOF1U";
+		String key = "396C37DF0CED1DF2AA2D27D3CF9DA871A0E9EEC65DA7CD718EB7E09B8C000050";
+		String IV = "00399F3D125DB5530AB5E000D6B0F45A";
+		String result = "CBIOAAA1FTUVwCZCzg0EIwhm8Y6WMLKJbb3t/AM+HP1xwsvBFxHs5aS3DI9gB1jA2HyucZsqdAbM//DFErTFsLjK4M26BamRx1FrJQ57rsF3A4jSCmag/YvBUuHNk73maSTbrH4AAA==";
+
+		byte[] targetBytes = new BASE64Decoder().decodeBuffer(target);
+		byte[] keyBytes = ConvertHelper.hexString2ByteNoSpace(key);
+		byte[] IVBytes = ConvertHelper.hexString2ByteNoSpace(IV);
+		
+		  System.out.println("decrypted bytes:"+ConvertHelper.byte2HexStringWithoutSpace(targetBytes));
+	       // Get the KeyGenerator
+	       KeyGenerator kgen = KeyGenerator.getInstance("AES");
+	       kgen.init(0x100); // 192 and 256 bits may not be available
+	       // Generate the secret key specs.
+	       SecretKey skey = kgen.generateKey();
+	       byte[] raw = skey.getEncoded();
+
+	       SecretKeySpec skeySpec = new SecretKeySpec(keyBytes, "AES");
+	       IvParameterSpec iv = new IvParameterSpec(IVBytes);//
+	       
+	       System.out.println("Key:"+ConvertHelper.byte2HexStringWithoutSpace(raw));
+
+	       // Instantiate the cipher
+
+	       Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
+	       cipher.init(Cipher.DECRYPT_MODE, skeySpec, iv);
+
+	       byte[] encrypted =
+	         cipher.doFinal(targetBytes);
+	       System.out.println("decrypted bytes:"+ConvertHelper.byte2HexStringWithoutSpace(encrypted));
+	       System.out.println("decrypted string: " + new String(encrypted,"utf8"));
+
+	       /*
+	        * 
+
+	       485031787773764246784873356153334449396742316A4132487975635A73716441624D2F2F4446
+	       45725446734C6A4B344D323642616D52783146724A5135377273463341346A53436D61672F597642
+	       5575484E6B37336D615354627248344141413D3D
+				        */
+		/*Rijndael_Algorithm ra = new Rijndael_Algorithm();
+			
+			byte[] decoded = ra.decode(keyBytes, targetBytes, 16);
+			System.out.println(new String(decoded));*/
+			
+	}
 }

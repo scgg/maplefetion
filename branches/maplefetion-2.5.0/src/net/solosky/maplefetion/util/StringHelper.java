@@ -25,6 +25,13 @@
  */
 package net.solosky.maplefetion.util;
 
+import java.io.UnsupportedEncodingException;
+import java.net.URLEncoder;
+
+import org.apache.mina.util.Base64;
+
+import sun.misc.BASE64Encoder;
+
 /**
  * 字符串工具类
  * 
@@ -78,5 +85,51 @@ public class StringHelper {
 		 html=html.replace("&nbsp;"," "); 
 		 
 		 return html;
+	}
+	
+	
+	/**
+	 * 以一种简单的方式格式化字符串
+	 * 如  String s = StringHelper.format("{0} is {1}", "apple", "fruit");
+	 * System.out.println(s);	//输出  apple is fruit.
+	 * @param pattern
+	 * @param args
+	 * @return
+	 */
+	public static String format(String pattern, Object ...args)
+	{
+		for(int i=0; i<args.length; i++) {
+			pattern = pattern.replace("{"+i+"}", args[i].toString());
+		}
+		return pattern;
+	}
+	
+	/**
+	 * 编码URL
+	 * @param url
+	 * @return
+	 */
+	public static String urlEncode(String url)
+	{
+		try {
+	        return URLEncoder.encode(url, "utf8");
+        } catch (UnsupportedEncodingException e) {
+        	return url;
+        }
+	}
+	
+	/**
+	 * base64解码
+	 * @param code
+	 * @return
+	 */
+	public static byte[] base64Decode(String code)
+	{
+		try {
+	        byte[] bytesData = code.getBytes("utf8");
+	        return Base64.decodeBase64(bytesData);
+        } catch (UnsupportedEncodingException e) {
+	        throw new IllegalArgumentException(e);
+        }
 	}
 }

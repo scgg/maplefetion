@@ -52,6 +52,7 @@ public class SipcHeader
 	public final static String LENGTH   = "L";
 	public final static String EVENT    = "N";
 	public final static String TO       = "T";
+	public final static String EXPIRED  = "X";
 	public final static String SUPPORTED       = "K";
 	public final static String CONTENT_TYPE    = "C";
 	public final static String AUTHORIZATION   = "A";

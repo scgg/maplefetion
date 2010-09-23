@@ -31,8 +31,8 @@
  */
 package net.solosky.maplefetion;
 
+import java.awt.image.BufferedImage;
 import java.io.IOException;
-import java.io.InputStream;
 import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Collection;
@@ -67,9 +67,7 @@ import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
-import net.solosky.maplefetion.event.action.SuccessEvent;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
-import net.solosky.maplefetion.event.action.TransferErrorEvent;
 import net.solosky.maplefetion.event.action.success.FindBuddySuccessEvent;
 import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.event.notify.ImageVerifyEvent;
@@ -444,6 +442,16 @@ public class FetionClient implements FetionContext
     {
     	if(this.state!=ClientState.ONLINE){
     		throw new IllegalStateException("client is not online [state="+this.state+"], action failed.");
+    	}
+    }
+    
+    /**
+     * 在进行Http操作时，确保SSi已经登录
+     */
+    private void ensureSSISigned()
+    {
+    	if(this.getFetionUser().getSsiCredential()==null) {
+    			throw new IllegalStateException("Empty ssic, please enable ssi login first.");
     	}
     }
 
@@ -1095,33 +1103,6 @@ public class FetionClient implements FetionContext
 		this.setPersonalInfo(listener);
 	}
 	
-	/**
-	 * 设置用户的头像
-	 * @param imgStream		头像图片流
-	 * @param listener
-	 */
-	public void setPortrait(final InputStream imgStream, final ActionEventListener listener)
-	{
-		this.ensureOnline();
-		//检测是否有有效的SSI
-		if(this.user.getSsic()==null) {
-			throw new IllegalStateException("Empty ssic, please enable ssi login first.");
-		}
-		
-		//TODO 检测是不是有效的图片文件
-		Runnable r = new Runnable(){
-			public void run(){
-				try {
-					long portraitId = HttpApplication.setPortrait(user, localeSetting, imgStream);
-					if(listener!=null) listener.fireEevent(new SuccessEvent());
-				} catch (IOException e) {
-					logger.debug("Set portrait failed.", e);
-					if(listener!=null) listener.fireEevent(new TransferErrorEvent());
-				}
-			}
-		};
-		this.executor.submitTask(r);
-	}
 	
 	/**
 	 * 获取定时短信列表
@@ -1229,6 +1210,41 @@ public class FetionClient implements FetionContext
 			if(listener!=null) listener.fireEevent(new FailureEvent(FailureType.BUDDY_NOT_IN_BLACKLIST));
 		}else {
 			this.getServerDialog().removeBuddyFromBlackList(buddy, listener);
+		}
+	}
+	
+	////////////////////////////////////////////////////////////////////////////////////
+	// 下面是HTTP操作，所有的HTTP操作都是同步的，如果出错抛出IO异常
+	////////////////////////////////////////////////////////////////////////////////////
+	/**
+	 * 获取好友头像
+	 * @param buddy		好友对象
+	 * @return			成功返回好友头像，并存储在好友对象中
+	 * @throws IOException
+	 */
+	public BufferedImage httpGetPortrait(Buddy buddy) throws IOException
+	{
+		this.ensureOnline();
+		this.ensureSSISigned();
+		BufferedImage portrait = HttpApplication.getPortrait(this, buddy, 120);
+		buddy.setPortrait(portrait);
+		return portrait;
+	}
+	
+	/**
+	 * 设置用户的头像，头像的的高和宽都不能超过120px
+	 * @param image			图片对象，可以使用ImageIO.read()来从流中读取
+	 * @param listener
+	 * @throws IOException 
+	 */
+	public void httpSetPortrait(BufferedImage image) throws IOException
+	{
+		this.ensureOnline();
+		this.ensureSSISigned();
+		if(image.getHeight()>120 || image.getWidth()>120) {
+			throw new IllegalArgumentException("portrait height and width should below 120 px.");
+		}else {
+			long portraitCrc = HttpApplication.setPortrait(this, image);
 		}
 	}
 	

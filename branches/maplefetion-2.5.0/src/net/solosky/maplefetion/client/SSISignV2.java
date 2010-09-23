@@ -181,12 +181,12 @@ public class SSISignV2 implements SSISign
 	        	Element userEl = root.getChild("user");
 	        	String uri = userEl.getAttributeValue("uri");
 	        	String uid = userEl.getAttributeValue("user-id");
-	        	user.setSsic(ssic);
+	        	user.setSsiCredential(ssic);
 	        	user.setUri(uri);
 	        	BeanHelper.setValue(user, "userId", (Integer.parseInt(uid)));
 	        	
 	        	logger.debug("SSISignIn: ssic = "+ssic);
-	        	user.setSsic(ssic);
+	        	user.setSsiCredential(ssic);
 	        	break;
 	        	
 	        	default:

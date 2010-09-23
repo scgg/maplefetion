@@ -87,16 +87,25 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 		
 		//如果被拒绝后，用户还可以发起添加对方的请求，这样用户可能发起了多次加好友请求
 		//所以这里做个判断，如果原来的好友存在，直接删除掉
-		Buddy buddy = store.getBuddyByUri(uri);
-		if(buddy!=null){
-			store.deleteBuddy(buddy);
+		int statusCode = Integer.parseInt(element.getAttributeValue("status-code"));
+		switch(statusCode) {
+		case 200:
+			Buddy buddy = store.getBuddyByUri(uri);
+			if(buddy!=null){
+				store.deleteBuddy(buddy);
+			}
+			buddy = new Buddy();
+			BeanHelper.toBean(Buddy.class, buddy, element);
+			
+			store.addBuddy(buddy);
+			return new AddBuddySuccessEvent(buddy);
+			
+		case 520:
+			return new FailureEvent(FailureType.MAX_BUDDIES_LIMITED);
+			
+		default:
+			return new FailureEvent(FailureType.UNKNOWN_FAIL);	
 		}
-		buddy = new Buddy();
-		BeanHelper.toBean(Buddy.class, buddy, element);
-		
-		store.addBuddy(buddy);
-		
-		return new AddBuddySuccessEvent(buddy);
 	}
 
 	/* (non-Javadoc)

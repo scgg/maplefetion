@@ -29,6 +29,7 @@ import java.util.Collection;
 
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
+import net.solosky.maplefetion.bean.Credential;
 import net.solosky.maplefetion.bean.Group;
 import net.solosky.maplefetion.bean.Member;
 import net.solosky.maplefetion.bean.Relation;
@@ -266,5 +267,25 @@ public interface FetionStore
      * @param scheduleSMS
      */
     public void deleteScheduleSMS(ScheduleSMS scheduleSMS);
+    
+    
+    /**
+     * 添加一个凭证
+     * @param credential
+     */
+    public void addCredential(Credential credential);
+    
+    /**
+     * 根据域名查找凭证
+     * @param domain	域名
+     * @return
+     */
+    public Credential getCredential(String domain);
+    
+    /**
+     * 返回所有的凭证列表
+     * @return
+     */
+    public Collection<Credential> getCredentialList();
 
 }

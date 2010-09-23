@@ -49,6 +49,7 @@ import net.solosky.maplefetion.sipc.SipcMethod;
 import net.solosky.maplefetion.sipc.SipcReceipt;
 import net.solosky.maplefetion.sipc.SipcRequest;
 import net.solosky.maplefetion.util.AuthGeneratorV4;
+import net.solosky.maplefetion.util.ConvertHelper;
 import net.solosky.maplefetion.util.NodeBuilder;
 import net.solosky.maplefetion.util.PasswordEncrypterV4;
 import net.solosky.maplefetion.util.StringHelper;
@@ -127,7 +128,7 @@ public class MessageFactory
     	if(mc.matches()) {
     		String passHex = PasswordEncrypterV4.encryptV4(this.user.getUserId(),this.user.getPassword());
     		AuthGeneratorV4 auth = new AuthGeneratorV4();
-    		String aeskey = "396C37DF0CED1DF2AA2D27D3CF9DA871A0E9EEC65DA7CD718EB7E09B8C000050";/*aesKey 可以随机生成，登录过程没有含义，可能是加密和解密本地配置，待考证*/
+    		String aeskey = ConvertHelper.byte2HexStringWithoutSpace(user.getAesKey());
         	String response = auth.generate(mc.group(2), passHex, mc.group(1), aeskey);
         	String authString ="Digest response=\""+response+"\",algorithm=\"SHA1-sess-v4\"";
         	req.addHeader(SipcHeader.AUTHORIZATION, authString);
@@ -221,6 +222,15 @@ public class MessageFactory
     	return req;
     }
     
+    /**
+     * 注销登录请求
+     */
+    public SipcRequest createLogoutRequest()
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
+    	req.addHeader(SipcHeader.EXPIRED, "0");
+    	return req;
+    }
     
     
     /**

@@ -60,6 +60,7 @@ import net.solosky.maplefetion.client.response.GetMemberListResponseHandler;
 import net.solosky.maplefetion.client.response.GetPersonalInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetScheduleSMSInfoResponseHandler;
 import net.solosky.maplefetion.client.response.GetScheduleSMSListResponseHandler;
+import net.solosky.maplefetion.client.response.KeepAliveResponseHandler;
 import net.solosky.maplefetion.client.response.RemoveBuddyFromBlackListResponseHandler;
 import net.solosky.maplefetion.client.response.SendChatMessageResponseHandler;
 import net.solosky.maplefetion.client.response.ServerRegisterResponseHandler;
@@ -68,6 +69,7 @@ import net.solosky.maplefetion.client.response.SetCordTitleResponseHandler;
 import net.solosky.maplefetion.client.response.SetPresenceResponseHandler;
 import net.solosky.maplefetion.client.response.UserAuthResponseHandler;
 import net.solosky.maplefetion.event.ActionEvent;
+import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
@@ -143,14 +145,22 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     @Override
     protected void doCloseDialog() throws Exception
     {
-    	//不需要发送任何离开消息，直接关闭对话框即可
+		if(!this.processorChain.isChainClosed()) {
+        	//注销请求
+        	ActionEventFuture future = new ActionEventFuture();
+        	this.logout(future);
+        	//future.waitActionEventWithoutException();
+        	
+        	//停止处理链
+        	this.processorChain.stopProcessorChain();
+		}
+    	
+    	//停止定时任务
     	this.keepAliveTask.cancel();
     	this.keepConnectionTask.cancel();
     	this.context.getFetionTimer().clearCanceledTask();
     	
-    	//停止处理链
-		if(!this.processorChain.isChainClosed())
-			this.processorChain.stopProcessorChain();
+    	
     }
 
 	/**
@@ -277,6 +287,16 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	}
 	
 	
+	/**
+	 * 注销登录
+	 */
+	public void logout(ActionEventListener listener)
+	{
+		SipcRequest request = this.getMessageFactory().createLogoutRequest();
+		request.setResponseHandler(new DefaultResponseHandler(listener));
+		this.process(request);
+	}
+	
 	///////////////////////////////////////////////////////////////////////////////
 	/**
 	 * 获取个人信息
@@ -375,13 +395,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
         public void run()
         {
         	SipcRequest request = messageFactory.createKeepAliveRequest();
-        	ActionEventListener listener = new ActionEventListener()
-			{
-				public void fireEevent(ActionEvent event)
-				{
-				}
-			};
-        	request.setResponseHandler(new DefaultResponseHandler(listener));
+        	request.setResponseHandler(new KeepAliveResponseHandler(context, null, null));
 	        process(request);
         }
     }

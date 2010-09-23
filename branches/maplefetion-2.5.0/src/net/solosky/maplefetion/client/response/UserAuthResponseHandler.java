@@ -25,6 +25,7 @@
  */
 package net.solosky.maplefetion.client.response;
 
+import java.io.IOException;
 import java.util.Iterator;
 import java.util.List;
 
@@ -32,8 +33,10 @@ import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Cord;
+import net.solosky.maplefetion.bean.Credential;
 import net.solosky.maplefetion.bean.Relation;
 import net.solosky.maplefetion.bean.User;
+import net.solosky.maplefetion.client.SystemException;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
@@ -42,6 +45,8 @@ import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.sipc.SipcResponse;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.util.BeanHelper;
+import net.solosky.maplefetion.util.DigestHelper;
+import net.solosky.maplefetion.util.StringHelper;
 import net.solosky.maplefetion.util.UriHelper;
 import net.solosky.maplefetion.util.XMLHelper;
 
@@ -82,7 +87,7 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		Element personal = XMLHelper.find(root, "/results/user-info/personal");
 		User user = this.context.getFetionUser();
 		user.setEmail(personal.getAttributeValue("register-email"));
-		BeanHelper.toBean(User.class, user, personal);
+
 		int personalVersion = Integer.parseInt(personal.getAttributeValue("version"));
 		Element contactList = XMLHelper.find(root, "/results/user-info/contact-list");
 		int contactVersion = Integer.parseInt(contactList.getAttributeValue("version"));
@@ -90,6 +95,10 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		//联系人和个人信息版本信息
 		store.getStoreVersion().setPersonalVersion(personalVersion);
 		store.getStoreVersion().setContactVersion(contactVersion);
+		
+		//个人信息
+		BeanHelper.toBean(User.class, user, personal);
+		
 		
 		//一定要对飞信列表加锁，防止其他飞信操作获取到空的数据
 		synchronized (store) {
@@ -143,10 +152,42 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
     				b.setRelation(Relation.BANNED);
     			}
     		}
+    		
+    		
+    		//处理Crendeticals
+    		Element credentialList = XMLHelper.find(root, "/results/credentials");
+    		
+    		user.setSsiCredential(this.decryptCredential(credentialList.getAttributeValue("kernel")));
+    		
+    		list = XMLHelper.findAll(root, "/results/credentials/*credential");
+    		it = list.iterator();
+    		while(it.hasNext()) {
+    			Element e = (Element) it.next();
+    			String domain = e.getAttributeValue("domain");
+    			Credential c = store.getCredential(domain);
+    			if(c==null) {
+    				c = new Credential(domain, null);
+    				store.addCredential(c);
+    			}
+    			c.setCredential(this.decryptCredential(e.getAttributeValue("c")));
+    		}
         }
+		
 		
 		return super.doActionOK(response);
 	}
+	
+    private String decryptCredential(String c) throws FetionException {
+    	User user = this.context.getFetionUser();
+    	try {
+            byte[] encrypted = StringHelper.base64Decode(c);
+            byte[] decrypted = DigestHelper.AESDecrypt(encrypted, user.getAesKey(), user.getAesIV());
+            return new String(decrypted,"utf8");
+        } catch (IOException ex) {
+        	throw new SystemException("decrypt credential failed.", ex);
+        }
+    }
+    
 	
 
 	@Override
