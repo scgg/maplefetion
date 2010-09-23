@@ -25,21 +25,15 @@
  */
 package net.solosky.maplefetion.util;
 
-import java.security.InvalidAlgorithmParameterException;
 import java.security.InvalidKeyException;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import javax.crypto.BadPaddingException;
 import javax.crypto.Cipher;
-import javax.crypto.IllegalBlockSizeException;
 import javax.crypto.KeyGenerator;
-import javax.crypto.NoSuchPaddingException;
 import javax.crypto.SecretKey;
 import javax.crypto.spec.IvParameterSpec;
 import javax.crypto.spec.SecretKeySpec;
-
-import org.apache.log4j.Logger;
 
 /**
  *	
@@ -119,6 +113,13 @@ public class DigestHelper
 	        Cipher cipher = Cipher.getInstance("AES/CBC/NoPadding");
 	        cipher.init(Cipher.DECRYPT_MODE, skeySpec, ivSpec);
 	        return cipher.doFinal(encrypted);
+		} catch(InvalidKeyException e) {
+			throw new IllegalArgumentException(
+					"if you see invalid key size: 256, it cause by default JCE does not support 256-aes key for shipping reason.\n" +
+					"but you can download those two policy files(US_export_policy.jar,local_policy.jar) and replace the same files in '$JDK_HOME/jre/lib/security',\n" +
+					"then it still work well. I would implement AES/CBC/NoPadding algorithm to make things better in futrue.\n" +
+					"download link:https://cds.sun.com/is-bin/INTERSHOP.enfinity/WFS/CDS-CDS_Developer-Site/en_US/-/USD/ViewProductDetail-Start?ProductRef=jce_policy-6-oth-JPR@CDS-CDS_Developer",
+				e);
         } catch (Exception e) {
         	throw new IllegalArgumentException("AESDecrypt failed.", e);
         }
