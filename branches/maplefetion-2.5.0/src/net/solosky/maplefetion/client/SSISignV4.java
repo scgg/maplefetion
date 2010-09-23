@@ -33,6 +33,7 @@ import java.util.List;
 
 import javax.net.ssl.HttpsURLConnection;
 
+import net.solosky.maplefetion.FetionConfig;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventListener;
@@ -158,13 +159,13 @@ public class SSISignV4 implements SSISign
 	        		if(mobileStr!=null && mobileStr.length()>0)
 	        			user.setMobile(Long.parseLong(mobileStr));
 	        		
-//	        		FetionStore store = this.fetionContext.getFetionStore();
-//	        		List list = XMLHelper.findAll(root, "/results/user/credentials/*credential");
-//	        		Iterator it = list.iterator();
-//	        		while(it.hasNext()) {
-//	        			Element c = (Element) it.next();
-//	        			store.addCredential(new Credential(c.getAttributeValue("domain"), c.getAttributeValue("c")));
-//	        		}
+	        		FetionStore store = this.fetionContext.getFetionStore();
+	        		List list = XMLHelper.findAll(root, "/results/user/credentials/*credential");
+	        		Iterator it = list.iterator();
+	        		while(it.hasNext()) {
+	        			Element c = (Element) it.next();
+	        			store.addCredential(new Credential(c.getAttributeValue("domain"), c.getAttributeValue("c")));
+	        		}
 	        		
 	        		logger.info("SSISignV4:ssic="+user.getSsiCredential());
 	        		
@@ -217,10 +218,10 @@ public class SSISignV4 implements SSISign
 	        NotifyEventListener listener = this.fetionContext.getNotifyEventListener();
 	        
 	        if(listener!=null) {
-	        	listener.fireEvent(new ImageVerifyEvent(ImageVerifyEvent.SSI_VERIFY, verifyImage, text, tips,null, null));
+	        	listener.fireEvent(new ImageVerifyEvent(ImageVerifyEvent.SSI_VERIFY, verifyImage, text, tips, null, null));
 	        }else {
 	        	throw new IllegalArgumentException("SSI need verify, but found no notifyEventListener" +
-	        			" to handle verify action, please set NotifyEventListener frist.");
+	        			" to handle verify action, please set NotifyEventListener first.");
 	        }
         } catch (ParseException e) {
         	logger.warn("fetch verify image failed.",e );
@@ -233,7 +234,10 @@ public class SSISignV4 implements SSISign
     private String buildUrl(User user, VerifyImage img)
 	{
 		StringBuffer b = new StringBuffer();
-		b.append("https://uid.fetion.com.cn/ssiportal/SSIAppSignInV4.aspx?");
+		String urlV4 = this.fetionContext.getLocaleSetting().getNodeText("/config/servers/ssi-app-sign-in-v2");
+		if(urlV4==null)	urlV4 = FetionConfig.getString("server.ssi-sign-in-v2");
+		b.append(urlV4);
+		b.append("?");
 		if(user.getMobile()>0){
 			b.append("mobileno="+Long.toString(user.getMobile()));
 		}else if(user.getFetionId()>0){

@@ -364,7 +364,7 @@ public class MapleFetion extends NotifyEventAdapter
 				String impresa = buddy.getImpresa();
 				println(Integer.toString(startId)+" "+formatRelation(buddy.getRelation())+" "+fomartString(buddy.getDisplayName(),10)+"\t"
 						+buddy.getDisplayPresence()
-						+"\t"+impresa);
+						+"\t"+(impresa==null?"":impresa));
 				startId++;
 			}
 			return startId;

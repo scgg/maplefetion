@@ -26,6 +26,7 @@
 package net.solosky.maplefetion.util;
 
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.HttpURLConnection;
 import java.net.URL;
@@ -119,6 +120,18 @@ public class LocaleSetting
         this.isLoaded = true;
 	}
 
+	/***
+	 * 从一个流中加载配置
+	 * @param in
+	 * @throws IOException 
+	 * @throws JDOMException 
+	 */
+	public void load(InputStream in) throws JDOMException, IOException
+	{
+		SAXBuilder builder = new SAXBuilder();
+        this.document = builder.build(in);
+        this.isLoaded = true;
+	}
 
 	/**
 	 * 是否被加载
