@@ -42,7 +42,7 @@ public class PermissionNotifyHandler extends AbstractNotifyHandler
     @Override
     public void handle(SipcNotify notify) throws FetionException
     {
-    	logger.info("Got a permission notify, ignore it .");
+    	logger.debug("Got a permission notify, ignore it .");
     }
 
 }

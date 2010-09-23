@@ -101,7 +101,7 @@ public class SSISignV4 implements SSISign
 	        URL doUrl = new URL(url);
 	        HttpsURLConnection conn = (HttpsURLConnection) doUrl.openConnection();
 	        int status = conn.getResponseCode();
-	        logger.info("SSISignV4:status="+status);
+	        logger.debug("SSISignV4:status="+status);
 	        
 	        switch(status){
 	        
@@ -167,7 +167,7 @@ public class SSISignV4 implements SSISign
 	        			store.addCredential(new Credential(c.getAttributeValue("domain"), c.getAttributeValue("c")));
 	        		}
 	        		
-	        		logger.info("SSISignV4:ssic="+user.getSsiCredential());
+	        		logger.debug("SSISignV4:ssic="+user.getSsiCredential());
 	        		
 	        		break;
 	        		
