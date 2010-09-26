@@ -1,19 +1,19 @@
-=============================================
-´ÓMapleFetion-2.0.x Éı¼¶µ½ MapleFetion-2.5.x µÄÉı¼¶Ö¸µ¼
+ï»¿=============================================
+ä»MapleFetion-2.0.x å‡çº§åˆ° MapleFetion-2.5.x çš„å‡çº§æŒ‡å¯¼
 http://maplefetion.googlecode.com
 =============================================
 
 
-ÓÉÓÚ2.5.x²ÉÓÃÁË2010µÄĞ­Òé£¬ËùÒÔÓĞ²¿·ÖAPIÓĞËù¸Ä±ä£¬Çë²ÎÕÕÕâÉı¼¶Ö¸µ¼Íê³ÉÉı¼¶¡£
+ç”±äº2.5.xé‡‡ç”¨äº†2010çš„åè®®ï¼Œæ‰€ä»¥æœ‰éƒ¨åˆ†APIæœ‰æ‰€æ”¹å˜ï¼Œè¯·å‚ç…§è¿™å‡çº§æŒ‡å¯¼å®Œæˆå‡çº§ã€‚
 
-1.µÇÂ¼·½Ê½·¢ÉúÁË¸Ä±ä
+1.ç™»å½•æ–¹å¼å‘ç”Ÿäº†æ”¹å˜
 
-   a.´¦ÀíÑéÖ¤µÄ·½Ê½£º
+   a.å¤„ç†éªŒè¯çš„æ–¹å¼ï¼š
 
-µÇÂ¼¹ı³ÌÖĞ²»ÔÙ³öÏÖLoginStateÎªSSI_NEED_VERIFY,VERIFY_FAILµÈÑéÖ¤ÂëÊÂ¼ş£¬
-ËùÓĞµÄÑéÖ¤Âë´¦Àí¶¼·ÅÔÚÁËNotifyEventListenerµÄImageVerifyEventµÄÍ¨ÖªÊÂ¼şÀ´´¦ÀíÑéÖ¤Âë¡£
-Ç¿ÁÒ½¨ÒéµÇÂ¼Ö®Ç°ÉèÖÃÒ»¸öNotifyEventListener£¬·ñÔòÈç¹û²»ÉèÖÃ£¬µ±µÇÂ¼Óöµ½ĞèÒª´¦ÀíÑéÖ¤ÂëÊ±£¬»áÅ×³öIllegalStateException;
-ÔÚNotifyEventListener´¦ÀíÑéÖ¤ÂëµÄ²¿·Ö´úÂëÀı×ÓÈçÏÂ£º
+ç™»å½•è¿‡ç¨‹ä¸­ä¸å†å‡ºç°LoginStateä¸ºSSI_NEED_VERIFY,VERIFY_FAILç­‰éªŒè¯ç äº‹ä»¶ï¼Œ
+æ‰€æœ‰çš„éªŒè¯ç å¤„ç†éƒ½æ”¾åœ¨äº†NotifyEventListenerçš„ImageVerifyEventçš„é€šçŸ¥äº‹ä»¶æ¥å¤„ç†éªŒè¯ç ã€‚
+å¼ºçƒˆå»ºè®®ç™»å½•ä¹‹å‰è®¾ç½®ä¸€ä¸ªNotifyEventListenerï¼Œå¦åˆ™å¦‚æœä¸è®¾ç½®ï¼Œå½“ç™»å½•é‡åˆ°éœ€è¦å¤„ç†éªŒè¯ç æ—¶ï¼Œä¼šæŠ›å‡ºIllegalStateException;
+åœ¨NotifyEventListenerå¤„ç†éªŒè¯ç çš„éƒ¨åˆ†ä»£ç ä¾‹å­å¦‚ä¸‹ï¼š
 client.setNotifyEventListener(new NotifyEventListener(){
 	public void fireEvent(NotifyEvent event){
 		if(event.getEventType()==NotifyEventType.IMAGE_VERIFY){
@@ -21,8 +21,8 @@ client.setNotifyEventListener(new NotifyEventListener(){
 			OutputStream out = new FileoutputStream(new File("verify.jpg"));
 			out.write(e.getVerifyImage().getImageData());
 			out.close();
-			System.out.println("µ±Ç°²Ù×÷ĞèÒªÑéÖ¤£¬Ô­Òò"+e.getVerifyReasion());
-			System.out.print("ÇëÊäÈëµ±Ç°Ä¿Â¼ÏÂ[verify.jpg]ÏÂÃæµÄÑéÖ¤Âë:");
+			System.out.println("å½“å‰æ“ä½œéœ€è¦éªŒè¯ï¼ŒåŸå› "+e.getVerifyReasion());
+			System.out.print("è¯·è¾“å…¥å½“å‰ç›®å½•ä¸‹[verify.jpg]ä¸‹é¢çš„éªŒè¯ç :");
 			String code = System.getConsole().readLine();
 			e.getVerifyImage().setVerifyCode(code);
 			client.proccessVerify(e);
@@ -30,30 +30,30 @@ client.setNotifyEventListener(new NotifyEventListener(){
 	}
 });
 
-    b.Ìá¹©ÁËÈ¡ÏûµÇÂ¼µÄ·½·¨ client.cancelLogin()
-Èç¹û²Ù×÷ĞèÒªÓÃ»§ÊäÈëÑéÖ¤Âë£¬µ±ÓÃ»§²»ÔÚÊäÈëÑéÖ¤Âëºó£¬¾ÍĞèÒªµ÷ÓÃclient.cancelLogin()È¡ÏûµÇÂ¼²¢ÊÍ·Å×ÊÔ´
-µ±È»Ò²¿ÉÒÔÔÚµÇÂ¼µÄ¹ı³ÌÖĞÈÎºÎÊ±ºòµ÷ÓÃÈ¡ÏûµÇÂ¼£¬ÔÚÔÚÏß»òÕßÀëÏß×´Ì¬µ÷ÓÃ¶¼»áÅ×³öÒì³£¡£
+    b.æä¾›äº†å–æ¶ˆç™»å½•çš„æ–¹æ³• client.cancelLogin()
+å¦‚æœæ“ä½œéœ€è¦ç”¨æˆ·è¾“å…¥éªŒè¯ç ï¼Œå½“ç”¨æˆ·ä¸åœ¨è¾“å…¥éªŒè¯ç åï¼Œå°±éœ€è¦è°ƒç”¨client.cancelLogin()å–æ¶ˆç™»å½•å¹¶é‡Šæ”¾èµ„æº
+å½“ç„¶ä¹Ÿå¯ä»¥åœ¨ç™»å½•çš„è¿‡ç¨‹ä¸­ä»»ä½•æ—¶å€™è°ƒç”¨å–æ¶ˆç™»å½•ï¼Œåœ¨åœ¨çº¿æˆ–è€…ç¦»çº¿çŠ¶æ€è°ƒç”¨éƒ½ä¼šæŠ›å‡ºå¼‚å¸¸ã€‚
 
-    c.Í¬²½µÇÂ¼·½·¨Ìá¹©ÁËÒ»¸ö³¬Ê±²ÎÊı£¬syncLogin(int presence, long timeout)£¬¿ÉÒÔÉèÖÃÒ»¸öµÇÂ¼³¬Ê±Ê±¼ä¡£
-Èç¹ûÔÚ¸ø¶¨µÄÊ±¼äÄÚÃ»ÓĞÍê³ÉµÇÂ¼¾Í»á·µ»ØLOGIN_TIMEOUT×´Ì¬¡£Èç¹û³¬Ê±¿Í»§¶Ë»á×Ô¶¯ÊÍ·Å×ÊÔ´¡£
-
-
-
-
-2.²¿·ÖHTTP²Ù×÷¸ü¸ÄÎªÍ¬²½µÄ·½·¨¡£
-ËùÓĞÒÔhttp¿ªÍ·µÄ·½·¨ÈçhttpSetPortrait(..),httpGetPortrait(..)¶¼ÊÇÍ¬²½µÄ·½·¨£¬²¢ÔÚÎŞ·¨Á¬½Ó»òÕßÁ¬½ÓÊ§°ÜÊ±»áÅÜ³öIOÒì³££»
+    c.åŒæ­¥ç™»å½•æ–¹æ³•æä¾›äº†ä¸€ä¸ªè¶…æ—¶å‚æ•°ï¼ŒsyncLogin(int presence, long timeout)ï¼Œå¯ä»¥è®¾ç½®ä¸€ä¸ªç™»å½•è¶…æ—¶æ—¶é—´ã€‚
+å¦‚æœåœ¨ç»™å®šçš„æ—¶é—´å†…æ²¡æœ‰å®Œæˆç™»å½•å°±ä¼šè¿”å›LOGIN_TIMEOUTçŠ¶æ€ã€‚å¦‚æœè¶…æ—¶å®¢æˆ·ç«¯ä¼šè‡ªåŠ¨é‡Šæ”¾èµ„æºã€‚
 
 
 
-3.É¾³ıÁËÒ»Ğ©API£¬ÕâĞ©APIÔÚ2010µÄĞ­ÒéÖĞ²»ÔÚÓĞĞ§¡£ÈçÏÂ£º
+
+2.éƒ¨åˆ†HTTPæ“ä½œæ›´æ”¹ä¸ºåŒæ­¥çš„æ–¹æ³•ã€‚
+æ‰€æœ‰ä»¥httpå¼€å¤´çš„æ–¹æ³•å¦‚httpSetPortrait(..),httpGetPortrait(..)éƒ½æ˜¯åŒæ­¥çš„æ–¹æ³•ï¼Œå¹¶åœ¨æ— æ³•è¿æ¥æˆ–è€…è¿æ¥å¤±è´¥æ—¶ä¼šè·‘å‡ºIOå¼‚å¸¸ï¼›
+
+
+
+3.åˆ é™¤äº†ä¸€äº›APIï¼Œè¿™äº›APIåœ¨2010çš„åè®®ä¸­ä¸åœ¨æœ‰æ•ˆã€‚å¦‚ä¸‹ï¼š
 void updateBuddyList()
-void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener) [ÇëÓÃretireBuddyInfo(Buddy buddy)]
+void getBuddyDetail(FetionBuddy buddy, ActionEventListener listener) [è¯·ç”¨retireBuddyInfo(Buddy buddy)]
 void getBuddyDetail(Collection<FetionBuddy> buddyList, ActionEventListener listener)
-VerifyImage fetchVerifyImage() [ÇëÓÃflushVerifyImage(ImageVerifyEvent event)]
+VerifyImage fetchVerifyImage() [è¯·ç”¨flushVerifyImage(ImageVerifyEvent event)]
 ....
 
 
-4.ĞÂÔöÁËÒ»Ğ©APIÈçÏÂ£º
+4.æ–°å¢äº†ä¸€äº›APIå¦‚ä¸‹ï¼š
 void httpSetPortrait(BufferedImage image);
 BufferedImage httpGetPortrait(Buddy buddy);
 void flushVerifyImage(ImageVerifyEvent event);
@@ -61,5 +61,5 @@ void retireBuddyInfo(Buddy buddy);
 ....
 
 
-5.É¾³ıÁËÒ»Ğ©Bean;
-É¾³ıÁËFetionBuddyºÍMobileBuddy£¬ËùÓĞµÄºÃÓÑÖ»ĞèÓÃBuddy±íÊ¾¼´¿É¡£
+5.åˆ é™¤äº†ä¸€äº›Bean;
+åˆ é™¤äº†FetionBuddyå’ŒMobileBuddyï¼Œæ‰€æœ‰çš„å¥½å‹åªéœ€ç”¨Buddyè¡¨ç¤ºå³å¯ã€‚

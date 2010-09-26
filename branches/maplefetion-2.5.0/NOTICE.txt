@@ -1,13 +1,13 @@
-=============================================
-MapleFetionµÄÒ»Ğ©ËµÃ÷
+ï»¿=============================================
+MapleFetionçš„ä¸€äº›è¯´æ˜
 	solosky <solosky772@qq.com>
 =============================================
 
-¹ØÓÚ MapleFetion -2.5.0 ÖĞ java.security.InvalidKeyException: Illegal key size Òì³£
+å…³äº MapleFetion -2.5.0 ä¸­ java.security.InvalidKeyException: Illegal key size å¼‚å¸¸
 ----------------------------------------------------------------------
-ÔÚmaplefetion-2.5.0ÖĞ£¬Èç¹û³öÏÖÁË java.security.InvalidKeyException: Illegal key size£¬
-Çë¸´ÖÆ./lib/policy/Ä¿Â¼ÏÂÃæµÄÁ½¸öÎÄ¼şµ½ $JDK_HOME/jre/lib/security²¢¸²¸ÇÔ­À´ÄÇÁ½¸öÎÄ¼ş(×¢Òâ±¸·İ)£¬¼´¿É¡£
-ÕâÊÇÒòÎª·ÉĞÅÊ¹ÓÃAES 256Î»µÄÃÜÔ¿¼ÓÃÜCredential£¬ÔÚ²»Í¬¹ú¼ÒÖ®¼äµÄÃÜÂëËã·¨µÄ½»Á÷£¬³ö¿ÚµÄÃÜÔ¿³¤¶ÈÊÇÊÜÏŞÖÆµÄ¡£
-ÔÚ¹úÄÚ²»Ö§³Ö256Î»µÄ¼ÓÃÜ¡£ĞèÒªÏÂÔØJCEÎŞÏŞÖÆÃÜÔ¿³¤¶ÈµÄ²ßÂÔÎÄ¼ş(Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files)²ÅÄÜÊ¹ÓÃ¡£
+åœ¨maplefetion-2.5.0ä¸­ï¼Œå¦‚æœå‡ºç°äº† java.security.InvalidKeyException: Illegal key sizeï¼Œ
+è¯·å¤åˆ¶./lib/policy/ç›®å½•ä¸‹é¢çš„ä¸¤ä¸ªæ–‡ä»¶åˆ° $JDK_HOME/jre/lib/securityå¹¶è¦†ç›–åŸæ¥é‚£ä¸¤ä¸ªæ–‡ä»¶(æ³¨æ„å¤‡ä»½)ï¼Œå³å¯ã€‚
+è¿™æ˜¯å› ä¸ºé£ä¿¡ä½¿ç”¨AES 256ä½çš„å¯†é’¥åŠ å¯†Credentialï¼Œåœ¨ä¸åŒå›½å®¶ä¹‹é—´çš„å¯†ç ç®—æ³•çš„äº¤æµï¼Œå‡ºå£çš„å¯†é’¥é•¿åº¦æ˜¯å—é™åˆ¶çš„ã€‚
+åœ¨å›½å†…ä¸æ”¯æŒ256ä½çš„åŠ å¯†ã€‚éœ€è¦ä¸‹è½½JCEæ— é™åˆ¶å¯†é’¥é•¿åº¦çš„ç­–ç•¥æ–‡ä»¶(Java Cryptography Extension (JCE) Unlimited Strength Jurisdiction Policy Files)æ‰èƒ½ä½¿ç”¨ã€‚
 
-Ä¿Ç°µÄ½â¾ö·½°¸ÊÇÕâÑù£¬²»¹»ºÃ£¬µ«ÄÜ½â¾öÎÊÌâ£¬ÒÔºó»á¿¼ÂÇ×ÔĞĞÊµÏÖ AES/CBC/NoPadding Ëã·¨¡£
+ç›®å‰çš„è§£å†³æ–¹æ¡ˆæ˜¯è¿™æ ·ï¼Œä¸å¤Ÿå¥½ï¼Œä½†èƒ½è§£å†³é—®é¢˜ï¼Œä»¥åä¼šè€ƒè™‘è‡ªè¡Œå®ç° AES/CBC/NoPadding ç®—æ³•ã€‚
