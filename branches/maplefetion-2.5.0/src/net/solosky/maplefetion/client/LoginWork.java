@@ -26,9 +26,7 @@
 package net.solosky.maplefetion.client;
 
 
-import java.io.IOException;
 import java.util.Iterator;
-import java.util.TimerTask;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeoutException;
 
@@ -133,10 +131,13 @@ public class LoginWork implements Runnable
 	{
 		this.context.updateState(ClientState.LOGGING);
 		this.updateSystemConfig();	//获取自适应配置
+		  this.checkCanceledLogin();
 		this.SSISign();				//SSI登录 
+		  this.checkCanceledLogin();
 		this.openServerDialog();	//服务器连接并验证
+	 	  this.checkCanceledLogin();
 		this.getContactsInfo();		//获取联系人列表和信息
-		
+		  this.checkCanceledLogin();
 		boolean groupEnabled = FetionConfig.getBoolean("fetion.group.enable");
 		if(groupEnabled) {	//启用了群
 			this.getGroupsInfo();	 	//获取群信息
@@ -145,6 +146,15 @@ public class LoginWork implements Runnable
 	
 		this.updateLoginState(LoginState.LOGIN_SUCCESS, null);
 		
+	}
+	
+	/**
+	 * 检查是否取消登录，如果取消登录抛出登录异常，结束登录过程
+	 * @throws LoginException
+	 */
+	private void checkCanceledLogin() throws LoginException {
+		if(this.isCanceledLogin)	
+			throw new LoginException(LoginState.LOGIN_CANCELED);
 	}
 	
 
@@ -181,6 +191,9 @@ public class LoginWork implements Runnable
     			logger.debug("Loading locale setting...");
 				this.updateLoginState(LoginState.SEETING_LOAD_DOING, null);
 				localeSetting.load(this.context.getFetionUser());
+				if(!localeSetting.isValid())	//获取配置中如果无效，表明用户输入的账号无效
+					throw new LoginException(LoginState.SSI_ACCOUNT_NOT_FOUND);
+				
 				this.updateLoginState(LoginState.SETTING_LOAD_SUCCESS, null);
 			} catch (Exception e) {
 				logger.debug("Load localeSetting error", e);

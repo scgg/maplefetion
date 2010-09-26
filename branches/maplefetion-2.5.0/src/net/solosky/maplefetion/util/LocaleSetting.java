@@ -119,7 +119,16 @@ public class LocaleSetting
         this.document = builder.build(conn.getInputStream());
         this.isLoaded = true;
 	}
-
+	
+	
+	/**
+	 * 检查是否是有效的配置，比如获取的配置里面没有SIPC服务器地址，说明用户输入的账号无效
+	 * @return
+	 */
+	public boolean isValid() {
+		return this.getNodeText("/config/servers/sipc-proxy")!=null;
+	}
+	
 	/***
 	 * 从一个流中加载配置
 	 * @param in

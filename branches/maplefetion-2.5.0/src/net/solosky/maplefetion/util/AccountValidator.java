@@ -129,7 +129,7 @@ public class AccountValidator
 	
 	/**
 	 * 判断手机号是否合法
-	 * 目前仅判断了是否是以下号码段1340-1348，135-139，150-152, 187-188, 852(HK)
+	 * 目前仅判断了是否是以下号码段1340-1348，135-139，150-152, 187-188, 852(HK), 147, 182
 	 * @param mobile	手机号码
 	 * @return	是否合法
 	 */
@@ -144,6 +144,8 @@ public class AccountValidator
 		}else if(mobile>=15000000000L && mobile<=15299999999L){	//150-152
 			return true;
 		}else if(mobile>=15700000000L && mobile<=15999999999L){	//157-159
+			return true;
+		}else if(mobile>=18200000000L && mobile<=18299999999L){	//182
 			return true;
 		}else if(mobile>=18700000000L && mobile<=18899999999L){	//187-188
 			return true;
