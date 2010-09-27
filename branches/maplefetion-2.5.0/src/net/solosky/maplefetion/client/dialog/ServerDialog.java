@@ -68,7 +68,6 @@ import net.solosky.maplefetion.client.response.SetBuddyInfoResponseHandler;
 import net.solosky.maplefetion.client.response.SetCordTitleResponseHandler;
 import net.solosky.maplefetion.client.response.SetPresenceResponseHandler;
 import net.solosky.maplefetion.client.response.UserAuthResponseHandler;
-import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.net.RequestTimeoutException;
@@ -127,6 +126,8 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	{
 		super(client);
 		this.messageFactory = new MessageFactory(client.getFetionUser());
+		this.keepAliveTask = new ServerKeepAliveTask();
+		this.keepConnectionTask = new ServerKeepConnectionTask();
 	}
 	
 	/**
@@ -199,12 +200,9 @@ public class ServerDialog extends Dialog implements ExceptionHandler
      */
     public void startKeepAlive()
     {
-    	//注册定时任务
-    	this.keepAliveTask = new ServerKeepAliveTask();
     	int keepAliveInterval = FetionConfig.getInteger("fetion.sip.keep-alive-interval")*1000;
 		this.context.getFetionTimer().scheduleTask(this.keepAliveTask, keepAliveInterval, keepAliveInterval);
 		
-		this.keepConnectionTask = new ServerKeepConnectionTask();
     	int keepConnectionInterval = FetionConfig.getInteger("fetion.sip.keep-connection-interval")*1000;
 		this.context.getFetionTimer().scheduleTask(this.keepConnectionTask, keepConnectionInterval, keepConnectionInterval);
     }

@@ -60,7 +60,7 @@ public class SSISignV4 implements SSISign
 {
 	private LocaleSetting localeSetting;
 	private FetionContext fetionContext;
-	private static Logger logger = Logger.getLogger(SSISignV2.class);
+	private static Logger logger = Logger.getLogger(SSISignV4.class);
 
 	/* (non-Javadoc)
      * @see net.solosky.maplefetion.client.SSISign#setLocaleSetting(net.solosky.maplefetion.util.LocaleSetting)
@@ -218,7 +218,7 @@ public class SSISignV4 implements SSISign
 	        NotifyEventListener listener = this.fetionContext.getNotifyEventListener();
 	        
 	        if(listener!=null) {
-	        	listener.fireEvent(new ImageVerifyEvent(ImageVerifyEvent.SSI_VERIFY, verifyImage, text, tips, null, null));
+	        	listener.fireEvent(new ImageVerifyEvent(ImageVerifyEvent.SSI_VERIFY, verifyImage, text, tips));
 	        }else {
 	        	throw new IllegalArgumentException("SSI need verify, but found no notifyEventListener" +
 	        			" to handle verify action, please set NotifyEventListener first.");

@@ -509,6 +509,24 @@ public class FetionClient implements FetionContext
     	}
     }
     
+    
+    /**
+     * 取消验证操作，如果是在登录阶段取消验证操作，就退出登录过程
+     * 如果是在其他操作需要验证操作，就取消当前操作，当前操作将会获得一个FailureType.VERIFY_CANCELED事件
+     * @param event
+     */
+    public void cancelVerify(ImageVerifyEvent event) 
+    {
+    	if(this.state==ClientState.LOGGING) {
+    		this.cancelLogin();
+    	}else {
+    		ActionEventListener listener = event.getTargetListener();
+    		if(listener!=null) {
+    			listener.fireEevent(new FailureEvent(FailureType.VERIFY_CANCELED));
+    		}
+    	}
+    }
+    
     /**
      * 处理客户端异常
      * 通常交给客户端处理的异常都是致命的，也就是说如果调用了这个方法客户端都会主动退出

@@ -391,8 +391,6 @@ public class LoginWork implements Runnable
     		this.loginWaiter.objectArrive(state);
     		this.context.updateState(ClientState.ONLINE);
     		this.context.getDialogFactory().getServerDialog().startKeepAlive();
-    		//int ssicReplaceInterval = FetionConfig.getInteger("fetion.ssi.replace-interval")*1000;
-    		//this.context.getFetionTimer().scheduleTask(this.replaceSsicTask, ssicReplaceInterval, ssicReplaceInterval);
     	}else {
     		//logger.warn("Unhandled login state="+state);
     	}

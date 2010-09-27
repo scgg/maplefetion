@@ -1,15 +1,18 @@
 package net.solosky.maplefetion.demo;
 
+import net.solosky.maplefetion.ClientState;
 import net.solosky.maplefetion.FetionClient;
 import net.solosky.maplefetion.LoginState;
 import net.solosky.maplefetion.NotifyEventListener;
 import net.solosky.maplefetion.bean.Message;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.NotifyEvent;
+import net.solosky.maplefetion.event.NotifyEventType;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.FailureEvent;
 import net.solosky.maplefetion.event.action.failure.RequestFailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
+import net.solosky.maplefetion.event.notify.ImageVerifyEvent;
 
 
 /**
@@ -28,7 +31,7 @@ public class SimpleFetion {
 			System.out.println("参数不正确。参数格式为：手机号 密码 发送消息的手机号 消息内容");
 			System.out.println("说明：可以给指定的手机号码发送消息然后退出，前提是这个手机号码的飞信用户是你的好友，否则会发送失败。");
 		}else{
-			FetionClient client = new FetionClient(args[0], args[1]);
+			final FetionClient client = new FetionClient(args[0], args[1]);
 			System.out.println("正在登录中，可能需要1分钟左右，请稍候...");
 			
 			//这里设置一个登录状态监听器，可以显示当前登录步骤，避免用户感到焦虑
@@ -36,6 +39,11 @@ public class SimpleFetion {
 				public void fireEvent(NotifyEvent event)
 				{
 					System.err.println(event.toString());
+					//如果出现验证码，取消登录
+					if(event.getEventType()==NotifyEventType.IMAGE_VERIFY) {
+						System.out.println("当前登录过程或者操作需要验证，操作失败。");
+						client.cancelVerify((ImageVerifyEvent) event);
+					}
 				}
 			});
 			//禁用掉群，登录可以变得快一点
@@ -111,7 +119,9 @@ public class SimpleFetion {
 				System.out.println("SSI连接失败！！");
 			}else if(state==LoginState.SIPC_CONNECT_FAIL){
 				System.out.println("SIPC服务器连接失败！！");
-			}else{
+			}else if(state==LoginState.LOGIN_CANCELED){
+				//取消了登录
+			}else {
 				System.out.println("登录失败，原因："+state.name());
 			}
 		}

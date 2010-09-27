@@ -29,6 +29,7 @@ import net.solosky.maplefetion.bean.VerifyImage;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.NotifyEvent;
 import net.solosky.maplefetion.event.NotifyEventType;
+import net.solosky.maplefetion.event.action.ActionEventListener;
 import net.solosky.maplefetion.sipc.SipcRequest;
 
 /**
@@ -63,6 +64,11 @@ public class ImageVerifyEvent extends NotifyEvent
 	private Dialog targetDialog;
 	
 	/**
+	 * 结果监听器
+	 */
+	private ActionEventListener targetListener;
+	
+	/**
 	 * 出现验证码的原因
 	 */
 	private String verifyReason;
@@ -81,14 +87,13 @@ public class ImageVerifyEvent extends NotifyEvent
      * @param targetDialog
      */
     public ImageVerifyEvent(int verifyType, VerifyImage verifyImage,
-            SipcRequest targetRequest, Dialog targetDialog)
+    		String verifyReason, String verifyTips)
     {
 	    this.verifyAction = verifyType;
 	    this.verifyImage = verifyImage;
-	    this.targetRequest = targetRequest;
-	    this.targetDialog = targetDialog;
+	    this.verifyReason = verifyReason;
+	    this.verifyTips = verifyTips;
     }
-    
     
 
 	/**
@@ -101,15 +106,15 @@ public class ImageVerifyEvent extends NotifyEvent
      */
     public ImageVerifyEvent(int verifyAction, VerifyImage verifyImage,
             String verifyReason, String verifyTips, SipcRequest targetRequest,
-            Dialog targetDialog)
+            Dialog targetDialog, ActionEventListener targetListener)
     {
-	    super();
 	    this.verifyAction = verifyAction;
 	    this.verifyImage = verifyImage;
 	    this.verifyReason = verifyReason;
 	    this.verifyTips = verifyTips;
 	    this.targetRequest = targetRequest;
 	    this.targetDialog = targetDialog;
+	    this.targetListener = targetListener;
     }
 
 
@@ -183,6 +188,15 @@ public class ImageVerifyEvent extends NotifyEvent
     	this.verifyImage = verifyImage;
     }
 
+
+
+	/**
+     * @return the targetListener
+     */
+    public ActionEventListener getTargetListener()
+    {
+    	return targetListener;
+    }
 
 
 	/* (non-Javadoc)

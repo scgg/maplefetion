@@ -135,7 +135,7 @@ public class MessageFactory
         	req.addHeader("AK", "ak-value");
         	
         	String body = MessageTemplate.TMPL_USER_AUTH;
-        	body = body.replace("{machineCode}", "5DBFE64D4449FBD0AE130C7B12D27A9F"); /*暂时固定，以后可能要动态生成*/
+        	body = body.replace("{machineCode}", FetionConfig.getString("fetion.sip.machine-code")); 
         	body = body.replace("{sid}", Integer.toString(this.user.getFetionId()));
         	body = body.replace("{userId}", Integer.toString(this.user.getUserId()));
         	body = body.replace("{presence}", Integer.toString(presence));

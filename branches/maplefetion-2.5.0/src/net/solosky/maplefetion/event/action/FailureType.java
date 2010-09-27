@@ -135,6 +135,11 @@ public enum FailureType {
 	AUTHORIZATION_FAIL,
 	
 	/**
+	 * 取消了验证操作
+	 */
+	VERIFY_CANCELED,
+	
+	/**
 	 * 未知错误
 	 */
 	UNKNOWN_FAIL,	

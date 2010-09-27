@@ -245,7 +245,8 @@ public abstract class AbstractResponseHandler implements ResponseHandler
 			NotifyEventListener listener = this.context.getNotifyEventListener();
 			if(listener!=null) {
 				listener.fireEvent(new ImageVerifyEvent(ImageVerifyEvent.SIPC_VERIFY, 
-						verifyImage, text, tips, response.getRequest(), this.dialog));
+						verifyImage, text, tips, response.getRequest(),
+						this.dialog, this.listener));
 			}else{
 				throw new IllegalArgumentException("action need verify, but found no NotifyEventListener" +
     			" to handle verify action, please set NotifyEventListener frist.");
