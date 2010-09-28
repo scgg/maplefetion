@@ -95,6 +95,8 @@ public class UserAuthResponseHandler extends AbstractResponseHandler
 		//联系人和个人信息版本信息
 		store.getStoreVersion().setPersonalVersion(personalVersion);
 		store.getStoreVersion().setContactVersion(contactVersion);
+		user.getStoreVersion().setPersonalVersion(personalVersion);
+		user.getStoreVersion().setContactVersion(contactVersion);
 		
 		//个人信息
 		BeanHelper.toBean(User.class, user, personal);
