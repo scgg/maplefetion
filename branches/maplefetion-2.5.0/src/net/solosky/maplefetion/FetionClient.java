@@ -629,7 +629,6 @@ public class FetionClient implements FetionContext
      */
     public void logout()
     {
-    	this.ensureOnline();
     	if(this.state==ClientState.ONLINE) {
     		try {
                 dialogFactory.closeAllDialog();

@@ -226,6 +226,10 @@ public class LoginWork implements Runnable
             }
     	}
     	
+    	//如果SSI登录出错，抛出登录异常，结束登录流程
+    	//因为上面判断了SSI_NEED_VERIFY和SSI_VERIFY_FAIL事件，所以这里只需判断是否SSI登录成功即可
+    	if(state!=LoginState.SSI_SIGN_IN_SUCCESS)	throw new LoginException(state);
+    		
 		this.updateLoginState(state, null);
     }
     
