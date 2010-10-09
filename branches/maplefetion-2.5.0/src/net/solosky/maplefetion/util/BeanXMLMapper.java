@@ -25,20 +25,15 @@
  */
 package net.solosky.maplefetion.util;
 
-import java.io.File;
-import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.InputStream;
 import java.lang.reflect.Field;
-import java.lang.reflect.InvocationTargetException;
 import java.lang.reflect.Method;
 import java.util.ArrayList;
-import java.util.Hashtable;
 import java.util.Iterator;
 import java.util.List;
 
 import org.apache.log4j.Logger;
-import org.jdom.Attribute;
 import org.jdom.Element;
 
 
@@ -112,7 +107,7 @@ public class BeanXMLMapper
 		while(it.hasNext()) {
 			FieldRule rule =  it.next();
 			String value   = node.getAttributeValue(rule.getXmlName());
-			if(rule!=null && value!=null) {
+			if(rule!=null && value!=null && value.length()>0) {
 					this.setValue(rule, bean, this.parseValue(rule, value));
 			}
 		}

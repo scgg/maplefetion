@@ -43,7 +43,11 @@ public class ParseHelper
 	}
 	public static Long parseLong(String s)
 	{
-		return Long.parseLong(s);
+		try {
+	        return Long.parseLong(s);
+        } catch (NumberFormatException e) {
+        	return new Long(0);
+        }
 	}
 	
 	public static String toString(String s)
@@ -58,7 +62,11 @@ public class ParseHelper
 	
 	public static Integer parseInteger(String s)
 	{
-		return Integer.parseInt(s);
+		try {
+	        return Integer.parseInt(s);
+        } catch (NumberFormatException e) {
+	        return new Integer(0);
+        }
 	}
 	
 	public static String toInteger(Integer i)
