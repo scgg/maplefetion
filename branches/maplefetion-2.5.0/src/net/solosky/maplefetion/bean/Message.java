@@ -126,6 +126,6 @@ public class Message
      */
     public static Message wrap(String plain)
     {
-    	return new Message("<Font Face='宋体' Color='-16777216' Size='10'>"+plain+"</Font> ", Message.TYPE_HTML);
+    	return new Message("<Font Face='宋体' Color='-16777216' Size='10'>"+StringHelper.qouteHtmlSpecialChars(plain)+"</Font> ", Message.TYPE_HTML);
     }
 }

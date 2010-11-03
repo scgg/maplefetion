@@ -65,6 +65,7 @@ import net.solosky.maplefetion.net.AutoTransferFactory;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.SingleExecutor;
+import net.solosky.maplefetion.util.StringHelper;
 import net.solosky.maplefetion.util.ThreadTimer;
 import net.solosky.maplefetion.util.UriHelper;
 
@@ -218,20 +219,6 @@ public class MapleFetion extends NotifyEventAdapter
         		println("需要验证, 请输入目录下的[verify.png]里面的验证码:");
         	else
         		println("验证码验证失败，刷新验证码中...");
-        	
-        	//启动一个新线程完成重新登录的操作，让回调函数马上返回，详细信息请参见NotifyListener里面的注释
-//        	new Thread(new Runnable() {
-//    			public void run() {
-//    				VerifyImage img = client.fetchVerifyImage();
-//    	        	if(img!=null) {
-//    	        		saveImage(img.getImageData());
-//    	        		img.setVerifyCode(readLine());
-//    	        		client.login(Presence.ONLINE, img, true);
-//    	        	}else {
-//    	        		println("刷新验证图片失败···");
-//    	        	}
-//    			}
-//    		}).start();
 	        break;
 
         case SSI_CONNECT_FAIL:
@@ -422,7 +409,7 @@ public class MapleFetion extends NotifyEventAdapter
 	    public void tel(final String tel, String msg)
 	    {
 	    	long mobile = Long.parseLong(tel);
-	    	this.client.sendChatMessage(mobile, new Message(msg), new ActionEventListener() {
+	    	this.client.sendChatMessage(mobile, new Message(StringHelper.qouteHtmlSpecialChars(msg), Message.TYPE_PLAIN), new ActionEventListener() {
 				public void fireEevent(ActionEvent event)
 				{
 					switch(event.getEventType()){
@@ -1116,7 +1103,7 @@ public class MapleFetion extends NotifyEventAdapter
 				this.decline(this.buddymap.get(cmd[1]));
 		}else if(cmd[0].equals("self")) {
 			if(cmd.length>=2)
-				this.self(cmd[1]);
+				this.self(line.substring(line.indexOf(cmd[1])));
 		}else if(cmd[0].equals("localname")) {
 			if(cmd.length>=3)
 				this.localname(this.buddymap.get(cmd[1]), cmd[2]);
@@ -1135,7 +1122,7 @@ public class MapleFetion extends NotifyEventAdapter
 		else {
 			if( line!=null && line.length()>0 ){
 				if(this.activeChatDialog!=null) {
-					this.activeChatDialog.sendChatMessage(Message.wrap(line),new ActionEventListener(){
+					this.activeChatDialog.sendChatMessage(Message.wrap(line), new ActionEventListener(){
 						public void fireEevent(ActionEvent event)
 		 				{
 		 					if(event.getEventType()==ActionEventType.SUCCESS){
@@ -1379,17 +1366,16 @@ public class MapleFetion extends NotifyEventAdapter
     {
     	
     	saveImage(verifyImage.getImageData());
-    	System.out.print("当前操作需要验证,原因:【"+verifyReason+"】。\n请输入当前目录下[verify.jpg]里面的验证码(如verify 123abc):");
-    	if(!this.isConsoleReadTheadStarted) {
-    		String line = this.readLine();
-    		if(line.indexOf("verify ")!=-1) {
-    			verifyImage.setVerifyCode(line.substring(7));
-    			client.processVerify(event);
-    		}else {
-    			println("无效的输入");
-    		}
+    	
+    	if(client.getState()==ClientState.LOGGING) {
+			System.out.print("当前登录过程需要验证，原因【"+verifyReason+"】,请输入当前目录下图片[verify.jpg]中的验证码：");
+			String line = this.readLine();
+			verifyImage.setVerifyCode(line.substring(7));
+			client.processVerify(event);
     	}else {
+    		println("当前操作需要验证,原因:【"+verifyReason+"】。\n请使用verify命令输入当前目录下图片[verify.jpg]中的验证码(如verify 123abc).");
     		this.verifyEvent = event;
+    		prompt();
     	}
     }
 
