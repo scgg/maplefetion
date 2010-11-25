@@ -481,7 +481,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void agreedApplication(final Buddy buddy, final ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.getMessageFactory().createAgreeApplicationRequest(buddy.getUri());
+		SipcRequest request = this.getMessageFactory().createAgreeApplicationRequest(buddy.getUserId());
 		request.setResponseHandler(new AgreeApplicationResponseHandler(context, this, listener));
 		this.process(request);
 	}
@@ -494,7 +494,7 @@ public class ServerDialog extends Dialog implements ExceptionHandler
 	public void declinedAppliction(Buddy buddy, ActionEventListener listener)
 	{
 		this.ensureOpened();
-		SipcRequest request = this.getMessageFactory().createDeclineApplicationRequest(buddy.getUri());
+		SipcRequest request = this.getMessageFactory().createDeclineApplicationRequest(buddy.getUserId());
 		request.setResponseHandler(new DeclineApplicationResponseHandler(context, this, listener));
 		this.process(request);
 	}

@@ -101,7 +101,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * MapleFetion版本
 	 */
-	public static final String CLIENT_VERSION = "MapleFetion-2.5.0";
+	public static final String CLIENT_VERSION = "MapleFetion-2.5.1";
 	
 	/**
 	 * 协议版本

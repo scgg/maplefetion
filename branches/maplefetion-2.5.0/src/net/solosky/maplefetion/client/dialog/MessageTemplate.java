@@ -43,8 +43,8 @@ public class MessageTemplate
 	public static final String TMPL_INVATE_BUDDY = "<args><contacts><contact uri=\"{uri}\" /></contacts></args>";
 	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" {localName} desc=\"{desc}\" expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" /></buddies></contacts></args>";
 	public static final String TMPL_DELETE_BUDDY = "<args><contacts><buddies><buddy user-id=\"{userId}\" /></buddies></contacts></args>";
-	public static final String TMPL_APPLICATION_AGREED = "<args><contacts><buddies><buddy uri=\"{uri}\" result=\"1\" buddy-lists=\"\" expose-mobile-no=\"1\" expose-name=\"1\" /></buddies></contacts></args>";
-	public static final String TMPL_APPLICATION_DECLINED = "<args><contacts><buddies><buddy uri=\"{uri}\" result=\"0\" /></buddies></contacts></args>";
+	public static final String TMPL_APPLICATION_AGREED = "<args><contacts><buddies><buddy user-id=\"{userId}\" result=\"1\" buddy-lists=\"\" expose-mobile-no=\"1\" expose-name=\"1\" /></buddies></contacts></args>";
+	public static final String TMPL_APPLICATION_DECLINED = "<args><contacts><buddies><buddy user-id=\"{userId}\" result=\"0\" /></buddies></contacts></args>";
 	public static final String TMPL_SET_PERSONAL_INFO = "<args><userinfo>{personal}</userinfo></args>";
 	public static final String TMPL_SET_BUDDY_LOCAL_NAME = "<args><contacts><contact user-id=\"{userId}\" local-name=\"{localName}\" /></contacts></args>";
 	public static final String TMPL_SET_BUDDY_CORD = "<args><contacts><contact user-id=\"{userId}\" buddy-lists=\"{cordId}\" /></contacts></args>";

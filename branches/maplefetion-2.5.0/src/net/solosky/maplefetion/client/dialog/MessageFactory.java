@@ -369,13 +369,13 @@ public class MessageFactory
      * @param cordId
      * @return
      */
-    public SipcRequest createAgreeApplicationRequest(String uri)
+    public SipcRequest createAgreeApplicationRequest(int userId)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	String body = MessageTemplate.TMPL_APPLICATION_AGREED;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{userId}", Integer.toString(userId));
     	
-    	req.addHeader(SipcHeader.EVENT,"HandleContactRequest");
+    	req.addHeader(SipcHeader.EVENT,"HandleContactRequestV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;
@@ -383,16 +383,16 @@ public class MessageFactory
     
     /**
      * 拒绝陌生人添加好友请求
-     * @param uri
+     * @param userId
      * @return
      */
-    public SipcRequest createDeclineApplicationRequest(String uri)
+    public SipcRequest createDeclineApplicationRequest(int userId)
     {
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.SERVICE);
     	String body = MessageTemplate.TMPL_APPLICATION_DECLINED;
-    	body = body.replace("{uri}", uri);
+    	body = body.replace("{userId}", Integer.toString(userId));
     	
-    	req.addHeader(SipcHeader.EVENT,"HandleContactRequest");
+    	req.addHeader(SipcHeader.EVENT,"HandleContactRequestV4");
     	
     	req.setBody(new SipcBody(body));
     	return req;

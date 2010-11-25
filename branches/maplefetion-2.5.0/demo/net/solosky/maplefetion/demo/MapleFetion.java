@@ -1370,7 +1370,7 @@ public class MapleFetion extends NotifyEventAdapter
     	if(client.getState()==ClientState.LOGGING) {
 			System.out.print("当前登录过程需要验证，原因【"+verifyReason+"】,请输入当前目录下图片[verify.jpg]中的验证码：");
 			String line = this.readLine();
-			verifyImage.setVerifyCode(line.substring(7));
+			verifyImage.setVerifyCode(line);
 			client.processVerify(event);
     	}else {
     		println("当前操作需要验证,原因:【"+verifyReason+"】。\n请使用verify命令输入当前目录下图片[verify.jpg]中的验证码(如verify 123abc).");

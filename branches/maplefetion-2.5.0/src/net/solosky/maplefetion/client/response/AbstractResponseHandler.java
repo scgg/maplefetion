@@ -249,7 +249,7 @@ public abstract class AbstractResponseHandler implements ResponseHandler
 						this.dialog, this.listener));
 			}else{
 				throw new IllegalArgumentException("action need verify, but found no NotifyEventListener" +
-    			" to handle verify action, please set NotifyEventListener frist.");
+    			" to handle verify action, please set NotifyEventListener first.");
 			}
 		}else {
 			throw new IllegalStateException("parse verify info failed. wwwHeader="+wwwHeader.getValue());

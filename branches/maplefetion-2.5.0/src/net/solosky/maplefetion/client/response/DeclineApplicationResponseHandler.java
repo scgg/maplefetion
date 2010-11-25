@@ -28,7 +28,6 @@ package net.solosky.maplefetion.client.response;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.FetionException;
 import net.solosky.maplefetion.bean.Buddy;
-import net.solosky.maplefetion.bean.StoreVersion;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.event.ActionEvent;
 import net.solosky.maplefetion.event.action.ActionEventListener;
@@ -57,16 +56,18 @@ public class DeclineApplicationResponseHandler extends AbstractResponseHandler{
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
 		FetionStore store = this.context.getFetionStore();
-		if(element!=null && element.getAttributeValue("uri")!=null) {
-			Buddy buddy = store.getBuddyByUri(element.getAttributeValue("uri"));
+		if(element!=null && element.getAttributeValue("user-id")!=null) {
+			Buddy buddy = store.getBuddyByUserId(Integer.parseInt(element.getAttributeValue("user-id")));
 			if(buddy!=null)
 				store.deleteBuddy(buddy);
 		}
 		
 		Element contacts = XMLHelper.find(root, "/results/contacts");
 		if(contacts!=null && contacts.getAttributeValue("version")!=null){
-			StoreVersion storeVersion = store.getStoreVersion();
-			storeVersion.setContactVersion(Integer.parseInt(contacts.getAttributeValue("version")));
+			int version = Integer.parseInt(contacts.getAttributeValue("version"));
+			context.getFetionStore().getStoreVersion().setContactVersion(version);
+			context.getFetionUser().getStoreVersion().setContactVersion(version);
+			context.getFetionStore().flushStoreVersion(context.getFetionUser().getStoreVersion());
 		}
 		
 		return super.doActionOK(response);

@@ -66,13 +66,18 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
 	{
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
-		if(element!=null && element.getAttributeValue("uri")!=null) {
-			Buddy buddy = this.context.getFetionStore().getBuddyByUri(element.getAttributeValue("uri"));
-			if(element.getChild("personal")!=null) {
-				BeanHelper.toBean(Buddy.class, buddy, element.getChild("personal"));
-			}
+		if(element!=null && element.getAttributeValue("user-id")!=null) {
+			Buddy buddy = this.context.getFetionStore().getBuddyByUserId(Integer.parseInt(element.getAttributeValue("user-id")));
+			BeanHelper.toBean(Buddy.class, buddy, element);
 			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
 			context.getFetionStore().flushBuddy(buddy);
+		}
+		Element contacts = XMLHelper.find(root, "/result/contacts");
+		if(contacts.getAttributeValue("version")!=null) {
+			int version = Integer.parseInt(contacts.getAttributeValue("version"));
+			context.getFetionStore().getStoreVersion().setContactVersion(version);
+			context.getFetionUser().getStoreVersion().setContactVersion(version);
+			context.getFetionStore().flushStoreVersion(context.getFetionUser().getStoreVersion());
 		}
 		
 		return super.doActionOK(response);
