@@ -82,7 +82,6 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 
 		Element root = XMLHelper.build(response.getBody().toSendString());
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
-		String uri = element.getAttributeValue("uri");
 		FetionStore store = this.context.getFetionStore();
 		
 		//如果被拒绝后，用户还可以发起添加对方的请求，这样用户可能发起了多次加好友请求
@@ -90,7 +89,8 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 		int statusCode = Integer.parseInt(element.getAttributeValue("status-code"));
 		switch(statusCode) {
 		case 200:
-			Buddy buddy = store.getBuddyByUri(uri);
+			int userId = Integer.parseInt(element.getAttributeValue("user-id"));
+			Buddy buddy = store.getBuddyByUserId(userId);
 			if(buddy!=null){
 				store.deleteBuddy(buddy);
 			}
@@ -98,14 +98,32 @@ public class AddBuddyResponseHandler extends AbstractResponseHandler
 			BeanHelper.toBean(Buddy.class, buddy, element);
 			
 			store.addBuddy(buddy);
+			
+			//更新联系人版本信息
+			Element contacts = XMLHelper.find(root,"/results/contacts");
+	    	String version = contacts.getAttributeValue("version");
+	    	if(version!=null){
+	    		int v = Integer.parseInt(version);
+	    		store.getStoreVersion().setContactVersion(v);
+	    		context.getFetionUser().getStoreVersion().setContactVersion(v);
+	    	}
+	    	
 			return new AddBuddySuccessEvent(buddy);
+			
+		case 404:
+			return new FailureEvent(FailureType.USER_NOT_FOUND);
 			
 		case 520:
 			return new FailureEvent(FailureType.MAX_BUDDIES_LIMITED);
 			
+		case 521:
+			return new FailureEvent(FailureType.BUDDY_EXISTS); 
+			
 		default:
+			logger.warn("add buddy failed, unknown status: "+statusCode);
 			return new FailureEvent(FailureType.UNKNOWN_FAIL);	
 		}
+		
 	}
 
 	/* (non-Javadoc)
