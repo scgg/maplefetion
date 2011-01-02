@@ -218,11 +218,14 @@ public class LoginWork implements Runnable
             	VerifyImage img = this.ssiVerifyWaiter.waitObject();
             	state = this.signAction.signIn(this.context.getFetionUser(), img);
             } catch (ExecutionException e) {
+            	 this.checkCanceledLogin();
             	 throw new LoginException(LoginState.OTHER_ERROR, e);
             } catch (TimeoutException e) {
-            	 throw new LoginException(LoginState.OTHER_ERROR, e);
+            	 this.checkCanceledLogin();
+            	 throw new LoginException(LoginState.LOGIN_TIMEOUT, e);
             } catch (InterruptedException e) {
-	           if(!this.isCanceledLogin) throw new LoginException(LoginState.OTHER_ERROR, e);
+            	 this.checkCanceledLogin();
+	             throw new LoginException(LoginState.OTHER_ERROR, e);
             }
     	}
     	
@@ -461,5 +464,6 @@ public class LoginWork implements Runnable
     public void cancelLogin() {
     	this.isCanceledLogin = true;
     	this.loginWaiter.objectArrive(LoginState.LOGIN_CANCELED);
+    	this.ssiVerifyWaiter.objectException(new LoginException(LoginState.LOGIN_CANCELED));
     }
 }
