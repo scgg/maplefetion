@@ -76,7 +76,7 @@ public class CreateScheduleSMSResponseHandler extends  AbstractResponseHandler
 		Element scel = XMLHelper.find(root, "/results/schedule-sms");
 		
 		if(scel!=null){
-			int scId = Integer.parseInt(scel.getAttributeValue("id"));
+			long scId = Long.parseLong(scel.getAttributeValue("id"));
 			BeanHelper.setValue(this.scheduleSMS, "id", scId);
 			this.context.getFetionStore().addScheduleSMS(this.scheduleSMS);
 		}

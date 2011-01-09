@@ -717,7 +717,7 @@ public class MessageFactory
     	Iterator<ScheduleSMS> it = scheduleSMSList.iterator();
     	while(it.hasNext()){
     		ScheduleSMS s = it.next();
-    		buffer.append(scheduleSMSTmpl.replace("{id}", Integer.toString(s.getId())));
+    		buffer.append(scheduleSMSTmpl.replace("{id}", Long.toString(s.getId())));
     	}
     	body = body.replace("{scheduleSMSList}", buffer.toString());
     	
@@ -767,7 +767,7 @@ public class MessageFactory
     	Iterator<ScheduleSMS> it = scheduleSMSList.iterator();
     	while(it.hasNext()){
     		ScheduleSMS s = it.next();
-    		buffer.append(scheduleSMSTmpl.replace("{id}", Integer.toString(s.getId())));
+    		buffer.append(scheduleSMSTmpl.replace("{id}", Long.toString(s.getId())));
     	}
     	body = body.replace("{scheduleSMSList}", buffer.toString());
     	

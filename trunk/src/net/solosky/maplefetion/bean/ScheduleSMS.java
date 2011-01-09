@@ -41,7 +41,7 @@ public class ScheduleSMS
 	/**
 	 * 定时短信ID
 	 */
-	private int id;
+	private long id;
 	
 	/**
 	 * 发送时间
@@ -91,7 +91,7 @@ public class ScheduleSMS
 	/**
 	 * @return the id
 	 */
-	public int getId()
+	public long getId()
 	{
 		return id;
 	}
