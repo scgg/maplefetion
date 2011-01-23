@@ -92,4 +92,9 @@ public class ParseHelper
 		SimpleDateFormat df = new SimpleDateFormat("y-M-d");
 		return df.parse(r);
 	}
+	
+	public static String toBirthday(Date date) {
+		SimpleDateFormat df = new SimpleDateFormat("y-M-d");
+		return df.format(date);
+	}
 }

@@ -8,6 +8,6 @@
 	<field xml="hobby" bean="hobby" type="java.lang.String" readonly="false" />
 	<field xml="occupation" bean="occupation" type="java.lang.String" readonly="false" />
 	<field xml="carrier-region" bean="carrierRegion" type="java.lang.String" readonly="false" />
-	<field xml="birth-date" bean="birth" type="java.util.Date" readonly="false" parser="parseBirthday"/>
+	<field xml="birth-date" bean="birth" type="java.util.Date" readonly="false" parser="parseBirthday" toer="toBirthday"/>
 	<field xml="birthday-valid" bean="birthdayValid" type="java.lang.String" readonly="false"/>
 </map>
