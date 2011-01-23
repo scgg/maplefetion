@@ -135,10 +135,12 @@ public class ContactNotifyHandler extends AbstractNotifyHandler
     {
     	Element app = event.getChild("application");
     	String uri  = app.getAttributeValue("uri");
+    	String userId  = app.getAttributeValue("user-id");
     	final String desc = app.getAttributeValue("desc");
     	//建立一个新好友，并把关系设置为陌生人
     	Buddy buddy = UriHelper.createBuddy(uri);
     	buddy.setUri(uri);
+    	buddy.setUserId(Integer.parseInt(userId));
     	BeanHelper.setValue(buddy, "relation", Relation.STRANGER);
     	context.getFetionStore().addBuddy(buddy);
     	//如果是飞信好友，获取陌生人的信息
