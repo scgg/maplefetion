@@ -1,6 +1,13 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map class="net.solosky.maplefetion.bean.BuddyExtend">
-	<field xml="nation" bean="nation" type="java.lang.String" readonly="false" />
-	<field xml="city" bean="city" type="java.lang.String" readonly="false" />
-	<field xml="province" bean="province" type="java.lang.String" readonly="false" />
+	<field xml="gender" bean="gender" type="java.lang.String" readonly="false" />
+	<field xml="blood-type" bean="blood" type="java.lang.String" readonly="false" />
+	<field xml="personal-email" bean="personalEmail" type="java.lang.String" readonly="false"/>
+	<field xml="lunar-animal" bean="lunarAnimal" type="java.lang.String" readonly="false" />
+	<field xml="horoscope" bean="horoscope" type="java.lang.String" readonly="false" />
+	<field xml="hobby" bean="hobby" type="java.lang.String" readonly="false" />
+	<field xml="occupation" bean="occupation" type="java.lang.String" readonly="false" />
+	<field xml="carrier-region" bean="carrierRegion" type="java.lang.String" readonly="false" />
+	<field xml="birth-date" bean="birth" type="java.util.Date" readonly="false" parser="parseBirthday"/>
+	<field xml="birthday-valid" bean="birthdayValid" type="java.lang.String" readonly="false"/>
 </map>

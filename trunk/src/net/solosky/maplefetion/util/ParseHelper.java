@@ -25,6 +25,9 @@
  */
 package net.solosky.maplefetion.util;
 
+import java.text.SimpleDateFormat;
+import java.util.Date;
+
 import net.solosky.maplefetion.bean.Relation;
 
 
@@ -82,5 +85,11 @@ public class ParseHelper
 	public static String toRelation(Relation r)
 	{
 		return r.toString();
+	}
+	
+	public static Date parseBirthday(String r) throws java.text.ParseException 
+	{
+		SimpleDateFormat df = new SimpleDateFormat("y-M-d");
+		return df.parse(r);
 	}
 }

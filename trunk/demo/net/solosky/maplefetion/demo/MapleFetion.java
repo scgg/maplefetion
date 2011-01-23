@@ -559,10 +559,15 @@ public class MapleFetion extends NotifyEventAdapter
     	    BuddyExtend extend = buddy.getExtend();
     	    if(extend!=null) {
         	    System.out.println("个性签名:"+buddy.getImpresa());
-        	    System.out.println("国家:"+extend.getNation());
-        	    System.out.println("省份:"+extend.getProvince());
-        	    System.out.println("城市:"+extend.getCity());
-        	    System.out.println("EMAIL:"+buddy.getEmail());
+        	    System.out.println("所在地:"+extend.getCarrierRegion());
+        	    System.out.println("性别:"+extend.getGender());
+        	    System.out.println("血型:"+extend.getBlood());
+        	    System.out.println("星座:"+extend.getHoroscope());
+        	    System.out.println("生肖:"+extend.getLunarAnimal());
+        	    System.out.println("职业:"+extend.getOccupation());
+        	    System.out.println("爱好:"+extend.getHobby());
+        	    System.out.println("生日:"+extend.getBirth());
+        	    System.out.println("个人邮件:"+buddy.getEmail());
     	    }
     	    System.out.println("----------------------------------");
 	    }

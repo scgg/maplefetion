@@ -36,58 +36,77 @@ import java.util.Date;
  */
 public class BuddyExtend
 {
-	private String nation;
-	private String province;
-	private String city;
+	private String gender;
 	private Date birth;
 	private String blood;
 	private String occupation;
 	private String hobby;
 	private String lunarAnimal;
 	private String horoscope;
-	private String feike;
+	private String carrierRegion;
+	private String personalEmail;
+	private String birthdayValid;
 	/**
+	 * @deprecated
      * @return the nation
      */
     public String getNation()
     {
-    	return nation;
+    	return null;
     }
 	/**
+	 * @deprecated
      * @param nation the nation to set
      */
     public void setNation(String nation)
     {
-    	this.nation = nation;
     }
 	/**
+	 * @deprecated
      * @return the province
      */
     public String getProvince()
     {
-    	return province;
+    	return null;
     }
 	/**
+	 * @deprecated
      * @param province the province to set
      */
     public void setProvince(String province)
     {
-    	this.province = province;
     }
 	/**
+	 * @deprecated
      * @return the city
      */
     public String getCity()
     {
-    	return city;
+    	return null;
     }
 	/**
+	 * @deprecated
      * @param city the city to set
      */
     public void setCity(String city)
     {
-    	this.city = city;
     }
+	/**
+	 * @deprecated
+     * @return the feike
+     */
+    public String getFeike()
+    {
+    	return null;
+    }
+	/**
+	 * @deprecated
+     * @param feike the feike to set
+     */
+    public void setFeike(String feike)
+    {
+    }
+    
 	/**
      * @return the birth
      */
@@ -172,22 +191,36 @@ public class BuddyExtend
     {
     	this.horoscope = horoscope;
     }
-	/**
-     * @return the feike
-     */
-    public String getFeike()
-    {
-    	return feike;
-    }
-	/**
-     * @param feike the feike to set
-     */
-    public void setFeike(String feike)
-    {
-    	this.feike = feike;
+    
+	public String getGender() {
+    	return gender;
     }
 	
+	public void setGender(String gender) {
+    	this.gender = gender;
+    }
 	
+	public String getCarrierRegion() {
+    	return carrierRegion;
+    }
+
+	public void setCarrierRegion(String carrierRegion) {
+    	this.carrierRegion = carrierRegion;
+    }
 	
+	public String getPersonalEmail() {
+    	return personalEmail;
+    }
 	
+	public void setPersonalEmail(String personalEmail) {
+    	this.personalEmail = personalEmail;
+    }
+	
+	public String getBirthdayValid() {
+    	return birthdayValid;
+    }
+	
+	public void setBirthdayValid(String birthdayValid) {
+    	this.birthdayValid = birthdayValid;
+    }
 }
