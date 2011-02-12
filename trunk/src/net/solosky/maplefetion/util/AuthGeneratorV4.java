@@ -44,7 +44,7 @@ public class AuthGeneratorV4
     protected byte[] encrypt(RSAPublicKey publicKey, byte[] obj) {
         if (publicKey != null) {
             try {
-                Cipher cipher = Cipher.getInstance("RSA");
+                Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
                 cipher.init(Cipher.ENCRYPT_MODE, publicKey);
                 return cipher.doFinal(obj);
             } catch (Exception e){
@@ -60,7 +60,7 @@ public class AuthGeneratorV4
     protected byte[] decrypt(RSAPrivateKey privateKey, byte[] obj) {
         if (privateKey != null) {
                 try{
-                    Cipher cipher = Cipher.getInstance("RSA");
+                    Cipher cipher = Cipher.getInstance("RSA/ECB/PKCS1Padding");
 
                     cipher.init(Cipher.DECRYPT_MODE, privateKey);
                     return cipher.doFinal(obj);

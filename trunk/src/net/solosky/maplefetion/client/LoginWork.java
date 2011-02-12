@@ -392,12 +392,12 @@ public class LoginWork implements Runnable
     		this.context.getNotifyEventListener().fireEvent(new LoginStateEvent(state));
     		
     	if(state.getValue()>400 && !this.isCanceledLogin) {	//大于400都是登录出错
-    		this.loginWaiter.objectArrive(state);
     		this.context.handleException(new LoginException(state));
-    	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.loginWaiter.objectArrive(state);
+    	}else if(state==LoginState.LOGIN_SUCCESS) {
     		this.context.updateState(ClientState.ONLINE);
     		this.context.getDialogFactory().getServerDialog().startKeepAlive();
+    		this.loginWaiter.objectArrive(state);		//最后才通知同步登陆线程，防止客户端状态没有刷新
     	}else {
     		//logger.warn("Unhandled login state="+state);
     	}
