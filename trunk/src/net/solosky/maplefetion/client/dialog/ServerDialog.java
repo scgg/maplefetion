@@ -224,13 +224,13 @@ public class ServerDialog extends Dialog implements ExceptionHandler
             	this.context.handleException(e);
             }
     	}else if(this.context.getState()==ClientState.LOGGING){
-    		logger.fatal("ServerDialog login error, close the client...");
+    		logger.fatal("ServerDialog login error.");
     		this.context.handleException(e);
     	}else if(e instanceof SystemException) {
-    		logger.fatal("ServerDialog system error");
+    		logger.fatal("ServerDialog system error.");
     		this.context.handleException(e);
     	}else {
-    		logger.warn("ServerDialog exception, it may not fatal error, ignore it.", e);
+    		logger.warn("ServerDialog got a exception, just ignore it...", e);
     	}
     }
 

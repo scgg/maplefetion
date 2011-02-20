@@ -395,7 +395,7 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
             }
     	}else{
     		//记录这个错误
-        	logger.warn("LiveV2ChatDialog exception caught, just ignore it..", e);
+        	logger.warn("LiveV2ChatDialog got a exception, just ignore it..", e);
     	}
     	
     	//如果是系统异常，报告这个错误

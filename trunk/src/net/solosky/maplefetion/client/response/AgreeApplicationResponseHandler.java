@@ -68,9 +68,13 @@ public class AgreeApplicationResponseHandler extends AbstractResponseHandler
 		Element element = XMLHelper.find(root, "/results/contacts/buddies/buddy");
 		if(element!=null && element.getAttributeValue("user-id")!=null) {
 			Buddy buddy = this.context.getFetionStore().getBuddyByUserId(Integer.parseInt(element.getAttributeValue("user-id")));
-			BeanHelper.toBean(Buddy.class, buddy, element);
-			BeanHelper.setValue(buddy, "relation", Relation.BUDDY);
-			context.getFetionStore().flushBuddy(buddy);
+			if(buddy!=null){
+				BeanHelper.toBean(Buddy.class, buddy, element);
+				buddy.setRelation(Relation.BUDDY);
+				context.getFetionStore().flushBuddy(buddy);
+			}else{
+				logger.warn("not found buddy in agree application response handler. Have you deleted her?");
+			}
 		}
 		Element contacts = XMLHelper.find(root, "/result/contacts");
 		if(contacts.getAttributeValue("version")!=null) {

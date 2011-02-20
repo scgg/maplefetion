@@ -530,6 +530,7 @@ public class FetionClient implements FetionContext
     /**
      * 处理客户端异常
      * 通常交给客户端处理的异常都是致命的，也就是说如果调用了这个方法客户端都会主动退出
+     * 但为了保证客户端的稳定性，在非调试模式下会忽略掉一些未知的错误，而不退出客户端
      */
     public void handleException(FetionException exception)
     {
@@ -544,20 +545,20 @@ public class FetionClient implements FetionContext
     			logger.fatal("You have logined by other client.");
     			this.state = ClientState.OTHER_LOGIN;		//用户其他地方登陆
     		}else if(re.getRegistrationType()==RegistrationException.DISCONNECTED) {
-    			logger.fatal("Server closed connecction. Please try to login again after several time.");
+    			logger.fatal("Server has closed connection. Please try to login again after several time.");
     			this.state = ClientState.DISCONNECTED;		//服务器关闭了连接
     		}else {
     			logger.fatal("Unknown registration exception", exception);
     		}
-		}else if(exception instanceof SystemException){		//系统错误,为了保证系统的稳定性，这里只是做个记录，并不退出客户端
-			logger.fatal("System error, just log it and ignore it. Not exit the client for stablity reason.", exception);
+		}else if(exception instanceof SystemException){		//系统错误
+			logger.fatal("System error, save to crush report and ignore it.", exception);
 			CrushBuilder.handleCrushReport(exception, ((SystemException) exception).getArgs());		//生成错误报告
 			return ;		//返回，不退出客户端
     	}else if(exception instanceof LoginException){		//登录错误
     		logger.fatal("Login error. state="+((LoginException)exception).getState().name());
     		this.state = ClientState.LOGIN_ERROR;
-    	}else {
-    		logger.fatal("Unknown error, just log it and ignore it. Not exit the client for stablity reason.", exception);
+    	}else {												//未知错误
+    		logger.fatal("Unknown error, save to crush report and ignore it.", exception);
 			CrushBuilder.handleCrushReport(exception);			//生成错误报告
 			return ;
     	}
@@ -650,8 +651,6 @@ public class FetionClient implements FetionContext
 	 * 客户端登录
 	 * 这是个异步操作，会把登录的操作封装在单线程池里去执行，登录结果应该通过NotifyEventListener异步通知结果
 	 * @param presence 		在线状态 定义在Presence中 
-	 * @param verifyImage	验证图片，如果没有可以设置为null
-	 * @param isSSISign		是否启用SSI登录
 	 */
 	public void login(int presence)
 	{
