@@ -30,8 +30,6 @@ import java.net.URLEncoder;
 
 import org.apache.mina.util.Base64;
 
-import sun.misc.BASE64Encoder;
-
 /**
  * 字符串工具类
  * 
