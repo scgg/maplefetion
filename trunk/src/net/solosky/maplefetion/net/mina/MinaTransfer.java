@@ -53,7 +53,7 @@ public class MinaTransfer extends AbstractTransfer
 	/**
 	 * 是否是用户主动关闭了连接
 	 */
-	private boolean isUserClosed;
+	private volatile boolean isUserClosed;
 	
 	
 	/**
@@ -119,7 +119,7 @@ public class MinaTransfer extends AbstractTransfer
 	@Override
 	public void stopTransfer() throws TransferException
 	{
-		this.session.close(true);
 		this.isUserClosed = true;
+		this.session.close(true);
 	}
 }
