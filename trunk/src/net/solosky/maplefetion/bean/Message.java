@@ -84,7 +84,7 @@ public class Message
 		this.content = content;
 		this.type    = type;
 		
-		if(type==null || ! (type.equals(TYPE_HTML) || type.endsWith(TYPE_PLAIN)) ){
+		if(type==null||(!type.equals(TYPE_HTML)&&!type.equals(TYPE_PLAIN))){
 			throw new IllegalArgumentException("invalid message type. message type must be Message.TYPE_HTML or Message.TYPE_PLAIN.");
 		}
 	}
