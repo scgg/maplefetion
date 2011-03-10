@@ -171,7 +171,6 @@ public class MessageFactory
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.MESSAGE);
     	
     	req.addHeader(SipcHeader.TO, toUri);
-    	//req.addHeader(SipcHeader.CONTENT_TYPE, "text/plain");text/html-fragment
     	req.addHeader(SipcHeader.CONTENT_TYPE, m.getType());
     	req.addHeader(SipcHeader.EVENT, "CatMsg");
     	
@@ -193,7 +192,7 @@ public class MessageFactory
     	req.addHeader(SipcHeader.TO, uri);
     	req.addHeader(SipcHeader.EVENT, "SendCatSMS");
     	
-    	req.setBody(new SipcBody(m.getText()));
+    	req.setBody(new SipcBody(m.getContent()));
     	
     	return req;
     }

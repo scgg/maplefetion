@@ -483,7 +483,7 @@ public class MapleFetion extends NotifyEventAdapter
 	     */
 	    public void self(String message)
 	    {
-	    	this.client.sendSMSMessage(this.client.getFetionUser(), Message.wrap(message), new ActionEventListener(){
+	    	this.client.sendSMSMessage(this.client.getFetionUser(), new Message(message, Message.TYPE_PLAIN), new ActionEventListener(){
             	public void fireEevent(ActionEvent event)
 				{
 					if(event.getEventType()==ActionEventType.SUCCESS){
