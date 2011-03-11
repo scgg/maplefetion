@@ -204,7 +204,7 @@ public class TransferService extends AbstractProcessor
     {
     	this.sipcTimeoutCheckTask = new SipMessageTimeOutCheckTask();
     	int checkTimeoutInterval  = FetionConfig.getInteger("fetion.sip.check-alive-interval")*1000;
-    	int checkTimeoutDelay     = 50*100;
+    	int checkTimeoutDelay     = 50*1000;
 	    this.context.getFetionTimer().scheduleTask(
 	    						this.sipcTimeoutCheckTask, checkTimeoutDelay, checkTimeoutInterval);
     }
