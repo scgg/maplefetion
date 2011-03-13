@@ -28,6 +28,9 @@ package net.solosky.maplefetion.client.dispatcher;
 import net.solosky.maplefetion.ExceptionHandler;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.client.dialog.Dialog;
+import net.solosky.maplefetion.client.notify.ConversationNotifyHandler;
+import net.solosky.maplefetion.client.notify.MessageNotifyHandler;
+import net.solosky.maplefetion.client.notify.OptionNotifyHandler;
 import net.solosky.maplefetion.sipc.SipcHeader;
 import net.solosky.maplefetion.sipc.SipcMethod;
 import net.solosky.maplefetion.sipc.SipcNotify;
@@ -51,19 +54,12 @@ public class LiveV2MessageDispatcher extends AbstractMessageDispatcher
 		super(client, dialog, exceptionHandler);
 	}
 
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @seenet.solosky.maplefetion.client.dispatcher.AbstractNotifyDispatcher#
-	 * findNotifyHandlerClass(net.solosky.maplefetion.sipc.SipcNotify)
-	 */
-	@Override
-	protected String findNotifyHandlerClass(SipcNotify notify)
+	protected Class findNotifyHandlerClass(SipcNotify notify)
 	{
 		String method = notify.getMethod();
-		String clazz = null;
+		Class clazz = null;
 		if (method.equals(SipcMethod.MESSAGE)) {
-			clazz = "MessageNotifyHandler";
+			clazz = MessageNotifyHandler.class;
 		} else if (method.equals(SipcMethod.BENOTIFY)) {
 			//检查事件名字
 			SipcHeader eventHeader = notify.getHeader(SipcHeader.EVENT);
@@ -75,17 +71,17 @@ public class LiveV2MessageDispatcher extends AbstractMessageDispatcher
 			
 			//根据不同的事件名字设置不同的处理器Conversation
 			if (event.equals("Conversation")) {
-				clazz = "ConversationNotifyHandler";
+				clazz = ConversationNotifyHandler.class;
 			}else {
 				//TODO 
 			}
 		} else if(method.equals(SipcMethod.OPTION)){
-			clazz = "OptionNotifyHandler";
+			clazz = OptionNotifyHandler.class;
 		}else {
 			//TODO ..
 		}
 
-		return clazz != null ? "net.solosky.maplefetion.client.notify." + clazz : null;
+		return clazz;
 	}
 
 }

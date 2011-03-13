@@ -58,7 +58,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 	/**
 	 * 通知处理器缓存
 	 */
-	private Hashtable<String, NotifyHandler> notifyHandlers;
+	private Hashtable<Class, NotifyHandler> notifyHandlers;//mod
 	
 	/**
 	 * 飞信客户端
@@ -84,7 +84,7 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 		this.context = client;
 		this.dialog = dialog;
 		this.exceptionHandler = exceptionHandler;
-		this.notifyHandlers = new Hashtable<String, NotifyHandler>();
+		this.notifyHandlers = new Hashtable<Class, NotifyHandler>();
 	}
 	
 	/* (non-Javadoc)
@@ -170,7 +170,8 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
     public void dispatch(SipcNotify notify) throws FetionException
     {
     	//查找处理这个通知的类
-    	String clazz = this.findNotifyHandlerClass(notify);
+    	//String clazz = this.findNotifyHandlerClass(notify);
+    	Class clazz = this.findNotifyHandlerClass(notify);
     	if(clazz==null) {
     		throw new DispatcherException("Cannot find a class to handle this notify - notify:\n"+notify.toSendString());
     	}
@@ -196,14 +197,13 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
 	 * @param clazz
 	 * @return
 	 */
-	private NotifyHandler loadNotifyHandler(String clazz) throws DispatcherException
+	private NotifyHandler loadNotifyHandler(Class clazz) throws DispatcherException
 	{
 		NotifyHandler handler = null;
 		handler = this.notifyHandlers.get(clazz);
 		if (handler == null) {
 			try {
-				handler = (NotifyHandler) Class.forName(clazz)
-				        .newInstance();
+				handler = (NotifyHandler) clazz.newInstance();
 				handler.setDailog(dialog);
 				handler.setContext(context);
 			} catch (Exception e) {
@@ -219,5 +219,5 @@ public abstract class AbstractMessageDispatcher extends AbstractProcessor implem
      * @param notify	通知
      * @return			类名
      */
-    protected abstract String findNotifyHandlerClass(SipcNotify notify);
+    protected abstract Class findNotifyHandlerClass(SipcNotify notify);
 }
