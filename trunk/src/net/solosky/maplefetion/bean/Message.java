@@ -96,7 +96,7 @@ public class Message
      */
     public String getText()
     {
-    	return type.equals(TYPE_HTML) ? StringHelper.qouteHtmlSpecialChars(content) : content;
+    	return type.equals(TYPE_HTML) ? StringHelper.stripHtmlSpecialChars(content) : content;
     }
     
     /**

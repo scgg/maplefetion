@@ -736,7 +736,7 @@ public class MessageFactory
     	SimpleDateFormat df = new SimpleDateFormat("yyyy-M-d H:m:s");
     	df.setTimeZone(TimeZone.getTimeZone("GMT 0"));
     	body = body.replace("{sendDate}", df.format(sendDate));
-    	body = body.replace("{message}", message.getText());
+    	body = body.replace("{message}", StringHelper.qouteHtmlSpecialChars(message.getContent()));
     	
     	String receiverTmpl = "<receiver uri=\"{uri}\" />";
     	StringBuffer buffer = new StringBuffer();
