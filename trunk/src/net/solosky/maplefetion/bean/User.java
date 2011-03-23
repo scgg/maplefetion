@@ -77,7 +77,7 @@ public class User extends Buddy
 	{
 		AccountValidator validator = new AccountValidator(account);
 		if(validator.isValidEmail()){
-			throw new UnsupportedOperationException("Sorry, the Fetion2008 Protocol does not supported Email sign in.");
+			this.email = account;
 		}else if(validator.isValidMobile()){
 			this.mobile = validator.getMobile();
 		}else if(validator.getFetionId()>0){

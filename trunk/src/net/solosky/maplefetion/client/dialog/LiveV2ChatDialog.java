@@ -451,6 +451,28 @@ public class LiveV2ChatDialog extends ChatDialog implements MutipartyDialog, Exc
 	            this.closeDialog();
     	}
 	}
+	
+	/**
+	 * 发送一个震屏信息给对方
+	 * @param listener
+	 */
+	public void sendNudgeState(ActionEventListener listener){
+		 this.ensureOpened();
+		 SipcRequest request = this.messageFactory.createSendChatStateRequest("nudge");
+		 request.setResponseHandler(new DefaultResponseHandler(listener));
+	   	 this.process(request);
+	}
+	
+	/**
+	 * 发送用户正在输入状态
+	 * @param listener
+	 */
+	public void sendInputState(ActionEventListener listener){
+		this.ensureOpened();
+		SipcRequest request = this.messageFactory.createSendChatStateRequest("input");
+		 request.setResponseHandler(new DefaultResponseHandler(listener));
+	   	 this.process(request);
+	}
     
     public String toString()
     {

@@ -31,13 +31,18 @@ import java.util.Iterator;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.bean.Buddy;
 import net.solosky.maplefetion.bean.Message;
+import net.solosky.maplefetion.client.response.DefaultResponseHandler;
 import net.solosky.maplefetion.event.action.ActionEventFuture;
 import net.solosky.maplefetion.event.action.ActionEventListener;
+import net.solosky.maplefetion.event.action.FailureEvent;
+import net.solosky.maplefetion.event.action.FailureType;
 import net.solosky.maplefetion.event.action.FutureActionEventListener;
 import net.solosky.maplefetion.event.action.SystemErrorEvent;
 import net.solosky.maplefetion.event.action.TimeoutEvent;
 import net.solosky.maplefetion.net.RequestTimeoutException;
 import net.solosky.maplefetion.net.TransferException;
+import net.solosky.maplefetion.sipc.SipcRequest;
+import net.solosky.maplefetion.util.ObjectWaiter;
 
 import org.apache.log4j.Logger;
 
@@ -272,11 +277,40 @@ public class ChatDialogProxy implements DialogListener
     	//同样，在改变对话框状态时，首先要获得对话锁，防止消息放入队列中而永远不会发送
     	synchronized (this.proxyChatDialog) {
     		switch(state) {
-        		case OPENED: this.processReadyMessage(true);  break;
+        		case OPENED: this.processReadyMessage(true); break;
         		case FAILED: this.processReadyMessage(false); break;
     		}
         }
     }
+    
+	/**
+	 * 发送一个震屏信息给对方
+	 * @param listener
+	 */
+	public void sendNudgeState(ActionEventListener listener){
+		 if(this.proxyChatDialog instanceof LiveV2ChatDialog){
+			 LiveV2ChatDialog dialog = (LiveV2ChatDialog) this.proxyChatDialog;
+			 dialog.sendNudgeState(listener);
+		 }else{
+			 if(listener!=null)
+				 listener.fireEevent(new FailureEvent(FailureType.NOT_SUPPORTED));
+		 }
+	}
+	
+	/**
+	 * 发送用户正在输入状态
+	 * @param listener
+	 */
+	public void sendInputState(ActionEventListener listener){
+		if(this.proxyChatDialog instanceof LiveV2ChatDialog){
+			 LiveV2ChatDialog dialog = (LiveV2ChatDialog) this.proxyChatDialog;
+			 dialog.sendInputState(listener);
+		 }else{
+			 if(listener!=null)
+				 listener.fireEevent(new FailureEvent(FailureType.NOT_SUPPORTED));
+		 }
+
+	}
     
     
     /**

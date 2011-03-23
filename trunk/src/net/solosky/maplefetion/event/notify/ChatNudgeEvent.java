@@ -16,80 +16,50 @@
  */
 
  /**
- * Project  : MapleFetion2
- * Package  : net.solosky.maplefetion.event
- * File     : NotifyEventType.java
+ * Project  : maplefetion-2.5
+ * Package  : net.solosky.maplefetion.event.notify
+ * File     : ChatNudgeEvent.java
  * Author   : solosky < solosky772@qq.com >
- * Created  : 2010-5-11
+ * Created  : 2011-3-23
  * License  : Apache License 2.0 
  */
-package net.solosky.maplefetion.event;
+package net.solosky.maplefetion.event.notify;
+
+import net.solosky.maplefetion.bean.Buddy;
+import net.solosky.maplefetion.client.dialog.ChatDialogProxy;
+import net.solosky.maplefetion.event.NotifyEvent;
+import net.solosky.maplefetion.event.NotifyEventType;
 
 /**
  *
- * 通知事件类型
+ * 震屏消息
  *
  * @author solosky <solosky772@qq.com>
+ *
  */
-public enum NotifyEventType {
-	/**
-	 * 登录状态发生变化
-	 */
-	LOGIN_STATE,
+public class ChatNudgeEvent extends NotifyEvent {
+
+private ChatDialogProxy proxy;
 	
-	/**
-	 * 客户端状态发生变化
-	 */
-	CLIENT_STATE,
+	public ChatNudgeEvent(ChatDialogProxy proxy) {
+		this.proxy = proxy;
+	}
+
+	public ChatDialogProxy getChatDialogProxy() {
+		return proxy;
+	}
 	
-	/**
-	 * 好友消息
-	 */
-	BUDDY_MESSAGE,
+	public Buddy getBuddy()	{
+		return proxy.getMainBuddy();
+	}
 	
-	/**
-	 * 群消息
-	 */
-	GROUP_MESSAGE,
-	
-	/**
-	 * 系统消息
-	 */
-	SYSTEM_MESSAGE,
-	
-	/**
-	 * 添加好友请求
-	 */
-	BUDDY_APPLICAION,
-	
-	/**
-	 * 对方回复了添加好友的请求
-	 */
-	BUDDY_CONFIRMED,
-	
-	/**
-	 * 对方状态发生改变
-	 */
-	BUDDY_PRESENCE,	
-	
-	/**
-	 * 接收到了一个邀请
-	 */
-	INVITE_RECEIVED,
-	
-	/**
-	 * 操作需要验证
-	 */
-	IMAGE_VERIFY,
-	
-	/**
-	 * 好友输入
-	 */
-	CHAT_INPUT,
-	
-	/**
-	 * 震屏
-	 */
-	CHAT_NUDGE,
-	
+	@Override
+	public NotifyEventType getEventType() {
+		return NotifyEventType.CHAT_NUDGE;
+	}
+
+	@Override
+	public String toString() {
+		return "ChatNudgeEvent [proxy=" + proxy + "]";
+	}
 }

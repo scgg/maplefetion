@@ -29,6 +29,7 @@ import net.solosky.maplefetion.ExceptionHandler;
 import net.solosky.maplefetion.FetionContext;
 import net.solosky.maplefetion.client.dialog.Dialog;
 import net.solosky.maplefetion.client.notify.ConversationNotifyHandler;
+import net.solosky.maplefetion.client.notify.DialogInfoNotifyHandler;
 import net.solosky.maplefetion.client.notify.MessageNotifyHandler;
 import net.solosky.maplefetion.client.notify.OptionNotifyHandler;
 import net.solosky.maplefetion.sipc.SipcHeader;
@@ -77,7 +78,9 @@ public class LiveV2MessageDispatcher extends AbstractMessageDispatcher
 			}
 		} else if(method.equals(SipcMethod.OPTION)){
 			clazz = OptionNotifyHandler.class;
-		}else {
+		}else if(method.equals(SipcMethod.INFO)){
+			clazz = DialogInfoNotifyHandler.class;
+		}else{
 			//TODO ..
 		}
 

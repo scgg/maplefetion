@@ -242,6 +242,8 @@ public class SSISignV4 implements SSISign
 			b.append("mobileno="+Long.toString(user.getMobile()));
 		}else if(user.getFetionId()>0){
 			b.append("sid="+Integer.toString(user.getFetionId()));
+		}else if(user.getEmail()!=null){
+			b.append("email="+user.getEmail());
 		}else{
 			throw new IllegalStateException("couldn't find valid mobile or fetionId to sign in..");
 		}

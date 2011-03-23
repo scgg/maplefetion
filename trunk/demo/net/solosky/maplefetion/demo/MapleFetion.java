@@ -62,6 +62,8 @@ import net.solosky.maplefetion.event.action.failure.RequestFailureEvent;
 import net.solosky.maplefetion.event.action.success.SendChatMessageSuccessEvent;
 import net.solosky.maplefetion.event.notify.ImageVerifyEvent;
 import net.solosky.maplefetion.net.AutoTransferFactory;
+import net.solosky.maplefetion.net.RequestTimeoutException;
+import net.solosky.maplefetion.net.TransferException;
 import net.solosky.maplefetion.store.FetionStore;
 import net.solosky.maplefetion.store.SimpleFetionStore;
 import net.solosky.maplefetion.util.SingleExecutor;
@@ -908,6 +910,41 @@ public class MapleFetion extends NotifyEventAdapter
 	    }
 	    
 	    /**
+	     * 发送震屏
+	     */
+	    public void nudge(String uri){
+	    	ChatDialogProxy proxy = null;
+	    	Buddy buddy = client.getFetionStore().getBuddyByUri(uri);
+	    	int state = buddy.getPresence().getValue();
+	    	if(state==Presence.OFFLINE){
+	    		println("你不能给不在线的好友发送震屏。");
+	    		prompt();
+	    		return;
+	    	}
+	    	
+            try {
+	            proxy = this.client.getChatDialogProxyFactory().create(buddy);
+	            if(proxy.getState()==DialogState.CREATED){
+	            	proxy.openDialog();
+	            }
+            } catch (Exception e) {
+	          println("建立对话失败！！");
+	          return;
+			}
+            
+            proxy.sendNudgeState(new ActionEventListener() {
+				@Override
+				public void fireEevent(ActionEvent event) {
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						println("发送震屏成功。");
+					}else{
+						println("发送震屏失败！"+event.toString());
+					}
+				}
+			});
+	    }
+	    
+	    /**
 	     * 设置登录用户的状态
 	     * @param presence
 	     * @throws Exception 
@@ -1067,6 +1104,9 @@ public class MapleFetion extends NotifyEventAdapter
 				this.enter(this.buddymap.get(cmd[1]));
 		}else if(cmd[0].equals("leave")) {
 			this.leave();
+		}else if(cmd[0].equals("nudge")) {
+			if(cmd.length>=2)
+				this.nudge(this.buddymap.get(cmd[1]));
 		}else if(cmd[0].equals("to")) {
 			if(cmd.length>=3)
 				this.to(this.buddymap.get(cmd[1]),line.substring(line.indexOf(cmd[2])));
@@ -1383,6 +1423,21 @@ public class MapleFetion extends NotifyEventAdapter
     		prompt();
     	}
     }
+
+    
+
+	@Override
+	protected void chatNugde(ChatDialogProxy dialog) {
+		println(dialog.getMainBuddy().getDisplayName()+" 给你发送了一个震屏。");
+		prompt();
+	}
+
+
+	@Override
+	protected void chatInput(ChatDialogProxy dialog) {
+		println(dialog.getMainBuddy().getDisplayName()+" 正在输入...");
+		prompt();
+	}
 
 
 	@Override

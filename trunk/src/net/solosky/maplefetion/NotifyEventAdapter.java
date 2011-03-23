@@ -37,6 +37,8 @@ import net.solosky.maplefetion.event.notify.BuddyApplicationEvent;
 import net.solosky.maplefetion.event.notify.BuddyConfirmedEvent;
 import net.solosky.maplefetion.event.notify.BuddyMessageEvent;
 import net.solosky.maplefetion.event.notify.BuddyPresenceEvent;
+import net.solosky.maplefetion.event.notify.ChatInputEvent;
+import net.solosky.maplefetion.event.notify.ChatNudgeEvent;
 import net.solosky.maplefetion.event.notify.ClientStateEvent;
 import net.solosky.maplefetion.event.notify.GroupMessageEvent;
 import net.solosky.maplefetion.event.notify.ImageVerifyEvent;
@@ -111,8 +113,19 @@ public class NotifyEventAdapter implements NotifyEventListener
 			case IMAGE_VERIFY:
 				ImageVerifyEvent e10 = (ImageVerifyEvent) event;
 				this.imageVerify(e10.getVerifyImage(), e10.getVerifyReason(), e10.getVerifyTips(), e10);
+				break;
 				
-				default:;
+			case CHAT_INPUT:
+				ChatInputEvent e11 = (ChatInputEvent) event;
+				this.chatInput(e11.getChatDialogProxy());
+				break;
+				
+			case CHAT_NUDGE:
+				ChatNudgeEvent e12 = (ChatNudgeEvent) event;
+				this.chatNugde(e12.getChatDialogProxy());
+				break;
+				
+			default:;
 				
 				
 		}
@@ -206,6 +219,24 @@ public class NotifyEventAdapter implements NotifyEventListener
 	 */
 	protected void inviteReceived(ChatDialogProxy dialog)
 	{
+	}
+	
+	/**
+	 * 聊天震屏
+	 * @param dialog
+	 */
+	protected void chatNugde(ChatDialogProxy dialog)
+	{
+		
+	}
+	
+	/**
+	 * 正在输入状态
+	 */
+	
+	protected void chatInput(ChatDialogProxy dialog)
+	{
+		
 	}
 
 }

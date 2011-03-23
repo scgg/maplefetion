@@ -280,10 +280,10 @@ public class MessageFactory
     	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.REGISTER);
     	req.addHeader(SipcHeader.AUTHORIZATION,"TICKS auth=\""+ticket+"\"");
     	req.addHeader(SipcHeader.SUPPORTED,"text/html-fragment");
-    	//req.addHeader(SipcHeader.SUPPORTED,"multiparty");
-    	//req.addHeader(SipcHeader.SUPPORTED,"nudge");
-    	//req.addHeader(SipcHeader.SUPPORTED,"share-background");
-    	//req.addHeader(SipcHeader.FIELD_SUPPORTED,"fetion-show");
+    	req.addHeader(SipcHeader.SUPPORTED,"multiparty");
+    	req.addHeader(SipcHeader.SUPPORTED,"nudge");
+    	req.addHeader(SipcHeader.SUPPORTED,"share-background");
+    	req.addHeader(SipcHeader.SUPPORTED,"fetion-show");
     	
     	return req;
     }
@@ -680,6 +680,24 @@ public class MessageFactory
 		body = body.replace("{presence}", Integer.toString(presense));
     	
     	req.setBody(new SipcBody(body));
+    	
+    	return req;
+    }
+    
+    /**
+     * 发送聊天状态消息
+     * @param state
+     * @return
+     */
+    public SipcRequest createSendChatStateRequest(String state)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.INFO);
+    	
+    	if(state.equals("nudge")){
+    		req.addHeader("RQ","nudge");
+    	}
+    	
+    	req.setBody(new SipcBody("<is-composing><state>"+state+"</state></is-composing>"));
     	
     	return req;
     }

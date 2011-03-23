@@ -140,6 +140,11 @@ public enum FailureType {
 	VERIFY_CANCELED,
 	
 	/**
+	 * 不支持这个操作
+	 */
+	NOT_SUPPORTED,
+	
+	/**
 	 * 未知错误
 	 */
 	UNKNOWN_FAIL,	
