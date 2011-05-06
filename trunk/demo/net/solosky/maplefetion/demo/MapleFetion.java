@@ -156,7 +156,7 @@ public class MapleFetion extends NotifyEventAdapter
 			serviceId   = args[0];
 			password = args[1];
 			if(args.length>=3)
-				loginPresence = "Y".equals(args[3]) ? Presence.HIDEN : Presence.ONLINE;
+				loginPresence = "Y".equals(args[2]) ? Presence.HIDEN : Presence.ONLINE;
 		}else {
 			System.out.println("提示：你可以直接在命令行后加 '手机号/飞信号 密码' 快速登录（不含引号）");
     		BufferedReader reader = new BufferedReader(new InputStreamReader(System.in));
