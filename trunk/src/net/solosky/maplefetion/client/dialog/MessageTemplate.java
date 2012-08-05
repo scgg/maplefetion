@@ -34,14 +34,14 @@ package net.solosky.maplefetion.client.dialog;
  */
 public class MessageTemplate
 {
-	public static final String TMPL_USER_AUTH = "<args><device machine-code=\"{machineCode}\" accept-language=\"default\"/><caps value=\"1FFF\" /><events value=\"7f\" /><user-info sid=\"{sid}\" user-id=\"{userId}\"><personal version=\"{personalVersion}\" attributes=\"v4default\" /><custom-config version=\"0\" /><contact-list version=\"{contactVersion}\"   buddy-attributes=\"v4default\" /></user-info><credentials domains=\"fetion.com.cn;m161.com.cn;www.ikuwa.cn;games.fetion.com.cn\" /><presence><basic value=\"{presence}\" desc=\"\" /></presence></args>";
+	public static final String TMPL_USER_AUTH = "<args><device accept-language=\"default\" machine-code=\"{machineCode}\" opmsg-version=\"0\" /><caps value=\"17BF9FFF\" /><events value=\"7F\" /><user-info mobile-no=\"13810451060\" user-id=\"346339663\"><personal version=\"{personalVersion}\" attributes=\"v4default;alv2-version;alv2-warn;dynamic-version;restricted;birthday-lunar;lunar-animal;horoscope;age\" /><custom-config version=\"0\" /><contact-list version=\"{contactVersion}\" buddy-attributes=\"v4default\" /></user-info><credentials domains=\"fetion.com.cn;m161.com.cn;www.ikuwa.cn;games.fetion.com.cn;turn.fetion.com.cn;pos.fetion.com.cn;ent.fetion.com.cn;mms.fetion.com.cn;cf.fetion.com.cn;shequ.10086.cn;webim.fetion.com.cn;mm.10086.cn;caiyun.10086.cn;127.0.0.1\" /><presence><basic value=\"{presence}\" desc=\"\" /><extendeds /></presence><login type=\"1\" retry=\"255\" /></args>";
 	public static final String TMPL_GET_PERSONAL_INFO = "<args><personal attributes=\"all\" /><services version=\"\" attributes=\"all\" /><quota attributes=\"all\" /></args>";
 	public static final String TMPL_GET_CONTACT_INFO = "<args><contact {args}/></args>";
-	public static final String TMPL_SUBSCRIBE = "<args><subscription self=\"v4default;mail-count\" buddy=\"v4default\" version=\"0\" /></args>";
+	public static final String TMPL_SUBSCRIBE = "<args><subscription self=\"v4default;mail-count;impresa;sms-online-status;feed-version;feed-type;es2all;birthday;marketing\" buddy=\"v4default;feed-version;feed-type;es2all;email-enable;rtm;dynamic-title;dynamic-id;birthday;fconline;client-type;marketing\" version=\"0\" /></args>";
 	public static final String TMPL_FETION_SHOW_1 = "<is-composing><state>fetion-show:";
 	public static final String TMPL_FETION_SHOW_2 = "0x000101010000010001000000000000010000000</state></is-composing>";
 	public static final String TMPL_INVATE_BUDDY = "<args><contacts><contact uri=\"{uri}\" /></contacts></args>";
-	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" {localName} desc=\"{desc}\" expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" /></buddies></contacts></args>";
+	public static final String TMPL_ADD_BUDDY = "<args><contacts><buddies><buddy uri=\"{uri}\" buddy-lists=\"{cordId}\" desc=\"{desc}\" {localName} expose-mobile-no=\"1\" expose-name=\"1\" addbuddy-phrase-id=\"{promptId}\" addbuddy-phrase=\"{desc}\" /></buddies></contacts></args>";
 	public static final String TMPL_DELETE_BUDDY = "<args><contacts><buddies><buddy user-id=\"{userId}\" /></buddies></contacts></args>";
 	public static final String TMPL_APPLICATION_AGREED = "<args><contacts><buddies><buddy user-id=\"{userId}\" result=\"1\" buddy-lists=\"\" expose-mobile-no=\"1\" expose-name=\"1\" /></buddies></contacts></args>";
 	public static final String TMPL_APPLICATION_DECLINED = "<args><contacts><buddies><buddy user-id=\"{userId}\" result=\"0\" /></buddies></contacts></args>";
@@ -57,7 +57,7 @@ public class MessageTemplate
 	public static final String TMPL_DELETE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" /></buddy-lists></contacts></args>";
 	public static final String TMPL_UPDATE_CORD = "<args><contacts><buddy-lists><buddy-list id=\"{cordId}\" name=\"{title}\"/></buddy-lists></contacts></args>";
 	
-	public static final String TMPL_GET_GROUP_LIST = "<args><group-list attributes=\"name;identity\" version=\"{version}\"/></args>";
+	public static final String TMPL_GET_GROUP_LIST = "<args><group-list grouptype=\"1,3\" version=\"{version}\"/></args>";
 	public static final String TMPL_GET_GROUP_INFO = "<args><groups attributes=\"all\">{groupList}</groups></args>";
 	public static final String TMPL_GET_MEMBER_LIST ="<args><groups attributes=\"member-uri;member-nickname;member-iicnickname;member-identity;member-t6svcid\">{groupList}</groups></args>";
 	public static final String TMPL_SUBSCRIBE_GROUP_NOPTIFY = "<args><subscription><groups><group uri=\"{uri}\" /></groups><presence><basic attributes=\"all\" /><member attributes=\"identity\" /><management attributes=\"all\" /></presence></subscription></args>";

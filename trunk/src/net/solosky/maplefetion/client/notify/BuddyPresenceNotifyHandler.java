@@ -93,22 +93,27 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
 
 				//状态改变
         	    if(presence!=null) {
-            	    int oldpresense = buddy.getPresence().getValue(); 
-            	    int curpresense = Integer.parseInt(presence.getAttributeValue("b"));  
-            	    BeanHelper.toBean(Presence.class, buddy.getPresence(), presence);
-            	    if(oldpresense!=curpresense) {
-            	    	//注意，如果好友上线了，并且当前打开了手机聊天对话框，需要关闭这个手机聊天对话框
-            	    	if(curpresense == Presence.AWAY   || curpresense == Presence.BUSY ||
-            	    	   curpresense == Presence.ONLINE || curpresense == Presence.ROBOT ) {
-            	    		ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(buddy);
-            	    		if(chatDialog!=null && chatDialog instanceof BasicChatDialog) {
-            	    			chatDialog.closeDialog();
-            	    		}
-            	    	}
-            	    	
-            	    	//通知监听器，好友状态已经改变
-            	    	this.tryFireNotifyEvent(new BuddyPresenceEvent(buddy));
-            	    }
+        	    	boolean isStatusChanged = false;
+        	    	if(presence.getAttributeValue("b")!=null){
+	            	    int oldpresense = buddy.getPresence().getValue(); 
+	            	    int curpresense = Integer.parseInt(presence.getAttributeValue("b"));  
+	            	    if(oldpresense!=curpresense) {
+	            	    	//注意，如果好友上线了，并且当前打开了手机聊天对话框，需要关闭这个手机聊天对话框
+	            	    	isStatusChanged = true;
+	            	    	if(curpresense == Presence.AWAY   || curpresense == Presence.BUSY ||
+	            	    	   curpresense == Presence.ONLINE || curpresense == Presence.ROBOT ) {
+	            	    		ChatDialog chatDialog = this.context.getDialogFactory().findChatDialog(buddy);
+	            	    		if(chatDialog!=null && chatDialog instanceof BasicChatDialog) {
+	            	    			chatDialog.closeDialog();
+	            	    		}
+	            	    	}
+	            	    }
+        	    	}
+        	    	
+        	    	BeanHelper.toBean(Presence.class, buddy.getPresence(), presence);
+        	    	if(isStatusChanged){
+        	    		this.tryFireNotifyEvent(new BuddyPresenceEvent(buddy));
+        	    	}
         	    }
 
         	    //刷新数据

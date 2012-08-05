@@ -135,25 +135,8 @@ public class AccountValidator
 	 */
 	public static boolean validateMobile(long mobile)
 	{
-		if(mobile>=13400000000L && mobile<=13489999999L){	//1340-1348
-			return true;
-		}else if(mobile>=13500000000L && mobile<=13999999999L){	//135-139
-			return true;
-		}else if(mobile>=14700000000L && mobile<=14799999999L){	//147
-			return true;
-		}else if(mobile>=15000000000L && mobile<=15299999999L){	//150-152
-			return true;
-		}else if(mobile>=15700000000L && mobile<=15999999999L){	//157-159
-			return true;
-		}else if(mobile>=18200000000L && mobile<=18299999999L){	//182
-			return true;
-		}else if(mobile>=18700000000L && mobile<=18899999999L){	//187-188
-			return true;
-		}else if(mobile>=85200000000L && mobile<=85299999999L){	//852 HK
-			return true;
-		}else {
-			return false;
-		}
+		String regex = "^(1(([35][0-9])|(47)|[8][01236789]))\\d{8}$";
+		return Pattern.compile(regex).matcher(mobile + "").matches();
 	}
 	
 	

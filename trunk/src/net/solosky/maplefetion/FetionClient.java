@@ -106,7 +106,7 @@ public class FetionClient implements FetionContext
 	/**
 	 * 协议版本
 	 */
-	public static final String PROTOCOL_VERSION = "4.1.0740";
+	public static final String PROTOCOL_VERSION = "4.7.5810";
 	
 	/**
 	 * SIPC版本
@@ -983,16 +983,17 @@ public class FetionClient implements FetionContext
 	public void addBuddy(String account, String localName, Cord cord, String desc, int promptId, ActionEventListener listener)
 	{
 		this.ensureOnline();
-		AccountValidator validator = new AccountValidator(account);
-		if(validator.isValidMobile()){
-			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, localName, cord, desc, promptId,  listener);
-		}else if(validator.getFetionId()>0){
-			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, localName, cord, desc, promptId, listener);
-		}else{
-			if(listener!=null){
-				listener.fireEevent(new FailureEvent(FailureType.INVALID_ACCOUNT));
-			}
-		}
+//		AccountValidator validator = new AccountValidator(account);
+//		if(validator.isValidMobile()){
+//			this.dialogFactory.getServerDialog().addBuddy("tel:"+account, localName, cord, desc, promptId,  listener);
+//		}else if(validator.getFetionId()>0){
+//			this.dialogFactory.getServerDialog().addBuddy("sip:"+account, localName, cord, desc, promptId, listener);
+//		}else{
+//			if(listener!=null){
+//				listener.fireEevent(new FailureEvent(FailureType.INVALID_ACCOUNT));
+//			}
+//		}
+		this.dialogFactory.getServerDialog().addBuddy("mix:"+account, localName, cord, desc, promptId,  listener);
 	}
 	
 	/**

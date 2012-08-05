@@ -119,6 +119,8 @@ public abstract class Person
     		this.fetionId = Integer.parseInt(uri.substring(4, uri.indexOf('@')));
     	}else if(uri.startsWith("tel")){
     		this.mobile = Long.parseLong(uri.substring(4));
+    	}else if(uri.startsWith("mix")){
+    		//TODO ...
     	}else {
     		throw new IllegalArgumentException("Illegal uri:"+uri);
     	}
