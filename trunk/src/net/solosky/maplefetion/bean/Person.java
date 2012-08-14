@@ -65,6 +65,16 @@ public abstract class Person
 	 * 用户状态, 只读属性
 	 */
 	protected Presence presence;
+	
+	/**
+	 * 用户运营商
+	 */
+	protected String carrierName;
+	
+	/***
+	 * 用户状态
+	 */
+	protected int carrierStatus;
 
 	/**
 	 * 构造函数
@@ -202,4 +212,20 @@ public abstract class Person
     {
     	return Presence.presenceValueToDisplayString(this.presence.getValue());
     }
+
+	public String getCarrierName() {
+		return carrierName;
+	}
+
+	public int getCarrierStatus() {
+		return carrierStatus;
+	}
+
+	public void setCarrierName(String carrierName) {
+		this.carrierName = carrierName;
+	}
+
+	public void setCarrierStatus(int carrierStatus) {
+		this.carrierStatus = carrierStatus;
+	}
 }

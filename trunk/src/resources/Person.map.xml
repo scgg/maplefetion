@@ -3,4 +3,6 @@
 	<field xml="uri" bean="uri" type="java.lang.String" readonly="true" setter="setUri"/>
 	<field xml="user-id" bean="userId" type="java.lang.Integer" readonly="true" />
 	<field xml="mobile-no" bean="mobile" type="java.lang.Long" readonly="true" />
+	<field xml="carrier" bean="carrierName" type="java.lang.String" readonly="true" />
+	<field xml="carrier-status" bean="carrierStatus" type="java.lang.Integer" readonly="true" />
 </map>

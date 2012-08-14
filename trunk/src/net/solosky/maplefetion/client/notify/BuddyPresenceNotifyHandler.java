@@ -81,6 +81,13 @@ public class BuddyPresenceNotifyHandler extends AbstractNotifyHandler
         	    	if(nickname!=null && nickname.length()>0) buddy.setNickName(nickname);
         	    	if(impresa!=null && impresa.length()>0)   buddy.setImpresa(impresa);
         	    	
+        	    	String carrierName = personal.getAttributeValue("c");
+        	    	String carrierStatus = personal.getAttributeValue("cs");
+        	    	buddy.setCarrierName(carrierName);
+        	    	if(carrierStatus!=null && !carrierStatus.isEmpty()){
+        	    		buddy.setCarrierStatus(Integer.parseInt(carrierStatus));
+        	    	}
+        	    	
         	    	String m = personal.getAttributeValue("m");
         	    	if(m!=null && m.length()>0)
         	    		buddy.setMobile(Long.parseLong(m));
