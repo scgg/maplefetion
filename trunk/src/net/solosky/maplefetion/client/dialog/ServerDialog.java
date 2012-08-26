@@ -456,6 +456,22 @@ public class ServerDialog extends Dialog implements ExceptionHandler
     }
     
     /**
+     * 发送付费短信消息，可以是任意手机号码，资费为0.1元/条
+     * @param buddy			消息发往的手机号码，任意号码均可
+     * @param message		消息正文
+     * @param listener		操作监听器
+     * @throws TransferException 
+     */
+    public void sendDirectSMSMessage(long mobileNo, Message message, ActionEventListener listener)
+    {
+    	this.ensureOpened();
+    	SipcRequest request  = this.getMessageFactory().createSendDirectSMSRequest(mobileNo, message);
+    	request.setResponseHandler(new SendChatMessageResponseHandler(context, this, listener));
+    	this.process(request);
+    }
+    
+    
+    /**
      * 发送聊天消息
      * @param buddy			消息发往的好友对象
      * @param message		消息正文

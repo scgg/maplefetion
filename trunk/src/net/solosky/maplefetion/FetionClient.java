@@ -794,7 +794,7 @@ public class FetionClient implements FetionContext
 	 * @param message		消息
 	 * @param listener 		操作事件监听器
 	 */
-	public void sendChatMessage(long mobile,final Message message, final ActionEventListener listener)
+	public void sendChatMessage(long mobile, final Message message, final ActionEventListener listener)
 	{
 		this.ensureOnline();
 		
@@ -845,6 +845,27 @@ public class FetionClient implements FetionContext
 		};
 		//开始查找好友请求
 		this.findBuddyByMobile(mobile, tmpListener);
+		
+	}
+	
+	/**
+	 * 通过手机号给任意用户发送付费短信，资费为0.1元每条
+	 * @param mobile		手机号码，联通移动电信均可，无需添加好友
+	 * @param message		纯文本的消息内容，貌似可以突破官方客户端的350字符的限制...
+	 * @param listener		操作事件监听器
+	 */
+	public void sendDirectSMSMessage(long mobile, final Message message, final ActionEventListener listener)
+	{
+		this.ensureOnline();
+		
+		//先判断是否是合法的移动号码
+		if(!AccountValidator.validateMobile(mobile)){
+			if(listener != null){
+				listener.fireEevent(new FailureEvent(FailureType.INVALID_ACCOUNT));
+			}
+		}
+				
+		getServerDialog().sendDirectSMSMessage(mobile, message, listener);
 		
 	}
 

@@ -32,6 +32,7 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
+import java.io.UnsupportedEncodingException;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Hashtable;
@@ -122,9 +123,10 @@ public class MapleFetion extends NotifyEventAdapter
 	  * 默认构造函数
 	  * @param serviceId
 	  * @param pass
+	 * @throws UnsupportedEncodingException 
 	  */
 	
-	public MapleFetion(String serviceId, String pass)
+	public MapleFetion(String serviceId, String pass) throws UnsupportedEncodingException
 	{
 		this.client = new FetionClient(serviceId, pass,
 				this, 
@@ -292,6 +294,7 @@ public class MapleFetion extends NotifyEventAdapter
 	    	println("decline 好友编号           拒绝陌生人添加好友请求");
 	    	println("to 好友编号 消息内容       给好友发送消息");
 	    	println("sms 好友编号 消息内容      给好友发送短信");
+	    	println("dsms 手机号码  消息内容     发送付费短信，资费为0.1元每条");
 	    	println("tel 手机号码 消息内容       通过手机号给好友发送消息（对方必须是好友才行）");
 	    	println("enter 好友编号             和好友对话");
 	    	println("leave                      离开当前对话");
@@ -478,6 +481,25 @@ public class MapleFetion extends NotifyEventAdapter
 	    	}else {
 	    		println("找不到这个好友，请检查你的输入！");
 	    	}
+	    }
+	    
+	    /**
+	     * 发送付费短信
+	     */
+	    public void dsms(String mobile, final String message)
+	    {
+	    	final long mobileNo = Long.parseLong(mobile);
+    		this.client.sendDirectSMSMessage(mobileNo, Message.wrap(message), new ActionEventListener(){
+				public void fireEevent(ActionEvent event)
+				{
+					if(event.getEventType()==ActionEventType.SUCCESS){
+						println("提示：发送给"+mobileNo+" 的短信发送成功！恭喜你的话费又少了一毛钱！！！");
+					}else{
+						println("[系统消息]:你发给 "+mobileNo+" 的短信  "+message+" 发送失败！");
+					}
+				}
+			});
+	    	System.out.println(message);
 	    }
 	    
 	    /**
@@ -1116,6 +1138,9 @@ public class MapleFetion extends NotifyEventAdapter
 		}else if(cmd[0].equals("sms")) {
 			if(cmd.length>=3)
 				this.sms(this.buddymap.get(cmd[1]),line.substring(line.indexOf(cmd[2])));
+		}else if(cmd[0].equals("dsms")) {
+			if(cmd.length>=3)
+				this.dsms(cmd[1],line.substring(line.indexOf(cmd[2])));
 		}else if(cmd[0].equals("tel")) {
 			if(cmd.length>=3)
 				this.tel(cmd[1], cmd[2]);
@@ -1190,6 +1215,8 @@ public class MapleFetion extends NotifyEventAdapter
 		}
 		return true;
     }
+
+
 
 	/**
      * 打印一行字符

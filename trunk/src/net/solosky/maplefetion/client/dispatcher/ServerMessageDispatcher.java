@@ -102,6 +102,8 @@ public class ServerMessageDispatcher extends AbstractMessageDispatcher
 																		//列表改变事件 TODO ..
 			}else if(event.equals("permission")) {
 				clazz = PermissionNotifyHandler.class;						//权限改变事件
+			}else if(event.equals("OperationNotify")){						//不知道是什么东东
+				clazz = SystemNotifyHandler.class;	
 			}else if(event.equals("SystemNotifyV4")){
 				clazz = SystemNotifyHandler.class;							//系统通知,啥东西。。 TODO ..
 			}else if(event.equals("SyncUserInfoV4")){

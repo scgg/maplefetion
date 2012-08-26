@@ -198,6 +198,25 @@ public class MessageFactory
     }
     
     /**
+     * 发送付费短信
+     * @param uri
+     * @param m
+     * @return
+     */
+    public SipcRequest createSendDirectSMSRequest(long mobileNo, Message m)
+    {
+    	SipcRequest req = this.createDefaultSipcRequest(SipcMethod.MESSAGE);
+    	
+    	req.addHeader(SipcHeader.TO, "tel:"+mobileNo);
+    	req.addHeader(SipcHeader.EVENT, "SendDirectCatSMS");
+    	req.addHeader(SipcHeader.SERVICE, "1");	//暂时不知道什么含义
+
+    	req.setBody(new SipcBody(m.getText()));
+    	
+    	return req;
+    }
+    
+    /**
      * 保持连接
      * @return
      */
